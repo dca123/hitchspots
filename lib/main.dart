@@ -25,13 +25,17 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage> {
   final Map<String, Marker> _markers = {};
+  BitmapDescriptor customIcon;
+  Future<void> _onMapCreated(GoogleMapController mapController) async {
+    customIcon = await BitmapDescriptor.fromAssetImage(
+        createLocalImageConfiguration(context), 'assets/icons/Bad.png');
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      _markers.clear();
+      _markers["location1"] = Marker(
+        markerId: MarkerId("location1"),
+        position: LatLng(37.77233630600149, -122.47879056090717),
+        icon: customIcon,
+      );
     });
   }
 
