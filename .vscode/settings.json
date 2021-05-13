@@ -1,6 +1,7 @@
 {
     "conventionalCommits.scopes": [
         "main.dart",
-        "lib/pages/create_location_page.dart"
+        "lib/pages/create_location_page.dart",
+        "pages/home_page"
     ]
 }
