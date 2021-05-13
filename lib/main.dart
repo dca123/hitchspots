@@ -154,6 +154,53 @@ class ReviewTile extends StatelessWidget {
     );
   }
 }
+
+class ButtonBar extends StatelessWidget {
+  const ButtonBar({required this.maximizePanel});
+  final Function maximizePanel;
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 44,
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: 8.0),
+        scrollDirection: Axis.horizontal,
+        children: [
+          SizedBox(width: 24.0),
+          ElevatedButton(
+            onPressed: () => {},
+            child: Row(
+              children: [
+                Icon(Icons.add),
+                Text("Review"),
+              ],
+            ),
+          ),
+          SizedBox(width: 16.0),
+          OutlinedButton(
+            onPressed: () => maximizePanel(),
+            child: Row(
+              children: [
+                Icon(Icons.comment),
+                Text("Comments"),
+              ],
+            ),
+          ),
+          SizedBox(width: 16.0),
+          OutlinedButton(
+            onPressed: () => {},
+            child: Row(
+              children: [
+                Icon(Icons.navigation),
+                Text("Open in Google Maps"),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
     );
   }
 
