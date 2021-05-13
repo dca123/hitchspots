@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:hitchspots/models/location_card.dart';
 import 'package:provider/provider.dart';
 import '../pages/create_review_page.dart';
@@ -113,15 +114,17 @@ class ReviewTile extends StatelessWidget {
           ),
           Row(
             children: [
-              StarRatingsBar(),
+              StarRatingsBar(
+                rating: rating,
+              ),
               Text(
-                "'${rating}', 5 Years Ago",
+                " 5 Years Ago",
                 style: Theme.of(context).textTheme.caption,
               ),
             ],
           ),
           Text(
-            '${description}',
+            '$description',
             style: Theme.of(context).textTheme.bodyText2,
             softWrap: true,
           )
@@ -206,7 +209,7 @@ class LocationInfomation extends StatelessWidget {
                   "${locationCard.locationRating}",
                   style: Theme.of(context).textTheme.caption,
                 ),
-                StarRatingsBar(),
+                StarRatingsBar(rating: locationCard.locationRating),
                 Text(
                   "(1,004)",
                   style: Theme.of(context).textTheme.caption,
@@ -225,38 +228,18 @@ class LocationInfomation extends StatelessWidget {
 }
 
 class StarRatingsBar extends StatelessWidget {
-  const StarRatingsBar({
-    Key? key,
-  }) : super(key: key);
-
+  const StarRatingsBar({Key? key, required this.rating}) : super(key: key);
+  final double rating;
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(
-          Icons.star,
-          size: 12.0,
-          color: Colors.green[700],
-        ),
-        Icon(
-          Icons.star,
-          size: 12.0,
-          color: Colors.green[700],
-        ),
-        Icon(
-          Icons.star,
-          size: 12.0,
-          color: Colors.green[700],
-        ),
-        Icon(
-          Icons.star_border_outlined,
-          size: 12.0,
-        ),
-        Icon(
-          Icons.star_border_outlined,
-          size: 12.0,
-        ),
-      ],
+    return RatingBarIndicator(
+      rating: rating,
+      itemBuilder: (context, index) => Icon(
+        Icons.star,
+        color: Colors.yellow[700],
+      ),
+      itemCount: 5,
+      itemSize: 13,
     );
   }
 }

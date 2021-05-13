@@ -3,6 +3,7 @@
         "main.dart",
         "lib/pages/create_location_page.dart",
         "pages/home_page",
-        "widgets/location_info_card"
+        "widgets/location_info_card",
+        "pages/create_review_page"
     ]
 }
