@@ -8,7 +8,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  firebase_core: ^1.1.0
+  provider: ^4.3.3
   cloud_firestore: ^2.0.0
   cupertino_icons: ^1.0.2
   geoflutterfire2: ^2.3.5

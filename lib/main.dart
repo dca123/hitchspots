@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:hitchspots/models/location_card.dart';
+import 'package:provider/provider.dart';
 import 'pages/home_page.dart';
 
-void main() => runApp(HitchSpotApp());
+void main() => runApp(
+      ChangeNotifierProvider(
+        create: (context) => LocationCardModel(),
+        child: HitchSpotApp(),
+      ),
+    );
 
 class HitchSpotApp extends StatelessWidget {
   @override
