@@ -1,6 +1,9 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 void main() => runApp(HitchSpotApp());
@@ -24,8 +27,15 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> {
+  HomePageState() {
+    init();
+  }
   final Map<String, Marker> _markers = {};
-  BitmapDescriptor customIcon;
+  late BitmapDescriptor customIcon;
+
+  Future<void> init() async {
+    await Firebase.initializeApp();
+  }
   Future<void> _onMapCreated(GoogleMapController mapController) async {
     customIcon = await BitmapDescriptor.fromAssetImage(
         createLocalImageConfiguration(context), 'assets/icons/Bad.png');
