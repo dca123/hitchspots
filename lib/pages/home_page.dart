@@ -6,6 +6,8 @@ import 'package:geoflutterfire2/geoflutterfire2.dart';
 // ignore: import_of_legacy_library_into_null_safe
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:hitchspots/models/location_card.dart';
+import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 import 'create_location_page.dart';
@@ -65,10 +67,8 @@ class HomePageState extends State<HomePage> {
           position: LatLng(point.latitude, point.longitude),
           icon: getLocationMarker(rating),
           onTap: () {
-            setState(() {
-              locationName = document.get('name');
-            });
-
+            Provider.of<LocationCardModel>(context, listen: false)
+                .updateLocation(document.data(), document.id);
             _panelController.animatePanelToPosition(0.35);
           },
         );
@@ -108,6 +108,9 @@ class HomePageState extends State<HomePage> {
           maximizePanel: maximizePanel,
           locationName: locationName,
         ),
+        onPanelOpened: () => {
+          Provider.of<LocationCardModel>(context, listen: false).getReviews()
+        },
         body: GoogleMap(
           initialCameraPosition: _sanFranciso,
           onMapCreated: _onMapCreated,
