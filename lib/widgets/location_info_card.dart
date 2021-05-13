@@ -31,8 +31,16 @@ class LocationInfoCard extends StatelessWidget {
           ],
         ),
       ),
+      Card(
+        margin: EdgeInsets.all(0),
+        elevation: 2,
+        child: Column(
+          children: [
       LocationInfomation(locationName: locationName),
       ButtonBar(maximizePanel: maximizePanel),
+          ],
+        ),
+      ),
       ReviewList()
     ]);
   }
@@ -91,7 +99,7 @@ class ReviewTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -129,8 +137,9 @@ class ButtonBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 44,
+      margin: EdgeInsets.only(bottom: 16),
       child: ListView(
-        padding: const EdgeInsets.only(bottom: 8.0),
+        padding: EdgeInsets.only(bottom: 8),
         scrollDirection: Axis.horizontal,
         children: [
           SizedBox(width: 24.0),

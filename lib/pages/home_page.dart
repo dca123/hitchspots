@@ -101,7 +101,7 @@ class HomePageState extends State<HomePage> {
         controller: _panelController,
         minHeight: 0,
         maxHeight: MediaQuery.of(context).size.height,
-        snapPoint: 0.5,
+        snapPoint: 0.35,
         borderRadius: radius,
         panel: LocationInfoCard(
           radius: radius,
