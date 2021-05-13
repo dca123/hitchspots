@@ -71,12 +71,125 @@ class HomePageState extends State<HomePage> {
         markers: _markers.values.toSet(),
       ),
       floatingActionButton: FloatingActionButton(
-          onPressed: _goToTheLake, child: const Icon(Icons.add)),
+class ReviewImage extends StatelessWidget {
+  const ReviewImage({Key? key, required this.imageName}) : super(key: key);
+  final String imageName;
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      "assets/locations/$imageName.jpg",
+      width: 144,
+      fit: BoxFit.cover,
+    );
+  }
+}
+
+class ReviewList extends StatelessWidget {
+  const ReviewList({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: ListView(
+        children: [
+          ReviewTile(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Divider(),
+          ),
+          ReviewTile(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Divider(),
+          ),
+          ReviewTile(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Divider(),
+          ),
+          ReviewTile(),
+        ],
+      ),
+    );
+  }
+}
+
+class ReviewTile extends StatelessWidget {
+  const ReviewTile({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Dev Dog",
+            style: Theme.of(context).textTheme.subtitle1,
+          ),
+          Row(
+            children: [
+              StarRatingsBar(),
+              Text(
+                " 5 Years Ago",
+                style: Theme.of(context).textTheme.caption,
+              ),
+            ],
+          ),
+          Text(
+            'Lorem ipsum dolor sit amet, consectetur adipiscing'
+            'elit, sed do eiusmod tempor incididunt ut labore et'
+            'dolore magna aliqua. Egestas maecenas pharetra'
+            ' convallis posuere morbi leo urna molestie.',
+            style: Theme.of(context).textTheme.bodyText2,
+            softWrap: true,
+          )
+        ],
+      ),
+    );
+  }
+}
     );
   }
 
-  Future<void> _goToTheLake() async {
-    final GoogleMapController controller = await _controller.future;
-    controller.animateCamera(CameraUpdate.newCameraPosition(_kLake));
+class StarRatingsBar extends StatelessWidget {
+  const StarRatingsBar({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(
+          Icons.star,
+          size: 12.0,
+          color: Colors.green[700],
+        ),
+        Icon(
+          Icons.star,
+          size: 12.0,
+          color: Colors.green[700],
+        ),
+        Icon(
+          Icons.star,
+          size: 12.0,
+          color: Colors.green[700],
+        ),
+        Icon(
+          Icons.star_border_outlined,
+          size: 12.0,
+        ),
+        Icon(
+          Icons.star_border_outlined,
+          size: 12.0,
+        ),
+      ],
+    );
   }
 }
