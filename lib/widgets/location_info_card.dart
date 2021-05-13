@@ -175,7 +175,7 @@ class LocationInfomation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.only(top: 24.0, left: 24.0, bottom: 16.0),
+      padding: EdgeInsets.only(top: 20.0, left: 24.0, bottom: 16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -183,6 +183,7 @@ class LocationInfomation extends StatelessWidget {
             "$locationName",
             style: Theme.of(context).textTheme.headline6,
           ),
+          SizedBox(height: 4),
           Row(
             children: [
               Text(

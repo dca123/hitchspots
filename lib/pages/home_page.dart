@@ -21,7 +21,6 @@ class HomePageState extends State<HomePage> {
     init();
   }
   Map<String, Marker> _markers = {};
-  late BitmapDescriptor customIcon;
   final geo = GeoFlutterFire();
 
   Future<void> init() async {
@@ -29,8 +28,21 @@ class HomePageState extends State<HomePage> {
   }
 
   Future<void> _onMapCreated(GoogleMapController mapController) async {
-    customIcon = await BitmapDescriptor.fromAssetImage(
+    BitmapDescriptor goodIcon = await BitmapDescriptor.fromAssetImage(
+        createLocalImageConfiguration(context), 'assets/icons/Good.png');
+    BitmapDescriptor warningIcon = await BitmapDescriptor.fromAssetImage(
+        createLocalImageConfiguration(context), 'assets/icons/Warning.png');
+    BitmapDescriptor badIcon = await BitmapDescriptor.fromAssetImage(
         createLocalImageConfiguration(context), 'assets/icons/Bad.png');
+
+    BitmapDescriptor getLocationMarker(double rating) {
+      if (rating >= 4) {
+        return goodIcon;
+      } else if (rating >= 2.5) {
+        return warningIcon;
+      }
+      return badIcon;
+    }
 
     GeoFirePoint center = geo.point(latitude: 37.7749, longitude: -122.4194);
     final _firestore = FirebaseFirestore.instance;
@@ -47,10 +59,11 @@ class HomePageState extends State<HomePage> {
     stream.listen((List<DocumentSnapshot> documentList) {
       documentList.forEach((document) {
         GeoPoint point = document.get('position')['geopoint'];
+        double rating = document.get('rating').toDouble();
         tempMarkers[document.id] = Marker(
           markerId: MarkerId(document.id),
           position: LatLng(point.latitude, point.longitude),
-          icon: customIcon,
+          icon: getLocationMarker(rating),
           onTap: () {
             setState(() {
               locationName = document.get('name');
@@ -62,7 +75,6 @@ class HomePageState extends State<HomePage> {
       });
       setState(() {
         _markers.addAll(tempMarkers);
-        print(_markers.values.toSet());
       });
     });
   }

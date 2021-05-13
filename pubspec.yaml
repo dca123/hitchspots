@@ -22,5 +22,5 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/icons/Bad.png
+    - assets/icons/
     - assets/locations/
