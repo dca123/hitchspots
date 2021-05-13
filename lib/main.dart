@@ -201,8 +201,43 @@ class ButtonBar extends StatelessWidget {
     );
   }
 }
+
+class LocationInfomation extends StatelessWidget {
+  const LocationInfomation();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.only(top: 24.0, left: 24.0, bottom: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "I-74 Exit",
+            style: Theme.of(context).textTheme.headline6,
+          ),
+          Row(
+            children: [
+              Text(
+                "4.9",
+                style: Theme.of(context).textTheme.caption,
+              ),
+              StarRatingsBar(),
+              Text(
+                "(1,004)",
+                style: Theme.of(context).textTheme.caption,
+              ),
+            ],
+          ),
+          Text(
+            "Near Irving St, San Francisco",
+            style: Theme.of(context).textTheme.caption,
+          )
+        ],
+      ),
     );
   }
+}
 
 class StarRatingsBar extends StatelessWidget {
   const StarRatingsBar({
