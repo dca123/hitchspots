@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../pages/create_review_page.dart';
 
 class LocationInfoCard extends StatelessWidget {
   const LocationInfoCard(
@@ -36,8 +37,8 @@ class LocationInfoCard extends StatelessWidget {
         elevation: 2,
         child: Column(
           children: [
-      LocationInfomation(locationName: locationName),
-      ButtonBar(maximizePanel: maximizePanel),
+            LocationInfomation(locationName: locationName),
+            ButtonBar(maximizePanel: maximizePanel),
           ],
         ),
       ),
@@ -144,11 +145,16 @@ class ButtonBar extends StatelessWidget {
         children: [
           SizedBox(width: 24.0),
           ElevatedButton(
-            onPressed: () => {},
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) {
+                return CreateReviewPage();
+              }),
+            ),
             child: Row(
               children: [
                 Icon(Icons.add),
-                Text("Review"),
+                Text(" Review"),
               ],
             ),
           ),
@@ -158,7 +164,7 @@ class ButtonBar extends StatelessWidget {
             child: Row(
               children: [
                 Icon(Icons.comment),
-                Text("Comments"),
+                Text(" Comments"),
               ],
             ),
           ),

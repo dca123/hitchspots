@@ -116,10 +116,12 @@ class HomePageState extends State<HomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () =>
-            Navigator.push(context, MaterialPageRoute(builder: (context) {
-          return CreateLocationPage();
-        })),
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) {
+            return CreateLocationPage();
+          }),
+        ),
         child: const Icon(Icons.add),
       ),
     );
