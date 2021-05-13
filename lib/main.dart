@@ -7,6 +7,8 @@ import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
+import 'pages/create_location_page.dart';
+
 void main() => runApp(HitchSpotApp());
 
 class HitchSpotApp extends StatelessWidget {
@@ -31,38 +33,61 @@ class HomePageState extends State<HomePage> {
   HomePageState() {
     init();
   }
-  final Map<String, Marker> _markers = {};
+  Map<String, Marker> _markers = {};
   late BitmapDescriptor customIcon;
+  final geo = Geoflutterfire();
 
   Future<void> init() async {
     await Firebase.initializeApp();
   }
 
   Future<void> _onMapCreated(GoogleMapController mapController) async {
+    this.mapController = mapController;
     customIcon = await BitmapDescriptor.fromAssetImage(
         createLocalImageConfiguration(context), 'assets/icons/Bad.png');
-    setState(() {
-      _markers.clear();
-      _markers["location1"] = Marker(
-          markerId: MarkerId("location1"),
-          position: LatLng(37.77233630600149, -122.47879056090717),
+
+    GeoFirePoint center = geo.point(latitude: 37.7749, longitude: -122.4194);
+    final _firestore = FirebaseFirestore.instance;
+
+    var collectionReference = _firestore.collection('locations');
+
+    double radius = 50;
+    String field = 'position';
+
+    Stream<List<DocumentSnapshot>> stream = geo
+        .collection(collectionRef: collectionReference)
+        .within(center: center, radius: radius, field: field);
+    final Map<String, Marker> tempMarkers = {};
+    stream.listen((List<DocumentSnapshot> documentList) {
+      documentList.forEach((document) {
+        GeoPoint point = document.get('position')['geopoint'];
+        tempMarkers[document.id] = Marker(
+          markerId: MarkerId(document.id),
+          position: LatLng(point.latitude, point.longitude),
           icon: customIcon,
-          onTap: () => _panelController.animatePanelToPosition(0.35));
+          onTap: () {
+            setState(() {
+              locationName = document.get('name');
+            });
+
+            _panelController.animatePanelToPosition(0.35);
+          },
+        );
+      });
+      setState(() {
+        _markers.addAll(tempMarkers);
+        print(_markers.values.toSet());
+      });
     });
   }
 
-  Completer<GoogleMapController> _controller = Completer();
+  late GoogleMapController mapController;
+  String locationName = "Test";
   final PanelController _panelController = PanelController();
   static final CameraPosition _sanFranciso = CameraPosition(
     target: LatLng(37.7749, -122.4194),
     zoom: 12,
   );
-
-  static final CameraPosition _kLake = CameraPosition(
-      bearing: 192.8334901395799,
-      target: LatLng(37.43296265331129, -122.08832357078792),
-      tilt: 59.440717697143555,
-      zoom: 19.151926040649414);
 
   void maximizePanel() => _panelController.animatePanelToPosition(1);
 
@@ -80,28 +105,11 @@ class HomePageState extends State<HomePage> {
         maxHeight: MediaQuery.of(context).size.height,
         snapPoint: 0.5,
         borderRadius: radius,
-        panel: Column(children: [
-          Container(
-            clipBehavior: Clip.hardEdge,
-            decoration: BoxDecoration(
-              borderRadius: radius,
-            ),
-            height: 103.0,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: [
-                ReviewImage(imageName: "image1"),
-                ReviewImage(imageName: "image2"),
-                ReviewImage(imageName: "image3"),
-                ReviewImage(imageName: "image4"),
-                ReviewImage(imageName: "image5"),
-              ],
-            ),
-          ),
-          LocationInfomation(),
-          ButtonBar(maximizePanel: maximizePanel),
-          ReviewList()
-        ]),
+        panel: LocationInfoCard(
+          radius: radius,
+          maximizePanel: maximizePanel,
+          locationName: locationName,
+        ),
         body: GoogleMap(
           initialCameraPosition: _sanFranciso,
           onMapCreated: _onMapCreated,
@@ -110,12 +118,51 @@ class HomePageState extends State<HomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => !_panelController.isPanelOpen
-            ? _panelController.open()
-            : _panelController.close(),
+        onPressed: () =>
+            Navigator.push(context, MaterialPageRoute(builder: (context) {
+          return CreateLocationPage();
+        })),
         child: const Icon(Icons.add),
       ),
     );
+  }
+}
+
+class LocationInfoCard extends StatelessWidget {
+  const LocationInfoCard(
+      {Key? key,
+      required this.radius,
+      required this.maximizePanel,
+      required this.locationName})
+      : super(key: key);
+
+  final BorderRadiusGeometry radius;
+  final Function maximizePanel;
+  final String locationName;
+  @override
+  Widget build(BuildContext context) {
+    return Column(children: [
+      Container(
+        clipBehavior: Clip.hardEdge,
+        decoration: BoxDecoration(
+          borderRadius: radius,
+        ),
+        height: 103.0,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          children: [
+            ReviewImage(imageName: "image1"),
+            ReviewImage(imageName: "image2"),
+            ReviewImage(imageName: "image3"),
+            ReviewImage(imageName: "image4"),
+            ReviewImage(imageName: "image5"),
+          ],
+        ),
+      ),
+      LocationInfomation(locationName: locationName),
+      ButtonBar(maximizePanel: maximizePanel),
+      ReviewList()
+    ]);
   }
 }
 
@@ -251,8 +298,8 @@ class ButtonBar extends StatelessWidget {
 }
 
 class LocationInfomation extends StatelessWidget {
-  const LocationInfomation();
-
+  const LocationInfomation({required this.locationName});
+  final String locationName;
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -261,7 +308,7 @@ class LocationInfomation extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "I-74 Exit",
+            "$locationName",
             style: Theme.of(context).textTheme.headline6,
           ),
           Row(
