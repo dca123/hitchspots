@@ -5,6 +5,7 @@ class LocationCardModel extends ChangeNotifier {
   String _locationName = "I-20 Exit";
   double _locationRating = 0.0;
   late String _locationID = "testLocationID";
+  String get locationID => _locationID;
   String get locationName => _locationName;
   double get locationRating => _locationRating;
   Map<String, dynamic> _reviews = {};
