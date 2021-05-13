@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hitchspots/models/location_card.dart';
+import 'package:provider/provider.dart';
 import '../pages/create_review_page.dart';
 
 class LocationInfoCard extends StatelessWidget {
@@ -67,35 +69,36 @@ class ReviewList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: ListView(
-        children: [
-          ReviewTile(),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+    return Consumer<LocationCardModel>(builder: (context, locationCard, child) {
+      return Expanded(
+        child: ListView.separated(
+          itemCount: locationCard.reviews.length,
+          separatorBuilder: (BuildContext context, int index) => const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
             child: Divider(),
           ),
-          ReviewTile(),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Divider(),
-          ),
-          ReviewTile(),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Divider(),
-          ),
-          ReviewTile(),
-        ],
-      ),
-    );
+          itemBuilder: (context, index) {
+            var review = locationCard.reviews[index];
+            return ReviewTile(
+              description: '${review['description']}',
+              rating: review['rating'].toDouble(),
+            );
+          },
+        ),
+      );
+    });
   }
 }
 
 class ReviewTile extends StatelessWidget {
   const ReviewTile({
     Key? key,
+    required this.description,
+    required this.rating,
   }) : super(key: key);
+
+  final String description;
+  final double rating;
 
   @override
   Widget build(BuildContext context) {
@@ -112,16 +115,13 @@ class ReviewTile extends StatelessWidget {
             children: [
               StarRatingsBar(),
               Text(
-                " 5 Years Ago",
+                "'${rating}', 5 Years Ago",
                 style: Theme.of(context).textTheme.caption,
               ),
             ],
           ),
           Text(
-            'Lorem ipsum dolor sit amet, consectetur adipiscing'
-            'elit, sed do eiusmod tempor incididunt ut labore et'
-            'dolore magna aliqua. Egestas maecenas pharetra'
-            ' convallis posuere morbi leo urna molestie.',
+            '${description}',
             style: Theme.of(context).textTheme.bodyText2,
             softWrap: true,
           )
@@ -189,36 +189,38 @@ class LocationInfomation extends StatelessWidget {
   final String locationName;
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.only(top: 20.0, left: 24.0, bottom: 16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "$locationName",
-            style: Theme.of(context).textTheme.headline6,
-          ),
-          SizedBox(height: 4),
-          Row(
-            children: [
-              Text(
-                "4.9",
-                style: Theme.of(context).textTheme.caption,
-              ),
-              StarRatingsBar(),
-              Text(
-                "(1,004)",
-                style: Theme.of(context).textTheme.caption,
-              ),
-            ],
-          ),
-          Text(
-            "Near Irving St, San Francisco",
-            style: Theme.of(context).textTheme.caption,
-          )
-        ],
-      ),
-    );
+    return Consumer<LocationCardModel>(builder: (context, locationCard, child) {
+      return Container(
+        padding: EdgeInsets.only(top: 20.0, left: 24.0, bottom: 16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "${locationCard.locationName}",
+              style: Theme.of(context).textTheme.headline6,
+            ),
+            SizedBox(height: 4),
+            Row(
+              children: [
+                Text(
+                  "${locationCard.locationRating}",
+                  style: Theme.of(context).textTheme.caption,
+                ),
+                StarRatingsBar(),
+                Text(
+                  "(1,004)",
+                  style: Theme.of(context).textTheme.caption,
+                ),
+              ],
+            ),
+            Text(
+              "Near Irving St, San Francisco",
+              style: Theme.of(context).textTheme.caption,
+            )
+          ],
+        ),
+      );
+    });
   }
 }
 
