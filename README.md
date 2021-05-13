@@ -1,16 +1,18 @@
-# hitchspots
+# HitchSpots
 
-A new Flutter project.
+Remake of the now broken hitchwiki.com/maps as a mobile app. Designed with Figma and developed with Flutter. 
 
-## Getting Started
+## Features
+- Add hitching spots
+- Review and rate hitching spots
+- View nearby hitchiking spots by rating
+    - Red => Bad
+    - Orange => Medium
+    - Green => Good
 
-This project is a starting point for a Flutter application.
+## Designs
+Design demo avaiable on [figma](https://www.figma.com/file/hNgH2qIOakEKw8kp2Z8uur/HitchApp?node-id=2%3A5814)
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+![image1](https://i.imgur.com/9nfsBLO.png)
+![image2](https://i.imgur.com/6NnxAzx.png)
+![image3](https://i.imgur.com/YNKq71d.png)
