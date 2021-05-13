@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 void main() => runApp(HitchSpotApp());
 
@@ -36,20 +37,22 @@ class HomePageState extends State<HomePage> {
   Future<void> init() async {
     await Firebase.initializeApp();
   }
+
   Future<void> _onMapCreated(GoogleMapController mapController) async {
     customIcon = await BitmapDescriptor.fromAssetImage(
         createLocalImageConfiguration(context), 'assets/icons/Bad.png');
     setState(() {
       _markers.clear();
       _markers["location1"] = Marker(
-        markerId: MarkerId("location1"),
-        position: LatLng(37.77233630600149, -122.47879056090717),
-        icon: customIcon,
-      );
+          markerId: MarkerId("location1"),
+          position: LatLng(37.77233630600149, -122.47879056090717),
+          icon: customIcon,
+          onTap: () => _panelController.animatePanelToPosition(0.35));
     });
   }
 
   Completer<GoogleMapController> _controller = Completer();
+  final PanelController _panelController = PanelController();
   static final CameraPosition _sanFranciso = CameraPosition(
     target: LatLng(37.7749, -122.4194),
     zoom: 12,
@@ -61,16 +64,61 @@ class HomePageState extends State<HomePage> {
       tilt: 59.440717697143555,
       zoom: 19.151926040649414);
 
+  void maximizePanel() => _panelController.animatePanelToPosition(1);
+
   @override
   Widget build(BuildContext context) {
+    BorderRadiusGeometry radius = BorderRadius.only(
+      topLeft: Radius.circular(24.0),
+      topRight: Radius.circular(24.0),
+    );
+
     return new Scaffold(
-      body: GoogleMap(
-        initialCameraPosition: _sanFranciso,
-        onMapCreated: _onMapCreated,
-        zoomControlsEnabled: false,
-        markers: _markers.values.toSet(),
+      body: SlidingUpPanel(
+        controller: _panelController,
+        minHeight: 0,
+        maxHeight: MediaQuery.of(context).size.height,
+        snapPoint: 0.5,
+        borderRadius: radius,
+        panel: Column(children: [
+          Container(
+            clipBehavior: Clip.hardEdge,
+            decoration: BoxDecoration(
+              borderRadius: radius,
+            ),
+            height: 103.0,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                ReviewImage(imageName: "image1"),
+                ReviewImage(imageName: "image2"),
+                ReviewImage(imageName: "image3"),
+                ReviewImage(imageName: "image4"),
+                ReviewImage(imageName: "image5"),
+              ],
+            ),
+          ),
+          LocationInfomation(),
+          ButtonBar(maximizePanel: maximizePanel),
+          ReviewList()
+        ]),
+        body: GoogleMap(
+          initialCameraPosition: _sanFranciso,
+          onMapCreated: _onMapCreated,
+          zoomControlsEnabled: false,
+          markers: _markers.values.toSet(),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
+        onPressed: () => !_panelController.isPanelOpen
+            ? _panelController.open()
+            : _panelController.close(),
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
 class ReviewImage extends StatelessWidget {
   const ReviewImage({Key? key, required this.imageName}) : super(key: key);
   final String imageName;
