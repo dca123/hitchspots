@@ -8,9 +8,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cloud_firestore: ^0.16.0
+  firebase_core: ^1.1.0
+  cloud_firestore: ^2.0.0
   cupertino_icons: ^1.0.2
-  geoflutterfire: ^2.2.2
+  geoflutterfire2: ^2.3.5
   google_maps_flutter: ^2.0.3
   sliding_up_panel: ^2.0.0+1
 
