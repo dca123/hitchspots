@@ -116,32 +116,35 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
               SizedBox(height: 24),
               TextFormField(
                 controller: locationName,
+                maxLength: 50,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter some text';
+                    return 'Please enter a name for this location';
                   }
                   return null;
                 },
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: "Add name",
-                  hintText: "Simple Location Description",
+                  labelText: "Location Name",
+                  hintText: "Briefly describe the location ",
+                  helperText: "i.e I-80 Exit, By the Doughnut shop",
                 ),
               ),
               SizedBox(height: 24),
               TextFormField(
                 controller: locationExperience,
+                maxLength: 300,
                 decoration: InputDecoration(
                     alignLabelWithHint: true,
                     border: OutlineInputBorder(),
                     labelText: "Experience",
-                    helperText: "How long did you wait ? Many vehicles go by ?",
-                    hintText: "Describe your experience briefly."),
+                    helperText: "How long did you wait ? It is a busy area ?",
+                    hintText: "Describe your experience briefly"),
                 maxLines: 3,
                 keyboardType: TextInputType.multiline,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter some text';
+                    return 'Please enter a short description of your experience';
                   }
                   return null;
                 },

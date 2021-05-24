@@ -101,18 +101,19 @@ class CreateReviewPage extends StatelessWidget {
                   SizedBox(height: 24),
                   TextFormField(
                     controller: descriptionTextController,
+                    maxLength: 300,
                     decoration: InputDecoration(
                         alignLabelWithHint: true,
                         border: OutlineInputBorder(),
                         labelText: "Experience",
                         helperText:
-                            "How long did you wait ? Many vehicles go by ?",
-                        hintText: "Describe your experience briefly."),
+                            "How long did you wait ? It is a busy area ?",
+                        hintText: "Describe your experience briefly"),
                     maxLines: 3,
                     keyboardType: TextInputType.multiline,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter some text';
+                        return 'Please enter a short description of your experience';
                       }
                       return null;
                     },
