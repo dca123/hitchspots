@@ -1,4 +1,4 @@
-package com.example.hitchspots
+package com.hitchspots
 
 import io.flutter.embedding.android.FlutterActivity
 
