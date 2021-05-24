@@ -66,7 +66,7 @@ class _LocationPickerState extends State<LocationPicker> {
               mapController = controller;
             },
           ),
-          Center(child: Image.asset('assets/icons/Good.png')),
+          Center(child: Image.asset('assets/icons/Picker.png')),
         ],
       ),
     );
