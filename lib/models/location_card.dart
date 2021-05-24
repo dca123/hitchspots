@@ -25,7 +25,7 @@ class LocationCardModel extends ChangeNotifier {
   void getReviews() async {
     var reviewQuery = await FirebaseFirestore.instance
         .collection("reviews")
-        .limit(2)
+        .limit(5)
         .where("locationID", isEqualTo: _locationID)
         .get();
     reviewQuery.docs.forEach((document) {
