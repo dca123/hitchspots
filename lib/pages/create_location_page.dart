@@ -96,56 +96,58 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
         key: _formKey,
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(children: [
-            MapLocationFormField(
-              buildContext: context,
-              onSaved: (value) => position = value,
-              centerLatLng: widget._centerLatLng,
-            ),
-            SizedBox(height: 24),
-            RatingBarFormField(
+          child: SingleChildScrollView(
+            child: Column(children: [
+              MapLocationFormField(
                 buildContext: context,
-                validator: (value) {
-                  if (value == null) {
-                    return 'Please select a rating';
-                  }
-                  ratingController = value;
-                  return null;
-                }),
-            SizedBox(height: 24),
-            TextFormField(
-              controller: locationName,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter some text';
-                }
-                return null;
-              },
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: "Add name",
-                hintText: "Simple Location Description",
+                onSaved: (value) => position = value,
+                centerLatLng: widget._centerLatLng,
               ),
-            ),
-            SizedBox(height: 24),
-            TextFormField(
-              controller: locationExperience,
-              decoration: InputDecoration(
-                  alignLabelWithHint: true,
+              SizedBox(height: 24),
+              RatingBarFormField(
+                  buildContext: context,
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Please select a rating';
+                    }
+                    ratingController = value;
+                    return null;
+                  }),
+              SizedBox(height: 24),
+              TextFormField(
+                controller: locationName,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter some text';
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: "Experience",
-                  helperText: "How long did you wait ? Many vehicles go by ?",
-                  hintText: "Describe your experience briefly."),
-              maxLines: 3,
-              keyboardType: TextInputType.multiline,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter some text';
-                }
-                return null;
-              },
-            ),
-          ]),
+                  labelText: "Add name",
+                  hintText: "Simple Location Description",
+                ),
+              ),
+              SizedBox(height: 24),
+              TextFormField(
+                controller: locationExperience,
+                decoration: InputDecoration(
+                    alignLabelWithHint: true,
+                    border: OutlineInputBorder(),
+                    labelText: "Experience",
+                    helperText: "How long did you wait ? Many vehicles go by ?",
+                    hintText: "Describe your experience briefly."),
+                maxLines: 3,
+                keyboardType: TextInputType.multiline,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter some text';
+                  }
+                  return null;
+                },
+              ),
+            ]),
+          ),
         ),
       ),
     );

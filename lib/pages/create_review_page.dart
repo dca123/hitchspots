@@ -83,50 +83,53 @@ class CreateReviewPage extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 24.0),
           child: Form(
             key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(height: 24),
-                RatingBarFormField(
-                    buildContext: context,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(height: 24),
+                  RatingBarFormField(
+                      buildContext: context,
+                      validator: (value) {
+                        if (value == null) {
+                          return 'Please select a rating';
+                        }
+                        ratingController = value;
+                        return null;
+                      }),
+                  SizedBox(height: 24),
+                  TextFormField(
+                    controller: descriptionTextController,
+                    decoration: InputDecoration(
+                        alignLabelWithHint: true,
+                        border: OutlineInputBorder(),
+                        labelText: "Experience",
+                        helperText:
+                            "How long did you wait ? Many vehicles go by ?",
+                        hintText: "Describe your experience briefly."),
+                    maxLines: 3,
+                    keyboardType: TextInputType.multiline,
                     validator: (value) {
-                      if (value == null) {
-                        return 'Please select a rating';
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter some text';
                       }
-                      ratingController = value;
                       return null;
-                    }),
-                SizedBox(height: 24),
-                TextFormField(
-                  controller: descriptionTextController,
-                  decoration: InputDecoration(
-                      alignLabelWithHint: true,
-                      border: OutlineInputBorder(),
-                      labelText: "Experience",
-                      helperText:
-                          "How long did you wait ? Many vehicles go by ?",
-                      hintText: "Describe your experience briefly."),
-                  maxLines: 3,
-                  keyboardType: TextInputType.multiline,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter some text';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 24),
-                OutlinedButton(
-                    onPressed: () => {},
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.camera_enhance),
-                        Text("Add Photos"),
-                      ],
-                    ))
-              ],
+                    },
+                  ),
+                  // SizedBox(height: 24),
+                  // OutlinedButton(
+                  //   onPressed: () => {},
+                  //   child: Row(
+                  //     mainAxisAlignment: MainAxisAlignment.center,
+                  //     children: [
+                  //       Icon(Icons.camera_enhance),
+                  //       Text("Add Photos"),
+                  //     ],
+                  // ),
+                  // ),
+                ],
+              ),
             ),
           ),
         ),
