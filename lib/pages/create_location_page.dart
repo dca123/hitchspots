@@ -35,7 +35,7 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
         'description': locationExperience.text,
         'locationID': locationID.id,
         'rating': ratingController,
-        'timestamp': DateTime.now().microsecondsSinceEpoch,
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
