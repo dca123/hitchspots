@@ -20,25 +20,25 @@ class MapLocationFormField extends FormField<LatLng> {
               target: centerLatLng,
               zoom: 18,
             );
-
             return Column(
               children: [
                 Container(
                   height: 100,
                   child: GestureDetector(
                     onTap: () async {
-                      final LatLng result = await Navigator.push(
+                      final LatLng? result = await Navigator.push(
                         buildContext,
                         MaterialPageRoute(builder: (context) {
                           return LocationPicker(centerOfScreen: centerCamPos);
                         }),
                       );
-                      CameraUpdate updatedPosition =
-                          CameraUpdate.newLatLng(result);
-                      mapController!.moveCamera(updatedPosition);
-                      print(result);
-                      context.didChange(result);
-                      context.save();
+                      if (result != null) {
+                        CameraUpdate updatedPosition =
+                            CameraUpdate.newLatLng(result);
+                        mapController!.moveCamera(updatedPosition);
+                        context.didChange(result);
+                        context.save();
+                      }
                     },
                     child: Stack(
                       children: [
