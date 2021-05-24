@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import './home_page.dart';
 
-class LocationPicker extends StatelessWidget {
+class LocationPicker extends StatefulWidget {
   LocationPicker({
     Key? key,
-    required CameraPosition sanFranciso,
-  })  : _sanFranciso = sanFranciso,
+    required CameraPosition centerOfScreen,
+  })  : _centerOfScreen = centerOfScreen,
         super(key: key);
 
-  final CameraPosition _sanFranciso;
+  final CameraPosition _centerOfScreen;
+
+  @override
+  _LocationPickerState createState() => _LocationPickerState();
+}
+
+class _LocationPickerState extends State<LocationPicker> {
   late GoogleMapController mapController;
 
   @override
@@ -35,18 +42,10 @@ class LocationPicker extends StatelessWidget {
             child: IconButton(
               icon: const Icon(Icons.done),
               onPressed: () async {
-                double screenWidth = MediaQuery.of(context).size.width *
-                    MediaQuery.of(context).devicePixelRatio;
-                double screenHeight = MediaQuery.of(context).size.height *
-                    MediaQuery.of(context).devicePixelRatio;
+                final ScreenCoordinate screenCoordinate =
+                    getCenterOfScreenCoordinater(context);
 
-                double middleX = screenWidth / 2;
-                double middleY = screenHeight / 2;
-
-                ScreenCoordinate screenCoordinate =
-                    ScreenCoordinate(x: middleX.round(), y: middleY.round());
-
-                LatLng middlePoint =
+                final LatLng middlePoint =
                     await mapController.getLatLng(screenCoordinate);
                 Navigator.pop(context, middlePoint);
               },
@@ -62,7 +61,7 @@ class LocationPicker extends StatelessWidget {
       body: Stack(
         children: [
           GoogleMap(
-            initialCameraPosition: _sanFranciso,
+            initialCameraPosition: widget._centerOfScreen,
             onMapCreated: (GoogleMapController controller) {
               mapController = controller;
             },

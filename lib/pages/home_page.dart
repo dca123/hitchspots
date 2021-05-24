@@ -120,16 +120,9 @@ class HomePageState extends State<HomePage> {
       topLeft: Radius.circular(24.0),
       topRight: Radius.circular(24.0),
     );
-    final double screenWidth = MediaQuery.of(context).size.width *
-        MediaQuery.of(context).devicePixelRatio;
-    final double screenHeight = MediaQuery.of(context).size.height *
-        MediaQuery.of(context).devicePixelRatio;
-
-    final double middleX = screenWidth / 2;
-    final double middleY = screenHeight / 2;
 
     final ScreenCoordinate screenCoordinate =
-        ScreenCoordinate(x: middleX.round(), y: middleY.round());
+        getCenterOfScreenCoordinater(context);
 
     return new Scaffold(
       body: SlidingUpPanel(
@@ -155,14 +148,30 @@ class HomePageState extends State<HomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) {
-            return CreateLocationPage();
-          }),
-        ),
+        onPressed: () async {
+          final LatLng middlePoint =
+              await mapController.getLatLng(screenCoordinate);
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) {
+              return CreateLocationPage(centerLatLng: middlePoint);
+            }),
+          );
+        },
         child: const Icon(Icons.add),
       ),
     );
   }
+}
+
+ScreenCoordinate getCenterOfScreenCoordinater(BuildContext context) {
+  double screenWidth = MediaQuery.of(context).size.width *
+      MediaQuery.of(context).devicePixelRatio;
+  double screenHeight = MediaQuery.of(context).size.height *
+      MediaQuery.of(context).devicePixelRatio;
+
+  double middleX = screenWidth / 2;
+  double middleY = screenHeight / 2;
+
+  return ScreenCoordinate(x: middleX.round(), y: middleY.round());
 }

@@ -7,6 +7,14 @@ import '../widgets/form_fields/location_picker.dart';
 // import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CreateLocationPage extends StatefulWidget {
+  final LatLng _centerLatLng;
+
+  CreateLocationPage({
+    Key? key,
+    required LatLng centerLatLng,
+  })  : _centerLatLng = centerLatLng,
+        super(key: key);
+
   @override
   _CreateLocationPageState createState() => _CreateLocationPageState();
 }
@@ -92,6 +100,7 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
             MapLocationFormField(
               buildContext: context,
               onSaved: (value) => position = value,
+              centerLatLng: widget._centerLatLng,
             ),
             SizedBox(height: 24),
             RatingBarFormField(

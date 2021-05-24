@@ -3,14 +3,12 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../pages/location_picker_page.dart';
 
 class MapLocationFormField extends FormField<LatLng> {
-  static final CameraPosition _sanFranciso = CameraPosition(
-    target: LatLng(37.7749, -122.4194),
-    zoom: 18,
-  );
   static GoogleMapController? mapController;
-
-  MapLocationFormField({required BuildContext buildContext, required onSaved})
-      : super(
+  MapLocationFormField({
+    required BuildContext buildContext,
+    required onSaved,
+    required LatLng centerLatLng,
+  }) : super(
           onSaved: onSaved,
           validator: (LatLng? value) {
             if (value == null) {
@@ -18,6 +16,11 @@ class MapLocationFormField extends FormField<LatLng> {
             }
           },
           builder: (context) {
+            final CameraPosition centerCamPos = CameraPosition(
+              target: centerLatLng,
+              zoom: 18,
+            );
+
             return Column(
               children: [
                 Container(
@@ -27,7 +30,7 @@ class MapLocationFormField extends FormField<LatLng> {
                       final LatLng result = await Navigator.push(
                         buildContext,
                         MaterialPageRoute(builder: (context) {
-                          return LocationPicker(sanFranciso: _sanFranciso);
+                          return LocationPicker(centerOfScreen: centerCamPos);
                         }),
                       );
                       CameraUpdate updatedPosition =
@@ -40,7 +43,7 @@ class MapLocationFormField extends FormField<LatLng> {
                     child: Stack(
                       children: [
                         GoogleMap(
-                          initialCameraPosition: _sanFranciso,
+                          initialCameraPosition: centerCamPos,
                           zoomControlsEnabled: false,
                           onMapCreated: (controller) {
                             mapController = controller;
