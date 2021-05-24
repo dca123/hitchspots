@@ -20,18 +20,18 @@ class LocationCardModel extends ChangeNotifier {
     if (_locationID != locationID) {
       _reviews.clear();
       _locationName = locationData['name'];
-      _reviewCount = locationData['reviewCount'];
-      _locationRating = locationData['rating'].toDouble();
       _locationID = locationID;
       var reviewQuery = await _reviewQuery(locationId: _locationID, limit: 1);
       _recentReview = reviewQuery.docs[0].get('description');
     }
+    _locationRating = double.parse(locationData['rating'].toStringAsFixed(2));
+    _reviewCount = locationData['reviewCount'];
     print(_locationID);
     notifyListeners();
   }
 
   void getReviews() async {
-    var reviewQuery = await _reviewQuery(locationId: _locationID, limit: 5);
+    var reviewQuery = await _reviewQuery(locationId: _locationID, limit: 10);
     reviewQuery.docs.forEach((document) {
       _reviews[document.id] = document.data();
     });

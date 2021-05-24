@@ -20,18 +20,32 @@ class CreateReviewPage extends StatelessWidget {
           'description': descriptionTextController.text,
           'locationID': locationID,
           'rating': ratingController,
-          'timestamp': DateTime.now().microsecondsSinceEpoch,
+          'timestamp': DateTime.now().millisecondsSinceEpoch,
         });
 
-        FirebaseFirestore.instance
-            .collection('locations')
-            .doc(locationID)
-            .update({'reviewCount': FieldValue.increment(1)});
+        DocumentReference locationDocumentRef =
+            FirebaseFirestore.instance.collection('locations').doc(locationID);
+        FirebaseFirestore.instance.runTransaction((transaction) async {
+          DocumentSnapshot location =
+              await transaction.get(locationDocumentRef);
+          int oldReviewCount = location.get('reviewCount');
+          int newReviewCount = oldReviewCount + 1;
+
+          double oldRatingTotal = location.get('rating') * oldReviewCount;
+          double newRating =
+              (oldRatingTotal + ratingController!) / newReviewCount;
+
+          transaction.update(locationDocumentRef,
+              {'rating': newRating, 'reviewCount': newReviewCount});
+        });
+        Provider.of<LocationCardModel>(context, listen: false).clearReviews();
+        Provider.of<LocationCardModel>(context, listen: false).getReviews();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Thank you for contributing!'),
           ),
         );
+
         Future.delayed(Duration(milliseconds: 100), () {
           Navigator.pop(context);
         });
