@@ -28,7 +28,7 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
         'name': locationName.text,
         'position': newSpot.data,
         'rating': ratingController,
-        'reviewCount': 0,
+        'reviewCount': 1,
       });
 
       FirebaseFirestore.instance.collection('reviews').add({
