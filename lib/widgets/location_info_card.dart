@@ -3,18 +3,17 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:hitchspots/models/location_card.dart';
 import 'package:provider/provider.dart';
 import '../pages/create_review_page.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class LocationInfoCard extends StatelessWidget {
-  const LocationInfoCard(
-      {Key? key,
-      required this.radius,
-      required this.maximizePanel,
-      required this.locationName})
-      : super(key: key);
+  const LocationInfoCard({
+    Key? key,
+    required this.radius,
+    required this.maximizePanel,
+  }) : super(key: key);
 
   final BorderRadiusGeometry radius;
   final Function maximizePanel;
-  final String locationName;
   @override
   Widget build(BuildContext context) {
     return Column(children: [
@@ -40,7 +39,7 @@ class LocationInfoCard extends StatelessWidget {
         elevation: 2,
         child: Column(
           children: [
-            LocationInfomation(locationName: locationName),
+            LocationInfomation(),
             ButtonBar(maximizePanel: maximizePanel),
           ],
         ),
@@ -80,8 +79,12 @@ class ReviewList extends StatelessWidget {
           ),
           itemBuilder: (context, index) {
             var review = locationCard.reviews[index];
+            DateTime reviewTimestamp =
+                DateTime.fromMillisecondsSinceEpoch(review['timestamp']);
+            String fuzzyTimeStamp = timeago.format(reviewTimestamp);
             return ReviewTile(
               description: '${review['description']}',
+              fuzzyTimeAgo: '$fuzzyTimeStamp',
               rating: review['rating'].toDouble(),
             );
           },
@@ -94,12 +97,14 @@ class ReviewList extends StatelessWidget {
 class ReviewTile extends StatelessWidget {
   const ReviewTile({
     Key? key,
+    required this.fuzzyTimeAgo,
     required this.description,
     required this.rating,
   }) : super(key: key);
 
   final String description;
   final double rating;
+  final String fuzzyTimeAgo;
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +123,7 @@ class ReviewTile extends StatelessWidget {
                 rating: rating,
               ),
               Text(
-                " 5 Years Ago",
+                ' $fuzzyTimeAgo',
                 style: Theme.of(context).textTheme.caption,
               ),
             ],
@@ -188,8 +193,7 @@ class ButtonBar extends StatelessWidget {
 }
 
 class LocationInfomation extends StatelessWidget {
-  const LocationInfomation({required this.locationName});
-  final String locationName;
+  const LocationInfomation();
   @override
   Widget build(BuildContext context) {
     return Consumer<LocationCardModel>(builder: (context, locationCard, child) {
@@ -211,14 +215,18 @@ class LocationInfomation extends StatelessWidget {
                 ),
                 StarRatingsBar(rating: locationCard.locationRating),
                 Text(
-                  "(1,004)",
+                  "(${locationCard.reviewCount})",
                   style: Theme.of(context).textTheme.caption,
                 ),
               ],
             ),
-            Text(
-              "Near Irving St, San Francisco",
-              style: Theme.of(context).textTheme.caption,
+            Container(
+              margin: EdgeInsets.only(right: 24),
+              child: Text(
+                "${locationCard.recentReview}",
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.caption,
+              ),
             )
           ],
         ),

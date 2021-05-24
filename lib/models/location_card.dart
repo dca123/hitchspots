@@ -4,30 +4,34 @@ import 'package:flutter/cupertino.dart';
 class LocationCardModel extends ChangeNotifier {
   String _locationName = "I-20 Exit";
   double _locationRating = 0.0;
+  int _reviewCount = 0;
   late String _locationID = "testLocationID";
+  String _recentReview = "";
+  Map<String, dynamic> _reviews = {};
+
   String get locationID => _locationID;
   String get locationName => _locationName;
+  String get recentReview => _recentReview;
   double get locationRating => _locationRating;
-  Map<String, dynamic> _reviews = {};
+  int get reviewCount => _reviewCount;
   List get reviews => _reviews.values.toList();
 
-  void updateLocation(dynamic locationData, String locationID) {
+  void updateLocation(dynamic locationData, String locationID) async {
     if (_locationID != locationID) {
       _reviews.clear();
       _locationName = locationData['name'];
+      _reviewCount = locationData['reviewCount'];
       _locationRating = locationData['rating'].toDouble();
       _locationID = locationID;
+      var reviewQuery = await _reviewQuery(locationId: _locationID, limit: 1);
+      _recentReview = reviewQuery.docs[0].get('description');
     }
     print(_locationID);
     notifyListeners();
   }
 
   void getReviews() async {
-    var reviewQuery = await FirebaseFirestore.instance
-        .collection("reviews")
-        .limit(5)
-        .where("locationID", isEqualTo: _locationID)
-        .get();
+    var reviewQuery = await _reviewQuery(locationId: _locationID, limit: 5);
     reviewQuery.docs.forEach((document) {
       _reviews[document.id] = document.data();
     });
@@ -37,5 +41,17 @@ class LocationCardModel extends ChangeNotifier {
 
   void clearReviews() {
     _reviews.clear();
+  }
+
+  Future<QuerySnapshot<Map<String, dynamic>>> _reviewQuery({
+    required locationId,
+    required limit,
+  }) async {
+    return await FirebaseFirestore.instance
+        .collection("reviews")
+        .orderBy('timestamp', descending: true)
+        .limit(limit)
+        .where("locationID", isEqualTo: locationId)
+        .get();
   }
 }

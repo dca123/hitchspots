@@ -29,7 +29,6 @@ class HomePageState extends State<HomePage> {
   final geo = GeoFlutterFire();
 
   late GoogleMapController mapController;
-  late String locationName = "Default Location Name";
   final PanelController _panelController = PanelController();
   static final CameraPosition _sanFranciso = CameraPosition(
     target: LatLng(37.7749, -122.4194),
@@ -142,7 +141,6 @@ class HomePageState extends State<HomePage> {
         panel: LocationInfoCard(
           radius: radius,
           maximizePanel: maximizePanel,
-          locationName: locationName,
         ),
         onPanelOpened: () => {
           Provider.of<LocationCardModel>(context, listen: false).getReviews()
@@ -150,6 +148,7 @@ class HomePageState extends State<HomePage> {
         body: GoogleMap(
           initialCameraPosition: _sanFranciso,
           onMapCreated: _onMapCreated,
+          myLocationButtonEnabled: false,
           zoomControlsEnabled: false,
           markers: _markers.values.toSet(),
           onCameraIdle: () => _getNearbySpots(screenCoordinate),

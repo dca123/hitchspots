@@ -20,7 +20,13 @@ class CreateReviewPage extends StatelessWidget {
           'description': descriptionTextController.text,
           'locationID': locationID,
           'rating': ratingController,
+          'timestamp': DateTime.now().microsecondsSinceEpoch,
         });
+
+        FirebaseFirestore.instance
+            .collection('locations')
+            .doc(locationID)
+            .update({'reviewCount': FieldValue.increment(1)});
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Thank you for contributing!'),

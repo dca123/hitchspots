@@ -23,21 +23,19 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
     if (_formKey.currentState!.validate()) {
       GeoFirePoint newSpot =
           geo.point(latitude: position.latitude, longitude: position.longitude);
-      print(locationName.text);
-      print(locationExperience.text);
-      print(ratingController);
-      print(position);
       final locationID =
           await FirebaseFirestore.instance.collection('locations').add({
         'name': locationName.text,
         'position': newSpot.data,
         'rating': ratingController,
+        'reviewCount': 0,
       });
 
       FirebaseFirestore.instance.collection('reviews').add({
         'description': locationExperience.text,
         'locationID': locationID.id,
         'rating': ratingController,
+        'timestamp': DateTime.now().microsecondsSinceEpoch,
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
