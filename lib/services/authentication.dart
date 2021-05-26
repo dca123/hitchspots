@@ -93,7 +93,8 @@ class AuthenticationState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void createProfile() {
+  void createProfile(String displayName) {
+    _displayName = displayName;
     _loginState = LoginState.loggedIn;
   }
 

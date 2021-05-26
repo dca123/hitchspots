@@ -49,7 +49,7 @@ class _SetupProfilePageState extends State<SetupProfilePage> {
                       .doc(userUid)
                       .set({'uid': userUid, 'displayName': _displayName.text});
                   Provider.of<AuthenticationState>(context, listen: false)
-                      .createProfile();
+                      .createProfile(_displayName.text);
                   Navigator.pop(context);
                 }
               },
