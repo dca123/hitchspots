@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geoflutterfire2/geoflutterfire2.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:hitchspots/services/authentication.dart';
+import 'package:provider/provider.dart';
 import '../widgets/form_fields/rating_bar.dart';
 import '../widgets/form_fields/location_picker.dart';
-// import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CreateLocationPage extends StatefulWidget {
   final LatLng _centerLatLng;
@@ -37,13 +39,17 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
         'position': newSpot.data,
         'rating': ratingController,
         'reviewCount': 1,
+        'createdBy': FirebaseAuth.instance.currentUser!.uid,
       });
 
+      final String displayName =
+          Provider.of<AuthenticationState>(context, listen: false).displayName!;
       FirebaseFirestore.instance.collection('reviews').add({
         'description': locationExperience.text,
         'locationID': locationID.id,
         'rating': ratingController,
         'timestamp': DateTime.now().millisecondsSinceEpoch,
+        'username': displayName,
       });
 
       ScaffoldMessenger.of(context).showSnackBar(

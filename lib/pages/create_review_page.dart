@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hitchspots/services/authentication.dart';
 import '../widgets/form_fields/rating_bar.dart';
 import 'package:hitchspots/widgets/form_fields/rating_bar.dart';
 import '../models/location_card.dart';
@@ -16,11 +17,15 @@ class CreateReviewPage extends StatelessWidget {
   Widget build(BuildContext context) {
     void addLocation(String locationID) {
       if (_formKey.currentState!.validate()) {
+        final String displayName =
+            Provider.of<AuthenticationState>(context, listen: false)
+                .displayName!;
         FirebaseFirestore.instance.collection('reviews').add({
           'description': descriptionTextController.text,
           'locationID': locationID,
           'rating': ratingController,
           'timestamp': DateTime.now().millisecondsSinceEpoch,
+          'createdByDisplayName': displayName,
         });
 
         DocumentReference locationDocumentRef =
