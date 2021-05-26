@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:hitchspots/models/location_card.dart';
+import 'package:hitchspots/services/authentication.dart';
 import 'package:provider/provider.dart';
 import '../pages/create_review_page.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -86,6 +87,7 @@ class ReviewList extends StatelessWidget {
               description: '${review['description']}',
               fuzzyTimeAgo: '$fuzzyTimeStamp',
               rating: review['rating'].toDouble(),
+              displayName: '${review['createdByDisplayName']}',
             );
           },
         ),
@@ -100,11 +102,13 @@ class ReviewTile extends StatelessWidget {
     required this.fuzzyTimeAgo,
     required this.description,
     required this.rating,
+    required this.displayName,
   }) : super(key: key);
 
   final String description;
   final double rating;
   final String fuzzyTimeAgo;
+  final String displayName;
 
   @override
   Widget build(BuildContext context) {
@@ -114,7 +118,7 @@ class ReviewTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Dev Dog",
+            "$displayName",
             style: Theme.of(context).textTheme.subtitle1,
           ),
           Row(
@@ -153,12 +157,22 @@ class ButtonBar extends StatelessWidget {
         children: [
           SizedBox(width: 24.0),
           ElevatedButton(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) {
-                return CreateReviewPage();
-              }),
-            ),
+            onPressed: () async {
+              print(Provider.of<AuthenticationState>(context, listen: false)
+                  .loginState);
+              Provider.of<AuthenticationState>(context, listen: false)
+                  .loginFlowWithAction(
+                buildContext: context,
+                postLogin: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return CreateReviewPage();
+                    },
+                  ),
+                ),
+              );
+            },
             child: Row(
               children: [
                 Icon(Icons.add),

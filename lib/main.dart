@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:hitchspots/models/location_card.dart';
+import 'package:hitchspots/services/authentication.dart';
 import 'package:provider/provider.dart';
 import 'pages/home_page.dart';
 
 void main() => runApp(
-      ChangeNotifierProvider(
-        create: (context) => LocationCardModel(),
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(
+            create: (context) => LocationCardModel(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => AuthenticationState(),
+          ),
+        ],
         child: HitchSpotApp(),
       ),
     );

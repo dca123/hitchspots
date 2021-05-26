@@ -3,14 +3,13 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-// ignore: import_of_legacy_library_into_null_safe
 import 'package:geoflutterfire2/geoflutterfire2.dart';
-// ignore: import_of_legacy_library_into_null_safe
-import 'package:firebase_core/firebase_core.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hitchspots/models/location_card.dart';
+import 'package:hitchspots/services/authentication.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'create_location_page.dart';
 import '../widgets/location_info_card.dart';
@@ -149,14 +148,21 @@ class HomePageState extends State<HomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          final LatLng middlePoint =
-              await mapController.getLatLng(screenCoordinate);
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) {
-              return CreateLocationPage(centerLatLng: middlePoint);
-            }),
-          );
+          print(Provider.of<AuthenticationState>(context, listen: false)
+              .loginState);
+          Provider.of<AuthenticationState>(context, listen: false)
+              .loginFlowWithAction(
+                  buildContext: context,
+                  postLogin: () async {
+                    final LatLng middlePoint =
+                        await mapController.getLatLng(screenCoordinate);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) {
+                        return CreateLocationPage(centerLatLng: middlePoint);
+                      }),
+                    );
+                  });
         },
         child: const Icon(Icons.add),
       ),
