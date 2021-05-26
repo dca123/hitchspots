@@ -86,6 +86,7 @@ class ReviewList extends StatelessWidget {
               description: '${review['description']}',
               fuzzyTimeAgo: '$fuzzyTimeStamp',
               rating: review['rating'].toDouble(),
+              displayName: '${review['createdByDisplayName']}',
             );
           },
         ),
@@ -100,11 +101,13 @@ class ReviewTile extends StatelessWidget {
     required this.fuzzyTimeAgo,
     required this.description,
     required this.rating,
+    required this.displayName,
   }) : super(key: key);
 
   final String description;
   final double rating;
   final String fuzzyTimeAgo;
+  final String displayName;
 
   @override
   Widget build(BuildContext context) {
@@ -114,7 +117,7 @@ class ReviewTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Dev Dog",
+            "$displayName",
             style: Theme.of(context).textTheme.subtitle1,
           ),
           Row(
