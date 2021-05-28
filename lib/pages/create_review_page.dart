@@ -36,7 +36,8 @@ class CreateReviewPage extends StatelessWidget {
           int oldReviewCount = location.get('reviewCount');
           int newReviewCount = oldReviewCount + 1;
 
-          double oldRatingTotal = location.get('rating') * oldReviewCount;
+          double oldRatingTotal =
+              location.get('rating').toDouble() * oldReviewCount;
           double newRating =
               (oldRatingTotal + ratingController!) / newReviewCount;
 

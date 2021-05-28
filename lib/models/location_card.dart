@@ -8,7 +8,7 @@ class LocationCardModel extends ChangeNotifier {
   int _reviewCount = 0;
   late String _locationID = "testLocationID";
   String _recentReview = "";
-  LatLng? _coordinates;
+  LatLng _coordinates = LatLng(0, 0);
   Map<String, dynamic> _reviews = {};
 
   String get locationID => _locationID;
@@ -16,7 +16,7 @@ class LocationCardModel extends ChangeNotifier {
   String get recentReview => _recentReview;
   double get locationRating => _locationRating;
   int get reviewCount => _reviewCount;
-  LatLng get coordinates => _coordinates!;
+  LatLng get coordinates => _coordinates;
   List get reviews => _reviews.values.toList();
 
   void updateLocation(dynamic locationData, String locationID) async {
@@ -27,11 +27,12 @@ class LocationCardModel extends ChangeNotifier {
       final GeoPoint position = locationData['position']['geopoint'];
       _coordinates = LatLng(position.latitude, position.longitude);
       var reviewQuery = await _reviewQuery(locationId: _locationID, limit: 1);
-      _recentReview = reviewQuery.docs[0].get('description');
+      _recentReview = reviewQuery.docs.length > 0
+          ? reviewQuery.docs[0].get('description')
+          : "";
     }
     _locationRating = double.parse(locationData['rating'].toStringAsFixed(2));
     _reviewCount = locationData['reviewCount'];
-
     notifyListeners();
   }
 
