@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class LocationCardModel extends ChangeNotifier {
   String _locationName = "I-20 Exit";
@@ -7,6 +8,7 @@ class LocationCardModel extends ChangeNotifier {
   int _reviewCount = 0;
   late String _locationID = "testLocationID";
   String _recentReview = "";
+  LatLng? _coordinates;
   Map<String, dynamic> _reviews = {};
 
   String get locationID => _locationID;
@@ -14,6 +16,7 @@ class LocationCardModel extends ChangeNotifier {
   String get recentReview => _recentReview;
   double get locationRating => _locationRating;
   int get reviewCount => _reviewCount;
+  LatLng get coordinates => _coordinates!;
   List get reviews => _reviews.values.toList();
 
   void updateLocation(dynamic locationData, String locationID) async {
@@ -21,11 +24,14 @@ class LocationCardModel extends ChangeNotifier {
       _reviews.clear();
       _locationName = locationData['name'];
       _locationID = locationID;
+      final GeoPoint position = locationData['position']['geopoint'];
+      _coordinates = LatLng(position.latitude, position.longitude);
       var reviewQuery = await _reviewQuery(locationId: _locationID, limit: 1);
       _recentReview = reviewQuery.docs[0].get('description');
     }
     _locationRating = double.parse(locationData['rating'].toStringAsFixed(2));
     _reviewCount = locationData['reviewCount'];
+
     notifyListeners();
   }
 

@@ -1,4 +1,4 @@
-import 'package:animations/animations.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:hitchspots/models/location_card.dart';
@@ -27,7 +27,6 @@ class LocationInfoCard extends AnimatedWidget {
       topLeft: Radius.circular(_borderRadius.evaluate(animation)),
       topRight: Radius.circular(_borderRadius.evaluate(animation)),
     );
-
     return Column(children: [
       Container(
         clipBehavior: Clip.hardEdge,
@@ -38,11 +37,18 @@ class LocationInfoCard extends AnimatedWidget {
         child: ListView(
           scrollDirection: Axis.horizontal,
           children: [
-            ReviewImage(imageName: "image1"),
-            ReviewImage(imageName: "image2"),
-            ReviewImage(imageName: "image3"),
-            ReviewImage(imageName: "image4"),
-            ReviewImage(imageName: "image5"),
+            ReviewImage(
+              imageName: "image1",
+              heading: 0,
+            ),
+            ReviewImage(
+              imageName: "image1",
+              heading: 120,
+            ),
+            ReviewImage(
+              imageName: "image1",
+              heading: 240,
+            ),
           ],
         ),
       ),
@@ -65,15 +71,25 @@ class LocationInfoCard extends AnimatedWidget {
 }
 
 class ReviewImage extends StatelessWidget {
-  const ReviewImage({Key? key, required this.imageName}) : super(key: key);
+  const ReviewImage({Key? key, required this.imageName, required this.heading})
+      : super(key: key);
   final String imageName;
+  final int heading;
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
-      "assets/locations/$imageName.jpg",
-      width: 144,
-      fit: BoxFit.cover,
-    );
+    return Consumer<LocationCardModel>(builder: (context, locationCard, child) {
+      return Image.network(
+        "https://maps.googleapis.com/maps/api/streetview?location=${locationCard.coordinates.latitude},${locationCard.coordinates.longitude}&fov=120&heading=${heading}&size=456x456&key=${env['MAPS_API_KEY']}",
+        width: MediaQuery.of(context).size.width / 2,
+        fit: BoxFit.cover,
+      );
+    });
+
+    // return Image.asset(
+    //   "assets/locations/$imageName.jpg",
+    //   width: 144,
+    //   fit: BoxFit.cover,
+    // );
   }
 }
 
@@ -160,6 +176,7 @@ class ReviewTile extends StatelessWidget {
 class ButtonBar extends AnimatedWidget {
   ButtonBar({Key? key, required this.maximizePanel, required animation})
       : super(key: key, listenable: animation);
+  static final _opacity = Tween<double>(begin: 1, end: 0);
   final Function maximizePanel;
   @override
   Widget build(BuildContext context) {
@@ -199,13 +216,16 @@ class ButtonBar extends AnimatedWidget {
           ),
           SizedBox(width: 16.0),
           if (!animation.isCompleted)
-            OutlinedButton(
-              onPressed: () => maximizePanel(),
-              child: Row(
-                children: [
-                  Icon(Icons.comment),
-                  Text(" Comments"),
-                ],
+            Opacity(
+              opacity: _opacity.evaluate(animation),
+              child: OutlinedButton(
+                onPressed: () => maximizePanel(),
+                child: Row(
+                  children: [
+                    Icon(Icons.comment),
+                    Text(" Comments"),
+                  ],
+                ),
               ),
             ),
           // SizedBox(width: 16.0),
