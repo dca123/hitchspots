@@ -8,12 +8,14 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  animations: ^2.0.0
   cloud_firestore: ^2.0.0
   cupertino_icons: ^1.0.2
   firebase_auth: ^1.2.0
+  flutter_dotenv: 4.0.0-nullsafety.1
   flutter_rating_bar: ^4.0.0
   geoflutterfire2: ^2.3.5
-  google_maps_flutter: ^2.0.3
+  google_maps_flutter: ^2.0.6
   google_sign_in: ^5.0.4
   provider: ^5.0.0
   sliding_up_panel: ^2.0.0+1
@@ -22,9 +24,18 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.9.0
 
 flutter:
   uses-material-design: true
   assets:
     - assets/icons/
     - assets/locations/
+    - .env
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/launcher.png"
+  adaptive_icon_background: "#06D6A0"
+  adaptive_icon_foreground: "assets/adaptive_foreground.png"
