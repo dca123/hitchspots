@@ -164,6 +164,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
               onMapCreated: _onMapCreated,
               myLocationButtonEnabled: false,
               zoomControlsEnabled: false,
+              mapToolbarEnabled: false,
               markers: _markers.values.toSet(),
               onCameraIdle: () => _getNearbySpots(screenCoordinate),
             ),

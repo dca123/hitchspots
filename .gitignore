@@ -7,8 +7,8 @@
 .atom/
 .buildlog/
 .history
+.env
 .svn/
-
 # IntelliJ related
 *.iml
 *.ipr
