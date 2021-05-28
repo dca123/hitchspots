@@ -1,3 +1,4 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:hitchspots/models/location_card.dart';
@@ -6,24 +7,34 @@ import 'package:provider/provider.dart';
 import '../pages/create_review_page.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
-class LocationInfoCard extends StatelessWidget {
+class LocationInfoCard extends AnimatedWidget {
   const LocationInfoCard({
     Key? key,
     required this.radius,
     required this.maximizePanel,
-  }) : super(key: key);
+    required Animation<double> animation,
+  }) : super(key: key, listenable: animation);
 
   final BorderRadiusGeometry radius;
   final Function maximizePanel;
+  static final _sizeTween = Tween<double>(begin: 100, end: 200);
+  static final _borderRadius = Tween<double>(begin: 24, end: 0);
+
   @override
   Widget build(BuildContext context) {
+    final animation = listenable as Animation<double>;
+    final BorderRadiusGeometry radius = BorderRadius.only(
+      topLeft: Radius.circular(_borderRadius.evaluate(animation)),
+      topRight: Radius.circular(_borderRadius.evaluate(animation)),
+    );
+
     return Column(children: [
       Container(
         clipBehavior: Clip.hardEdge,
         decoration: BoxDecoration(
           borderRadius: radius,
         ),
-        height: 103.0,
+        height: _sizeTween.evaluate(animation),
         child: ListView(
           scrollDirection: Axis.horizontal,
           children: [
@@ -41,7 +52,10 @@ class LocationInfoCard extends StatelessWidget {
         child: Column(
           children: [
             LocationInfomation(),
-            ButtonBar(maximizePanel: maximizePanel),
+            ButtonBar(
+              maximizePanel: maximizePanel,
+              animation: animation,
+            ),
           ],
         ),
       ),
@@ -143,11 +157,14 @@ class ReviewTile extends StatelessWidget {
   }
 }
 
-class ButtonBar extends StatelessWidget {
-  const ButtonBar({required this.maximizePanel});
+class ButtonBar extends AnimatedWidget {
+  ButtonBar({Key? key, required this.maximizePanel, required animation})
+      : super(key: key, listenable: animation);
   final Function maximizePanel;
   @override
   Widget build(BuildContext context) {
+    final animation = listenable as Animation<double>;
+
     return Container(
       height: 44,
       margin: EdgeInsets.only(bottom: 16),
@@ -181,25 +198,26 @@ class ButtonBar extends StatelessWidget {
             ),
           ),
           SizedBox(width: 16.0),
-          OutlinedButton(
-            onPressed: () => maximizePanel(),
-            child: Row(
-              children: [
-                Icon(Icons.comment),
-                Text(" Comments"),
-              ],
+          if (!animation.isCompleted)
+            OutlinedButton(
+              onPressed: () => maximizePanel(),
+              child: Row(
+                children: [
+                  Icon(Icons.comment),
+                  Text(" Comments"),
+                ],
+              ),
             ),
-          ),
-          SizedBox(width: 16.0),
-          OutlinedButton(
-            onPressed: () => {},
-            child: Row(
-              children: [
-                Icon(Icons.navigation),
-                Text("Open in Google Maps"),
-              ],
-            ),
-          ),
+          // SizedBox(width: 16.0),
+          // OutlinedButton(
+          //   onPressed: () => {},
+          //   child: Row(
+          //     children: [
+          //       Icon(Icons.navigation),
+          //       Text("Open in Google Maps"),
+          //     ],
+          //   ),
+          // ),
         ],
       ),
     );

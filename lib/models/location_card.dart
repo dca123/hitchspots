@@ -26,7 +26,6 @@ class LocationCardModel extends ChangeNotifier {
     }
     _locationRating = double.parse(locationData['rating'].toStringAsFixed(2));
     _reviewCount = locationData['reviewCount'];
-    print(_locationID);
     notifyListeners();
   }
 
@@ -35,7 +34,6 @@ class LocationCardModel extends ChangeNotifier {
     reviewQuery.docs.forEach((document) {
       _reviews[document.id] = document.data();
     });
-    print(reviews);
     notifyListeners();
   }
 
