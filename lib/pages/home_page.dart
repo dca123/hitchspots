@@ -5,6 +5,8 @@ import 'package:geoflutterfire2/geoflutterfire2.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hitchspots/models/location_card.dart';
 import 'package:hitchspots/services/authentication.dart';
+import 'package:location/location.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -140,14 +142,23 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _getNearbySpots(screenCoordinate);
   }
 
-  late AnimationController _snapPointAnimationController;
-  late AnimationController _completeAnimationController;
-  late Animation<double> _fabBotAnimation;
-  late Animation<double> _cardAnimation;
-  final BorderRadiusGeometry radius = BorderRadius.only(
-    topLeft: Radius.circular(24.0),
-    topRight: Radius.circular(24.0),
-  );
+  void getLocation() async {
+    if (await Permission.location.request().isGranted) {
+      setState(() {
+        _isLocationGranted = true;
+      });
+      LocationData locationData = await _location.getLocation();
+      mapController!.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: LatLng(locationData.latitude!, locationData.longitude!),
+            zoom: 11,
+          ),
+        ),
+      );
+      // Either the permission was already granted before or the user just granted it.
+    }
+  }
 
   @override
   void initState() {
@@ -167,7 +178,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final ScreenCoordinate screenCoordinate =
         getCenterOfScreenCoordinater(context);
-
     return new Scaffold(
       body: SlidingUpPanel(
         controller: _panelController,
@@ -192,6 +202,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
             GoogleMap(
               initialCameraPosition: _sanFranciso,
               onMapCreated: _onMapCreated,
+              myLocationEnabled: _isLocationGranted,
               myLocationButtonEnabled: false,
               zoomControlsEnabled: false,
               mapToolbarEnabled: false,
@@ -203,6 +214,15 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
               screenCoordinate: screenCoordinate,
               animation: _fabBotAnimation,
             ),
+            Positioned(
+              bottom: 84,
+              right: 16,
+              child: FloatingActionButton(
+                elevation: 1,
+                child: const Icon(Icons.gps_fixed),
+                onPressed: () => getLocation(),
+              ),
+            )
           ],
         ),
       ),

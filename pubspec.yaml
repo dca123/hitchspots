@@ -17,6 +17,8 @@ dependencies:
   geoflutterfire2: ^2.3.5
   google_maps_flutter: ^2.0.6
   google_sign_in: ^5.0.4
+  location: ^4.1.1
+  permission_handler: ^8.0.1
   provider: ^5.0.0
   sliding_up_panel: ^2.0.0+1
   timeago: ^3.0.2
