@@ -84,21 +84,21 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _getNearbySpots(ScreenCoordinate screenCoordinate) async {
-    // LatLngBounds bounds = await mapController!.getVisibleRegion();
-    // LatLng ne = bounds.northeast;
-    // double r = 3963.0;
+    LatLngBounds bounds = await mapController!.getVisibleRegion();
+    LatLng ne = bounds.northeast;
+    double r = 3963.0;
     LatLng middlePoint = await mapController!.getLatLng(screenCoordinate);
-    // var lat1 = middlePoint.latitude / 57.2958;
-    // var lon1 = middlePoint.longitude / 57.2958;
-    // var lat2 = ne.latitude / 57.2958;
-    // var lon2 = ne.longitude / 57.2958;
+    var lat1 = middlePoint.latitude / 57.2958;
+    var lon1 = middlePoint.longitude / 57.2958;
+    var lat2 = ne.latitude / 57.2958;
+    var lon2 = ne.longitude / 57.2958;
 
     GeoFirePoint center = geo.point(
         latitude: middlePoint.latitude, longitude: middlePoint.longitude);
     double? zoom = await mapController!.getZoomLevel();
-    // var dis = r *
-    //     acos(sin(lat1) * sin(lat2) + cos(lat1) * cos(lat2) * cos(lon2 - lon1));
-    double radius = ((40000 / pow(2, zoom.floor())) * 2);
+    var radius = r *
+        acos(sin(lat1) * sin(lat2) + cos(lat1) * cos(lat2) * cos(lon2 - lon1));
+    // double radius = ((40000 / pow(2, zoom.floor())) * 2);
     print("zoom: $zoom");
     // print("dis: $dis");
     // int limit = 1;
@@ -144,6 +144,12 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   void getLocation() async {
     if (await Permission.location.request().isGranted) {
+      moveCameraToUserLocation();
+    }
+  }
+
+  void moveCameraToUserLocation() async {
+    if (await Permission.location.isGranted) {
       setState(() {
         _isLocationGranted = true;
       });
@@ -156,7 +162,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ),
         ),
       );
-      // Either the permission was already granted before or the user just granted it.
     }
   }
 
@@ -172,6 +177,8 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         AnimationController(vsync: this, lowerBound: 0, upperBound: 1);
     _cardAnimation = CurvedAnimation(
         parent: _completeAnimationController, curve: Curves.easeIn);
+
+    moveCameraToUserLocation();
   }
 
   @override
