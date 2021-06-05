@@ -29,12 +29,25 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   final PanelController _panelController = PanelController();
   static final CameraPosition _sanFranciso = CameraPosition(
     target: LatLng(37.7749, -122.4194),
-    zoom: 12,
+    zoom: 2,
+  );
+  Location _location = Location();
+  bool _isLocationGranted = false;
+
+  late AnimationController _snapPointAnimationController;
+  late AnimationController _completeAnimationController;
+  late Animation<double> _fabBotAnimation;
+  late Animation<double> _cardAnimation;
+
+  final BorderRadiusGeometry radius = BorderRadius.only(
+    topLeft: Radius.circular(24.0),
+    topRight: Radius.circular(24.0),
   );
 
   HomePageState() {
     init();
   }
+
   Future<void> init() async {
     await Firebase.initializeApp();
   }
@@ -61,6 +74,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         onTap: () {
           Provider.of<LocationCardModel>(context, listen: false)
               .updateLocation(locationDocument.data(), locationDocument.id);
+
           _panelController.animatePanelToPosition(0.35);
         },
       );
@@ -68,26 +82,41 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _getNearbySpots(ScreenCoordinate screenCoordinate) async {
+    // LatLngBounds bounds = await mapController!.getVisibleRegion();
+    // LatLng ne = bounds.northeast;
+    // double r = 3963.0;
     LatLng middlePoint = await mapController!.getLatLng(screenCoordinate);
+    // var lat1 = middlePoint.latitude / 57.2958;
+    // var lon1 = middlePoint.longitude / 57.2958;
+    // var lat2 = ne.latitude / 57.2958;
+    // var lon2 = ne.longitude / 57.2958;
+
     GeoFirePoint center = geo.point(
         latitude: middlePoint.latitude, longitude: middlePoint.longitude);
     double? zoom = await mapController!.getZoomLevel();
+    // var dis = r *
+    //     acos(sin(lat1) * sin(lat2) + cos(lat1) * cos(lat2) * cos(lon2 - lon1));
     double radius = ((40000 / pow(2, zoom.floor())) * 2);
-
+    print("zoom: $zoom");
+    // print("dis: $dis");
+    // int limit = 1;
+    if (zoom < 5) return;
+    int limit = zoom >= 4 ? 9 : 2;
     final _firestore = FirebaseFirestore.instance;
-    var locationsCollection = _firestore.collection('locations');
+    var locationsCollection = _firestore.collection('locations').limit(limit);
 
     Stream<List<DocumentSnapshot>> stream =
         geo.collection(collectionRef: locationsCollection).within(
               center: center,
               radius: radius,
               field: 'position',
-              strictMode: true,
+              strictMode: false,
             );
 
     final Map<String, Marker> tempMarkers = {};
 
     stream.listen((locationList) {
+      print("length ${locationList.length}");
       _createMarkers(locationList, tempMarkers);
       setState(() {
         _markers.addAll(tempMarkers);
@@ -97,6 +126,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   Future<void> _onMapCreated(GoogleMapController mapController) async {
     this.mapController = mapController;
+
     goodIcon = await BitmapDescriptor.fromAssetImage(
         createLocalImageConfiguration(context), 'assets/icons/Good.png');
     warningIcon = await BitmapDescriptor.fromAssetImage(
