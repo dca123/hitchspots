@@ -79,7 +79,8 @@ class ReviewImage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<LocationCardModel>(builder: (context, locationCard, child) {
       return Image.network(
-        "https://maps.googleapis.com/maps/api/streetview?location=${locationCard.coordinates.latitude},${locationCard.coordinates.longitude}&fov=120&heading=${heading}&size=456x456&key=${env['MAPS_API_KEY']}",
+        """https://maps.googleapis.com/maps/api/streetview?location=${locationCard.coordinates.latitude},${locationCard.coordinates.longitude}
+        &fov=120&heading=$heading&size=456x456&key=${env['MAPS_API_KEY']}""",
         width: MediaQuery.of(context).size.width / 2,
         fit: BoxFit.cover,
       );
@@ -104,19 +105,24 @@ class ReviewList extends StatelessWidget {
       return Expanded(
         child: ListView.separated(
           itemCount: locationCard.reviews.length,
-          separatorBuilder: (BuildContext context, int index) => const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
-            child: Divider(),
+          padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+          separatorBuilder: (BuildContext context, int index) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: const Divider(),
           ),
           itemBuilder: (context, index) {
             var review = locationCard.reviews[index];
-            DateTime reviewTimestamp =
-                DateTime.fromMillisecondsSinceEpoch(review['timestamp']);
-            String fuzzyTimeStamp = timeago.format(reviewTimestamp);
+            int? reviewTimestamp = review['timestamp'];
+            String fuzzyTimeStamp = "Some time ago";
+            if (reviewTimestamp != null) {
+              DateTime dateTimeSinceEpoch =
+                  DateTime.fromMillisecondsSinceEpoch(reviewTimestamp);
+              fuzzyTimeStamp = timeago.format(dateTimeSinceEpoch);
+            }
             return ReviewTile(
               description: '${review['description']}',
               fuzzyTimeAgo: '$fuzzyTimeStamp',
-              rating: review['rating'].toDouble(),
+              rating: (review['rating'] ?? 0).toDouble(),
               displayName: '${review['createdByDisplayName']}',
             );
           },
@@ -143,7 +149,6 @@ class ReviewTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -151,21 +156,27 @@ class ReviewTile extends StatelessWidget {
             "$displayName",
             style: Theme.of(context).textTheme.subtitle1,
           ),
-          Row(
-            children: [
-              StarRatingsBar(
-                rating: rating,
-              ),
-              Text(
-                ' $fuzzyTimeAgo',
-                style: Theme.of(context).textTheme.caption,
-              ),
-            ],
+          Padding(
+            padding: const EdgeInsets.only(top: 1.0),
+            child: Row(
+              children: [
+                StarRatingsBar(
+                  rating: rating,
+                ),
+                Text(
+                  ' $fuzzyTimeAgo',
+                  style: Theme.of(context).textTheme.caption,
+                ),
+              ],
+            ),
           ),
-          Text(
-            '$description',
-            style: Theme.of(context).textTheme.bodyText2,
-            softWrap: true,
+          Padding(
+            padding: const EdgeInsets.only(top: 4.0),
+            child: Text(
+              '$description',
+              style: Theme.of(context).textTheme.bodyText2,
+              softWrap: true,
+            ),
           )
         ],
       ),
@@ -254,9 +265,13 @@ class LocationInfomation extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              "${locationCard.locationName}",
-              style: Theme.of(context).textTheme.headline6,
+            Container(
+              margin: const EdgeInsets.only(right: 16.0),
+              child: Text(
+                "${locationCard.locationName}",
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.headline6,
+              ),
             ),
             SizedBox(height: 4),
             Row(
@@ -273,7 +288,7 @@ class LocationInfomation extends StatelessWidget {
               ],
             ),
             Container(
-              margin: EdgeInsets.only(right: 24),
+              margin: EdgeInsets.only(right: 24, bottom: 5),
               child: Text(
                 "${locationCard.recentReview}",
                 overflow: TextOverflow.ellipsis,
@@ -294,12 +309,15 @@ class StarRatingsBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return RatingBarIndicator(
       rating: rating,
-      itemBuilder: (context, index) => Icon(
-        Icons.star,
-        color: Colors.yellow[700],
-      ),
+      itemBuilder: (context, index) {
+        return Icon(
+          index < rating ? Icons.star : Icons.star_outline,
+          color: Colors.yellow[700],
+        );
+      },
       itemCount: 5,
       itemSize: 13,
+      unratedColor: Colors.yellow[700],
     );
   }
 }
