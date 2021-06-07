@@ -204,16 +204,10 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
             AddLocationFAB(
               mapController: mapController,
               screenCoordinate: screenCoordinate,
-              controller: _slidingPanelAnimationController,
             ),
-            Positioned(
-              bottom: 84,
-              right: 16,
-              child: FloatingActionButton(
-                elevation: 1,
-                child: const Icon(Icons.gps_fixed),
-                onPressed: () => getLocation(),
-              ),
+            MyLocationFabAnimator(
+              getLocation: getLocation,
+              animationController: _slidingPanelAnimationController,
             )
           ],
         ),
@@ -228,54 +222,90 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 }
 
+class MyLocationFabAnimator extends StatelessWidget {
+  MyLocationFabAnimator({
+    Key? key,
+    required this.getLocation,
+    required this.animationController,
+  })  : bottom = Tween<double>(begin: 84.0, end: 265.0).animate(
+          CurvedAnimation(
+            parent: animationController,
+            curve: Interval(0.1, 0.35, curve: Curves.linear),
+          ),
+        ),
+        super(key: key);
+
+  final AnimationController animationController;
+  final Animation<double> bottom;
+  final Function getLocation;
+  Widget _buildAnimation(BuildContext context, Widget? child) {
+    return Positioned(
+      bottom: bottom.value,
+      right: 16,
+      child: MyLocationFAB(getLocation: getLocation),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+        animation: animationController, builder: _buildAnimation);
+  }
+}
+
+class MyLocationFAB extends StatelessWidget {
+  const MyLocationFAB({
+    Key? key,
+    required this.getLocation,
+  }) : super(key: key);
+
+  final Function getLocation;
+
+  @override
+  Widget build(BuildContext context) {
+    return FloatingActionButton(
+      elevation: 1,
+      child: const Icon(Icons.gps_fixed),
+      onPressed: () => getLocation(),
+    );
+  }
+}
+
 class AddLocationFAB extends StatelessWidget {
   AddLocationFAB({
     Key? key,
     required this.mapController,
     required this.screenCoordinate,
-    required this.controller,
-  })  : bottom = Tween<double>(begin: 16.0, end: 265.0).animate(
-          CurvedAnimation(
-            parent: controller,
-            curve: Interval(0.0, 0.35, curve: Curves.linear),
-          ),
-        ),
-        super(key: key);
+  }) : super(key: key);
 
   final GoogleMapController? mapController;
   final ScreenCoordinate screenCoordinate;
-  final AnimationController controller;
-  final Animation<double> bottom;
-
-  Widget _fab(BuildContext context) {
-    return FloatingActionButton(
-      elevation: 1,
-      onPressed: () async {
-        Provider.of<AuthenticationState>(context, listen: false)
-            .loginFlowWithAction(
-                buildContext: context,
-                postLogin: () async {
-                  final LatLng middlePoint =
-                      await mapController!.getLatLng(screenCoordinate);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) {
-                      return CreateLocationPage(centerLatLng: middlePoint);
-                    }),
-                  );
-                });
-      },
-      child: const Icon(Icons.add),
-    );
-  }
-
-  Widget _buildAnimation(BuildContext context, Widget? child) {
-    return Positioned(bottom: bottom.value, right: 16, child: _fab(context));
-  }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(animation: controller, builder: _buildAnimation);
+    return Positioned(
+      bottom: 16,
+      right: 16,
+      child: FloatingActionButton(
+        elevation: 1,
+        onPressed: () async {
+          Provider.of<AuthenticationState>(context, listen: false)
+              .loginFlowWithAction(
+                  buildContext: context,
+                  postLogin: () async {
+                    final LatLng middlePoint =
+                        await mapController!.getLatLng(screenCoordinate);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) {
+                        return CreateLocationPage(centerLatLng: middlePoint);
+                      }),
+                    );
+                  });
+        },
+        child: const Icon(Icons.add),
+      ),
+    );
   }
 }
 
