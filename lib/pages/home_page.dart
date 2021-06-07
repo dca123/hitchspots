@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:geoflutterfire2/geoflutterfire2.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hitchspots/models/location_card.dart';
-import 'package:hitchspots/services/authentication.dart';
+import 'package:hitchspots/widgets/fabs/add_location_fab.dart';
+import 'package:hitchspots/widgets/fabs/my_location_fab.dart';
 import 'package:location/location.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-import 'create_location_page.dart';
 import '../widgets/location_info_card.dart';
 
 class HomePage extends StatefulWidget {
@@ -219,93 +219,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   void dispose() {
     _slidingPanelAnimationController.dispose();
     super.dispose();
-  }
-}
-
-class MyLocationFabAnimator extends StatelessWidget {
-  MyLocationFabAnimator({
-    Key? key,
-    required this.getLocation,
-    required this.animationController,
-  })  : bottom = Tween<double>(begin: 84.0, end: 265.0).animate(
-          CurvedAnimation(
-            parent: animationController,
-            curve: Interval(0.1, 0.35, curve: Curves.linear),
-          ),
-        ),
-        super(key: key);
-
-  final AnimationController animationController;
-  final Animation<double> bottom;
-  final Function getLocation;
-  Widget _buildAnimation(BuildContext context, Widget? child) {
-    return Positioned(
-      bottom: bottom.value,
-      right: 16,
-      child: MyLocationFAB(getLocation: getLocation),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-        animation: animationController, builder: _buildAnimation);
-  }
-}
-
-class MyLocationFAB extends StatelessWidget {
-  const MyLocationFAB({
-    Key? key,
-    required this.getLocation,
-  }) : super(key: key);
-
-  final Function getLocation;
-
-  @override
-  Widget build(BuildContext context) {
-    return FloatingActionButton(
-      elevation: 1,
-      child: const Icon(Icons.gps_fixed),
-      onPressed: () => getLocation(),
-    );
-  }
-}
-
-class AddLocationFAB extends StatelessWidget {
-  AddLocationFAB({
-    Key? key,
-    required this.mapController,
-    required this.screenCoordinate,
-  }) : super(key: key);
-
-  final GoogleMapController? mapController;
-  final ScreenCoordinate screenCoordinate;
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      bottom: 16,
-      right: 16,
-      child: FloatingActionButton(
-        elevation: 1,
-        onPressed: () async {
-          Provider.of<AuthenticationState>(context, listen: false)
-              .loginFlowWithAction(
-                  buildContext: context,
-                  postLogin: () async {
-                    final LatLng middlePoint =
-                        await mapController!.getLatLng(screenCoordinate);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) {
-                        return CreateLocationPage(centerLatLng: middlePoint);
-                      }),
-                    );
-                  });
-        },
-        child: const Icon(Icons.add),
-      ),
-    );
   }
 }
 
