@@ -7,66 +7,118 @@ import 'package:provider/provider.dart';
 import '../pages/create_review_page.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
-class LocationInfoCard extends AnimatedWidget {
-  const LocationInfoCard({
+class LocationInfoCard extends StatelessWidget {
+  LocationInfoCard({
     Key? key,
     required this.radius,
     required this.maximizePanel,
-    required Animation<double> animation,
-  }) : super(key: key, listenable: animation);
+    required this.animationController,
+  })  : imageSize = Tween<double>(begin: 100, end: 200).animate(
+          CurvedAnimation(
+            parent: animationController,
+            curve: Interval(0.35, 1.0, curve: Curves.easeIn),
+          ),
+        ),
+        borderRadius = Tween<double>(begin: 24, end: 0).animate(
+          CurvedAnimation(
+            parent: animationController,
+            curve: Interval(0.35, 1.0, curve: Curves.easeIn),
+          ),
+        ),
+        super(key: key);
 
   final BorderRadiusGeometry radius;
   final Function maximizePanel;
-  static final _sizeTween = Tween<double>(begin: 100, end: 200);
-  static final _borderRadius = Tween<double>(begin: 24, end: 0);
+  final AnimationController animationController;
+  final Animation<double> imageSize;
+  final Animation<double> borderRadius;
+
+  Widget _buildAnimation(BuildContext context, Widget? widget) {
+    final BorderRadiusGeometry radius = BorderRadius.only(
+      topLeft: Radius.circular(borderRadius.value),
+      topRight: Radius.circular(borderRadius.value),
+    );
+    return Column(children: [
+      ReviewImageRow(radius: radius, imageSize: imageSize),
+      CardDetails(
+          maximizePanel: maximizePanel,
+          animationController: animationController),
+      ReviewList()
+    ]);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final animation = listenable as Animation<double>;
-    final BorderRadiusGeometry radius = BorderRadius.only(
-      topLeft: Radius.circular(_borderRadius.evaluate(animation)),
-      topRight: Radius.circular(_borderRadius.evaluate(animation)),
+    return AnimatedBuilder(
+        animation: animationController, builder: _buildAnimation);
+  }
+}
+
+class CardDetails extends StatelessWidget {
+  const CardDetails({
+    Key? key,
+    required this.maximizePanel,
+    required this.animationController,
+  }) : super(key: key);
+
+  final Function maximizePanel;
+  final AnimationController animationController;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.all(0),
+      elevation: 2,
+      child: Column(
+        children: [
+          LocationInfomation(),
+          ButtonBar(
+            maximizePanel: maximizePanel,
+            animationController: animationController,
+          ),
+        ],
+      ),
     );
-    return Column(children: [
-      Container(
-        clipBehavior: Clip.hardEdge,
-        decoration: BoxDecoration(
-          borderRadius: radius,
-        ),
-        height: _sizeTween.evaluate(animation),
-        child: ListView(
-          scrollDirection: Axis.horizontal,
-          children: [
-            ReviewImage(
-              imageName: "image1",
-              heading: 0,
-            ),
-            ReviewImage(
-              imageName: "image1",
-              heading: 120,
-            ),
-            ReviewImage(
-              imageName: "image1",
-              heading: 240,
-            ),
-          ],
-        ),
+  }
+}
+
+class ReviewImageRow extends StatelessWidget {
+  const ReviewImageRow({
+    Key? key,
+    required this.radius,
+    required this.imageSize,
+  }) : super(key: key);
+
+  final BorderRadiusGeometry radius;
+  final Animation<double> imageSize;
+
+  @override
+  Widget build(BuildContext context) {
+    print(imageSize.value);
+    return Container(
+      clipBehavior: Clip.hardEdge,
+      decoration: BoxDecoration(
+        borderRadius: radius,
       ),
-      Card(
-        margin: EdgeInsets.all(0),
-        elevation: 2,
-        child: Column(
-          children: [
-            LocationInfomation(),
-            ButtonBar(
-              maximizePanel: maximizePanel,
-              animation: animation,
-            ),
-          ],
-        ),
+      height: imageSize.value,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          ReviewImage(
+            imageName: "image1",
+            heading: 0,
+          ),
+          ReviewImage(
+            imageName: "image1",
+            heading: 120,
+          ),
+          ReviewImage(
+            imageName: "image1",
+            heading: 240,
+          ),
+        ],
       ),
-      ReviewList()
-    ]);
+    );
   }
 }
 
@@ -184,20 +236,27 @@ class ReviewTile extends StatelessWidget {
   }
 }
 
-class ButtonBar extends AnimatedWidget {
-  ButtonBar({Key? key, required this.maximizePanel, required animation})
-      : super(key: key, listenable: animation);
-  static final _opacity = Tween<double>(begin: 1, end: 0);
+class ButtonBar extends StatelessWidget {
+  ButtonBar(
+      {Key? key,
+      required this.maximizePanel,
+      required this.animationController})
+      : opacity = Tween<double>(begin: 1, end: 0).animate(
+          CurvedAnimation(
+            parent: animationController,
+            curve: Interval(0.35, 1.0, curve: Curves.linear),
+          ),
+        ),
+        super(key: key);
+  final Animation<double> opacity;
+  final AnimationController animationController;
   final Function maximizePanel;
   @override
   Widget build(BuildContext context) {
-    final animation = listenable as Animation<double>;
-
     return Container(
-      height: 44,
-      margin: EdgeInsets.only(bottom: 16),
+      height: 40,
+      margin: EdgeInsets.only(bottom: 22),
       child: ListView(
-        padding: EdgeInsets.only(bottom: 8),
         scrollDirection: Axis.horizontal,
         children: [
           SizedBox(width: 24.0),
@@ -226,19 +285,18 @@ class ButtonBar extends AnimatedWidget {
             ),
           ),
           SizedBox(width: 16.0),
-          if (!animation.isCompleted)
-            Opacity(
-              opacity: _opacity.evaluate(animation),
-              child: OutlinedButton(
-                onPressed: () => maximizePanel(),
-                child: Row(
-                  children: [
-                    Icon(Icons.comment),
-                    Text(" Comments"),
-                  ],
-                ),
+          Opacity(
+            opacity: opacity.value,
+            child: OutlinedButton(
+              onPressed: () => maximizePanel(),
+              child: Row(
+                children: [
+                  Icon(Icons.comment),
+                  Text(" Comments"),
+                ],
               ),
             ),
+          ),
           // SizedBox(width: 16.0),
           // OutlinedButton(
           //   onPressed: () => {},
@@ -261,7 +319,7 @@ class LocationInfomation extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<LocationCardModel>(builder: (context, locationCard, child) {
       return Container(
-        padding: EdgeInsets.only(top: 20.0, left: 24.0, bottom: 16.0),
+        padding: EdgeInsets.only(top: 20.0, left: 24.0, bottom: 8.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

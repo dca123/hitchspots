@@ -36,10 +36,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Location _location = Location();
   bool _isLocationGranted = false;
 
-  late AnimationController _snapPointAnimationController;
-  late AnimationController _completeAnimationController;
-  late Animation<double> _fabBotAnimation;
-  late Animation<double> _cardAnimation;
+  late AnimationController _slidingPanelAnimationController;
 
   final BorderRadiusGeometry radius = BorderRadius.only(
     topLeft: Radius.circular(24.0),
@@ -129,17 +126,14 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Future<void> _onMapCreated(GoogleMapController mapController) async {
     this.mapController = mapController;
 
+    moveCameraToUserLocation();
+
     goodIcon = await BitmapDescriptor.fromAssetImage(
         createLocalImageConfiguration(context), 'assets/icons/Good.png');
     warningIcon = await BitmapDescriptor.fromAssetImage(
         createLocalImageConfiguration(context), 'assets/icons/Warning.png');
     badIcon = await BitmapDescriptor.fromAssetImage(
         createLocalImageConfiguration(context), 'assets/icons/Bad.png');
-
-    LatLng initalPos = LatLng(37.7749, -122.4194);
-    ScreenCoordinate screenCoordinate =
-        await mapController.getScreenCoordinate(initalPos);
-    _getNearbySpots(screenCoordinate);
   }
 
   void getLocation() async {
@@ -168,17 +162,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _snapPointAnimationController =
-        AnimationController(vsync: this, lowerBound: 0, upperBound: 1);
-    _fabBotAnimation = Tween<double>(begin: 16, end: 265)
-        .animate(_snapPointAnimationController);
 
-    _completeAnimationController =
+    _slidingPanelAnimationController =
         AnimationController(vsync: this, lowerBound: 0, upperBound: 1);
-    _cardAnimation = CurvedAnimation(
-        parent: _completeAnimationController, curve: Curves.easeIn);
-
-    moveCameraToUserLocation();
   }
 
   @override
@@ -193,13 +179,12 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         snapPoint: 0.35,
         borderRadius: radius,
         panel: LocationInfoCard(
-          animation: _cardAnimation,
+          animationController: _slidingPanelAnimationController,
           radius: radius,
           maximizePanel: maximizePanel,
         ),
         onPanelSlide: (slideValue) {
-          _snapPointAnimationController.value = slideValue / 0.35;
-          _completeAnimationController.value = (slideValue - 0.35) / 0.65;
+          _slidingPanelAnimationController.value = slideValue;
         },
         onPanelOpened: () {
           Provider.of<LocationCardModel>(context, listen: false).getReviews();
@@ -219,7 +204,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
             AddLocationFAB(
               mapController: mapController,
               screenCoordinate: screenCoordinate,
-              animation: _fabBotAnimation,
+              controller: _slidingPanelAnimationController,
             ),
             Positioned(
               bottom: 84,
@@ -238,51 +223,59 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    _snapPointAnimationController.dispose();
+    _slidingPanelAnimationController.dispose();
     super.dispose();
   }
 }
 
-class AddLocationFAB extends AnimatedWidget {
+class AddLocationFAB extends StatelessWidget {
   AddLocationFAB({
     Key? key,
     required this.mapController,
     required this.screenCoordinate,
-    required Animation<double> animation,
-  }) : super(
-          key: key,
-          listenable: animation,
-        );
+    required this.controller,
+  })  : bottom = Tween<double>(begin: 16.0, end: 265.0).animate(
+          CurvedAnimation(
+            parent: controller,
+            curve: Interval(0.0, 0.35, curve: Curves.linear),
+          ),
+        ),
+        super(key: key);
 
   final GoogleMapController? mapController;
   final ScreenCoordinate screenCoordinate;
+  final AnimationController controller;
+  final Animation<double> bottom;
+
+  Widget _fab(BuildContext context) {
+    return FloatingActionButton(
+      elevation: 1,
+      onPressed: () async {
+        Provider.of<AuthenticationState>(context, listen: false)
+            .loginFlowWithAction(
+                buildContext: context,
+                postLogin: () async {
+                  final LatLng middlePoint =
+                      await mapController!.getLatLng(screenCoordinate);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) {
+                      return CreateLocationPage(centerLatLng: middlePoint);
+                    }),
+                  );
+                });
+      },
+      child: const Icon(Icons.add),
+    );
+  }
+
+  Widget _buildAnimation(BuildContext context, Widget? child) {
+    return Positioned(bottom: bottom.value, right: 16, child: _fab(context));
+  }
 
   @override
   Widget build(BuildContext context) {
-    final animation = listenable as Animation<double>;
-    return Positioned(
-      bottom: animation.value,
-      right: 16,
-      child: FloatingActionButton(
-        elevation: 1,
-        onPressed: () async {
-          Provider.of<AuthenticationState>(context, listen: false)
-              .loginFlowWithAction(
-                  buildContext: context,
-                  postLogin: () async {
-                    final LatLng middlePoint =
-                        await mapController!.getLatLng(screenCoordinate);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) {
-                        return CreateLocationPage(centerLatLng: middlePoint);
-                      }),
-                    );
-                  });
-        },
-        child: const Icon(Icons.add),
-      ),
-    );
+    return AnimatedBuilder(animation: controller, builder: _buildAnimation);
   }
 }
 
