@@ -20,21 +20,22 @@ class AddLocationFAB extends StatelessWidget {
       bottom: 16,
       right: 16,
       child: FloatingActionButton(
-        elevation: 1,
+        elevation: 2,
         onPressed: () async {
           Provider.of<AuthenticationState>(context, listen: false)
               .loginFlowWithAction(
-                  buildContext: context,
-                  postLogin: () async {
-                    final LatLng middlePoint =
-                        await mapController!.getLatLng(screenCoordinate);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) {
-                        return CreateLocationPage(centerLatLng: middlePoint);
-                      }),
-                    );
-                  });
+            buildContext: context,
+            postLogin: () async {
+              final LatLng middlePoint =
+                  await mapController!.getLatLng(screenCoordinate);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) {
+                  return CreateLocationPage(centerLatLng: middlePoint);
+                }),
+              );
+            },
+          );
         },
         child: const Icon(Icons.add),
       ),

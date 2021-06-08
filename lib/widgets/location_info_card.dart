@@ -94,7 +94,6 @@ class ReviewImageRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print(imageSize.value);
     return Container(
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(

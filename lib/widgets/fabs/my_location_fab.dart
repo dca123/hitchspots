@@ -16,6 +16,7 @@ class MyLocationFabAnimator extends StatelessWidget {
   final AnimationController animationController;
   final Animation<double> bottom;
   final Function getLocation;
+
   Widget _buildAnimation(BuildContext context, Widget? child) {
     return Positioned(
       bottom: bottom.value,
@@ -42,8 +43,12 @@ class MyLocationFAB extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton(
-      elevation: 1,
-      child: const Icon(Icons.gps_fixed),
+      elevation: 2,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      child: Icon(
+        Icons.gps_fixed,
+        color: Theme.of(context).primaryColor,
+      ),
       onPressed: () => getLocation(),
     );
   }

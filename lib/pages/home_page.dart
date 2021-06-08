@@ -124,7 +124,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Future<void> _onMapCreated(GoogleMapController mapController) async {
-    this.mapController = mapController;
+    setState(() {
+      this.mapController = mapController;
+    });
 
     moveCameraToUserLocation();
 
