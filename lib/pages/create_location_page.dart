@@ -1,3 +1,4 @@
+import 'package:animations/animations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -10,11 +11,13 @@ import '../widgets/form_fields/location_picker.dart';
 
 class CreateLocationPage extends StatefulWidget {
   final LatLng _centerLatLng;
-
+  final Function closedContainer;
   CreateLocationPage({
     Key? key,
     required LatLng centerLatLng,
-  })  : _centerLatLng = centerLatLng,
+    required Function closedContainer,
+  })  : closedContainer = closedContainer,
+        _centerLatLng = centerLatLng,
         super(key: key);
 
   @override
@@ -79,7 +82,7 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
         toolbarHeight: 84,
         leading: IconButton(
           icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => widget.closedContainer(),
           color: Colors.black,
         ),
         title: Text(
@@ -158,6 +161,74 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
             ]),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class SharedAxisTransitionWrapper extends Page {
+  final Widget screen;
+  final ValueKey transitionKey;
+
+  const SharedAxisTransitionWrapper(
+      {required this.screen, required this.transitionKey})
+      : super(key: transitionKey);
+
+  @override
+  Route createRoute(BuildContext context) {
+    return PageRouteBuilder(
+        settings: this,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SharedAxisTransition(
+            fillColor: Theme.of(context).cardColor,
+            animation: animation,
+            secondaryAnimation: secondaryAnimation,
+            transitionType: SharedAxisTransitionType.scaled,
+            child: child,
+          );
+        },
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return screen;
+        });
+  }
+}
+
+class CreateLocationRouterProvider extends ChangeNotifier {}
+
+class CreateLocationRouter extends StatelessWidget {
+  CreateLocationRouter({Key? key, closedContainer})
+      : closedContainer = closedContainer,
+        super(key: key);
+  final Function closedContainer;
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+  @override
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: () async {
+        if (navigatorKey.currentState != null) {
+          if (navigatorKey.currentState!.canPop()) {
+            navigatorKey.currentState!.pop();
+          } else {
+            Navigator.of(context).pop();
+          }
+        }
+        return false;
+      },
+      child: Navigator(
+        key: navigatorKey,
+        onPopPage: (Route<dynamic> route, dynamic result) {
+          return false;
+        },
+        pages: [
+          SharedAxisTransitionWrapper(
+            transitionKey: ValueKey('Location'),
+            screen: CreateLocationPage(
+              closedContainer: closedContainer,
+              centerLatLng: LatLng(0, 0),
+            ),
+          ),
+        ],
       ),
     );
   }
