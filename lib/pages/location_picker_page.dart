@@ -62,6 +62,8 @@ class _LocationPickerState extends State<LocationPicker> {
         children: [
           GoogleMap(
             initialCameraPosition: widget._centerOfScreen,
+            buildingsEnabled: false,
+            zoomControlsEnabled: false,
             onMapCreated: (GoogleMapController controller) {
               mapController = controller;
             },

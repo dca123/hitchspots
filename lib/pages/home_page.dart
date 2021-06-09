@@ -203,7 +203,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
               markers: _markers.values.toSet(),
               onCameraIdle: () => _getNearbySpots(screenCoordinate),
             ),
-            AddLocationFAB(
+            AddLocationWrapper(
               mapController: mapController,
               screenCoordinate: screenCoordinate,
             ),
