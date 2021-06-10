@@ -16,8 +16,8 @@ jobs:
   deploy:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-#     environment:
-#       name: deploy
+    environment:
+      name: deploy
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:      
 #       - uses: actions/checkout@v2
@@ -32,9 +32,11 @@ jobs:
 #           flutter-version: '2.2'
       - shell: bash
         env:
-          SUPER_SECRET: ${{ secrets.SERVICE_KEY }}
+          ENV_FILE: ${{ secrets.ENV_FILE }}
         run: |
-          echo "$SUPER_SECRET"
+          echo "$ENV_FILE" | base64 --decode > .env
+          ls
+          cat .env
 #       - uses: maierj/fastlane-action@v2.0.1
 #         with:
 #           lane: 'alpha'
