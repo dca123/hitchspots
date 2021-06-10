@@ -33,8 +33,10 @@ jobs:
       - shell: bash
         env:
           ENV_FILE: ${{ secrets.ENV_FILE }}
+          GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES }}          
         run: |
           echo "$ENV_FILE" | base64 --decode > .env
+          echo "$GOOGLE_SERVICES" | base64 --decode > ./android/app/google-services.json
           ls          
       - uses: maierj/fastlane-action@v2.0.1
         with:
