@@ -30,21 +30,22 @@ jobs:
       - uses: subosito/flutter-action@v1
         with:
           flutter-version: '2.2'
-      - shell: bash
-        env:
-          ENV_FILE: ${{ secrets.ENV_FILE }}
-          GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES }}
-          KEY_PROPERTIES: ${{ secrets.KEY_PROPERTIES }}
-          SERVICE_KEY: ${{ secrets.SERVICE_KEY }}
-          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
-          UPLOAD_KEYSTORE: ${{ secrets.UPLOAD_KEYSTORE }}
-        run: |
-          echo "$ENV_FILE" | base64 --decode > .env
-          echo "$GOOGLE_SERVICES" | base64 --decode > ./android/app/google-services.json
-          echo "$MAPS_API_KEY" | base64 --decode >> ./android/local.properties
-          echo "$KEY_PROPERTIES" | base64 --decode > ./android/key.properties
-          echo "$UPLOAD_KEYSTORE" | base64 --decode > ./android/upload-keystore.jks
-          echo "$SERVICE_KEY" | base64 --decode > ./android/service-account-key.json                   
+      - name: Setup Keys and Files
+        shell: bash
+          env:
+            ENV_FILE: ${{ secrets.ENV_FILE }}
+            GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES }}
+            KEY_PROPERTIES: ${{ secrets.KEY_PROPERTIES }}
+            SERVICE_KEY: ${{ secrets.SERVICE_KEY }}
+            MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+            UPLOAD_KEYSTORE: ${{ secrets.UPLOAD_KEYSTORE }}
+          run: |
+            echo "$ENV_FILE" | base64 --decode > .env
+            echo "$GOOGLE_SERVICES" | base64 --decode > ./android/app/google-services.json
+            echo "$MAPS_API_KEY" | base64 --decode >> ./android/local.properties
+            echo "$KEY_PROPERTIES" | base64 --decode > ./android/key.properties
+            echo "$UPLOAD_KEYSTORE" | base64 --decode > ./android/upload-keystore.jks
+                              
 
           cat ./android/key.properties          
       - uses: maierj/fastlane-action@v2.0.1
