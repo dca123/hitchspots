@@ -33,11 +33,17 @@ jobs:
       - shell: bash
         env:
           ENV_FILE: ${{ secrets.ENV_FILE }}
-          GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES }}          
+          GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES }}
+          KEY_PROPERTIES: ${{ secrets.KEY_PROPERTIES }}
+          SERVICE_KEY: ${{ secrets.SERVICE_KEY }}
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
         run: |
           echo "$ENV_FILE" | base64 --decode > .env
           echo "$GOOGLE_SERVICES" | base64 --decode > ./android/app/google-services.json
-          ls          
+          echo "$MAPS_API_KEY" | base64 --decode >> ./android/local.properties
+          echo "$KEY_PROPERTIES" | base64 --decode >> ./android/key.properties
+          echo "$SERVICE_KEY" | base64 --decode >> ./android/upload-keystore.jks          
+          cat ./android/local.properties          
       - uses: maierj/fastlane-action@v2.0.1
         with:
           lane: 'alpha'
