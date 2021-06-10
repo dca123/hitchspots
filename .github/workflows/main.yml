@@ -35,8 +35,7 @@ jobs:
           ENV_FILE: ${{ secrets.ENV_FILE }}
         run: |
           echo "$ENV_FILE" | base64 --decode > .env
-          ls
-          cat .env
+          ls          
 #       - uses: maierj/fastlane-action@v2.0.1
 #         with:
 #           lane: 'alpha'
