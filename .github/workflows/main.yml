@@ -41,8 +41,7 @@ jobs:
           echo "$ENV_FILE" | base64 --decode > .env
           echo "$GOOGLE_SERVICES" | base64 --decode > ./android/app/google-services.json
           echo "$MAPS_API_KEY" | base64 --decode >> ./android/local.properties
-          echo "$KEY_PROPERTIES" | base64 --decode > ./android/key.properties
-          echo "$SERVICE_KEY" | base64 --decode > ./android/upload-keystore.jks          
+          
           cat ./android/local.properties          
       - uses: maierj/fastlane-action@v2.0.1
         with:
