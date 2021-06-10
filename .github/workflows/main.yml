@@ -37,11 +37,13 @@ jobs:
           KEY_PROPERTIES: ${{ secrets.KEY_PROPERTIES }}
           SERVICE_KEY: ${{ secrets.SERVICE_KEY }}
           MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+          UPLOAD_KEYSTORE: ${{ secrets.UPLOAD_KEYSTORE }}
         run: |
           echo "$ENV_FILE" | base64 --decode > .env
           echo "$GOOGLE_SERVICES" | base64 --decode > ./android/app/google-services.json
           echo "$MAPS_API_KEY" | base64 --decode >> ./android/local.properties
           echo "$KEY_PROPERTIES" | base64 --decode > ./android/key.properties
+          echo "$UPLOAD_KEYSTORE" | base64 --decode > ./android/upload-keystore.jks
                     
 
           cat ./android/key.properties          
