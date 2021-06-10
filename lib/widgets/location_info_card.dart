@@ -1,3 +1,4 @@
+import 'package:animations/animations.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -259,29 +260,42 @@ class ButtonBar extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         children: [
           SizedBox(width: 24.0),
-          ElevatedButton(
-            onPressed: () async {
-              print(Provider.of<AuthenticationState>(context, listen: false)
-                  .loginState);
-              Provider.of<AuthenticationState>(context, listen: false)
-                  .loginFlowWithAction(
-                buildContext: context,
-                postLogin: () => Navigator.push(
+          OpenContainer<bool>(
+            openColor: Theme.of(context).canvasColor,
+            closedElevation: 2,
+            onClosed: (success) {
+              if (success == true) {
+                Future.delayed(const Duration(milliseconds: 500), () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Thank you for contributing!'),
+                    ),
+                  );
+                });
+              }
+            },
+            closedShape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+            closedBuilder: (context, openContainer) {
+              return ElevatedButton(
+                onPressed: () => Provider.of<AuthenticationState>(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return CreateReviewPage();
-                    },
-                  ),
+                  listen: false,
+                ).loginFlowWithAction(
+                  buildContext: context,
+                  postLogin: () => openContainer(),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.add),
+                    Text(" Review"),
+                  ],
                 ),
               );
             },
-            child: Row(
-              children: [
-                Icon(Icons.add),
-                Text(" Review"),
-              ],
-            ),
+            openBuilder: (context, closedContainer) {
+              return CreateReviewPage();
+            },
           ),
           SizedBox(width: 16.0),
           Opacity(

@@ -57,15 +57,7 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
         'timestamp': DateTime.now().millisecondsSinceEpoch,
         'createdByDisplayName': displayName,
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Thank you for contributing!'),
-        ),
-      );
-      Future.delayed(Duration(milliseconds: 100), () {
-        Navigator.pop(context);
-      });
+      Navigator.pop(context, true);
     }
   }
 

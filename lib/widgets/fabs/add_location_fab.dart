@@ -29,7 +29,18 @@ class _AddLocationWrapperState extends State<AddLocationWrapper> {
     return Positioned(
       bottom: 16,
       right: 16,
-      child: OpenContainer(
+      child: OpenContainer<bool>(
+        onClosed: (success) {
+          if (success == true) {
+            Future.delayed(const Duration(milliseconds: 500), () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('Thank you for contributing!'),
+                ),
+              );
+            });
+          }
+        },
         closedShape: widget.circleFabBorder,
         closedElevation: 2,
         closedColor: theme.primaryColor,
