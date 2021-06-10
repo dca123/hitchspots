@@ -174,6 +174,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final ScreenCoordinate screenCoordinate =
         getCenterOfScreenCoordinater(context);
     return new Scaffold(
+      resizeToAvoidBottomInset: false,
       body: SlidingUpPanel(
         controller: _panelController,
         minHeight: 0,
@@ -203,7 +204,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
               markers: _markers.values.toSet(),
               onCameraIdle: () => _getNearbySpots(screenCoordinate),
             ),
-            AddLocationFAB(
+            AddLocationWrapper(
               mapController: mapController,
               screenCoordinate: screenCoordinate,
             ),
