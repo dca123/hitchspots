@@ -57,7 +57,10 @@ class _AddLocationWrapperState extends State<AddLocationWrapper> {
           );
         },
         openBuilder: (context, closedContainer) {
-          return CreateLocationRouter(closedContainer: closedContainer);
+          return CreateLocationPageProvider(
+            closedContainer: closedContainer,
+            centerLatLng: middlePoint,
+          );
         },
       ),
     );
