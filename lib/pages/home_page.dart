@@ -175,22 +175,24 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         MediaQuery.of(context).orientation == Orientation.portrait;
 
     return FloatingSearchBar(
-      hint: 'Search...',
+      hint: 'Find a Location',
+      // hintStyle: Theme.of(context).textTheme.subtitle1,
       borderRadius: BorderRadius.circular(16),
+      margins: const EdgeInsets.only(top: 40, right: 20, left: 20),
       scrollPadding: const EdgeInsets.only(top: 16, bottom: 56),
-      transitionDuration: const Duration(milliseconds: 800),
+      transitionDuration: const Duration(milliseconds: 300),
       transitionCurve: Curves.easeInOut,
       physics: const BouncingScrollPhysics(),
       axisAlignment: isPortrait ? 0.0 : -1.0,
       openAxisAlignment: 0.0,
-      width: isPortrait ? 600 : 500,
+      // width: isPortrait ? 600 : 500,
       debounceDelay: const Duration(milliseconds: 500),
       onQueryChanged: (query) {
         // Call your model, bloc, controller here.
       },
       // Specify a custom transition to be used for
       // animating between opened and closed stated.
-      transition: ExpandingFloatingSearchBarTransition(),
+      transition: SlideFadeFloatingSearchBarTransition(),
       actions: [
         FloatingSearchBarAction(
           showIfOpened: false,
@@ -211,9 +213,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
             elevation: 4.0,
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: Colors.accents.map((color) {
-                return Container(height: 112, color: color);
-              }).toList(),
+              children: [
+                Container(height: 112, color: Colors.red),
+              ],
             ),
           ),
         );
