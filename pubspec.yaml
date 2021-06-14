@@ -15,6 +15,7 @@ dependencies:
   flutter_dotenv: 4.0.0-nullsafety.1
   flutter_rating_bar: ^4.0.0
   geoflutterfire2: ^2.3.5
+  google_maps_cluster_manager: ^1.0.0
   google_maps_flutter: ^2.0.6
   google_sign_in: ^5.0.4
   location: ^4.1.1

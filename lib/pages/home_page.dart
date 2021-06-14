@@ -1,7 +1,11 @@
 import 'dart:math';
+import 'dart:ui';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geoflutterfire2/geoflutterfire2.dart';
+import 'package:google_maps_cluster_manager/google_maps_cluster_manager.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hitchspots/models/location_card.dart';
 import 'package:hitchspots/widgets/fabs/add_location_fab.dart';
@@ -26,6 +30,8 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   Map<String, Marker> _markers = {};
   final geo = GeoFlutterFire();
+
+  Set<Marker> markers = {};
 
   GoogleMapController? mapController;
   final PanelController _panelController = PanelController();
@@ -117,15 +123,21 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     stream.listen((locationList) {
       print("length ${locationList.length}");
       _createMarkers(locationList, tempMarkers);
-      setState(() {
-        _markers.addAll(tempMarkers);
-      });
+      print(tempMarkers.length);
+      List<ClusterItem<Marker>> clusterItems = tempMarkers.values
+          .map((Marker marker) =>
+              ClusterItem<Marker>(marker.position, item: marker))
+          .toList();
+
+      _manager.setItems(clusterItems);
+      // _markers.addAll(tempMarkers);
     });
   }
 
   Future<void> _onMapCreated(GoogleMapController mapController) async {
     setState(() {
       this.mapController = mapController;
+      _manager.setMapController(mapController);
     });
 
     moveCameraToUserLocation();
@@ -161,12 +173,75 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
+  List<ClusterItem> items = [];
+  Future<Marker> Function(Cluster) get _markerBuilder => (cluster) async {
+        return Marker(
+          markerId: MarkerId(cluster.getId()),
+          position: cluster.location,
+          onTap: () {
+            print('---- $cluster');
+            cluster.items.forEach((p) => print(p));
+          },
+          icon: await _getMarkerBitmap(cluster.isMultiple ? 125 : 75,
+              text: cluster.isMultiple ? cluster.count.toString() : null),
+        );
+      };
+
+  Future<BitmapDescriptor> _getMarkerBitmap(int size, {String? text}) async {
+    final PictureRecorder pictureRecorder = PictureRecorder();
+    final Canvas canvas = Canvas(pictureRecorder);
+    final Paint paint1 = Paint()..color = Colors.orange;
+    final Paint paint2 = Paint()..color = Colors.white;
+
+    canvas.drawCircle(Offset(size / 2, size / 2), size / 2.0, paint1);
+    canvas.drawCircle(Offset(size / 2, size / 2), size / 2.2, paint2);
+    canvas.drawCircle(Offset(size / 2, size / 2), size / 2.8, paint1);
+
+    if (text != null) {
+      TextPainter painter = TextPainter(textDirection: TextDirection.ltr);
+      painter.text = TextSpan(
+        text: text,
+        style: TextStyle(
+            fontSize: size / 3,
+            color: Colors.white,
+            fontWeight: FontWeight.normal),
+      );
+      painter.layout();
+      painter.paint(
+        canvas,
+        Offset(size / 2 - painter.width / 2, size / 2 - painter.height / 2),
+      );
+    }
+
+    final img = await pictureRecorder.endRecording().toImage(size, size);
+    final data = await img.toByteData(format: ImageByteFormat.png) as ByteData;
+
+    return BitmapDescriptor.fromBytes(data.buffer.asUint8List());
+  }
+
+  late ClusterManager _manager;
+
   @override
   void initState() {
-    super.initState();
-
+    _manager = _initClusterManager();
     _slidingPanelAnimationController =
         AnimationController(vsync: this, lowerBound: 0, upperBound: 1);
+    super.initState();
+  }
+
+  ClusterManager _initClusterManager() {
+    return ClusterManager(
+      items, _updateMarkers,
+      // initialZoom: 16,
+      stopClusteringZoom: 10.0,
+    );
+  }
+
+  void _updateMarkers(Set<Marker> markers) {
+    print('Updated ${markers.length} markers');
+    setState(() {
+      this.markers = markers;
+    });
   }
 
   @override
@@ -201,7 +276,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
               myLocationButtonEnabled: false,
               zoomControlsEnabled: false,
               mapToolbarEnabled: false,
-              markers: _markers.values.toSet(),
+              markers: markers,
               onCameraIdle: () => _getNearbySpots(screenCoordinate),
             ),
             AddLocationWrapper(
