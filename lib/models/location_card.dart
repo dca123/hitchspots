@@ -37,7 +37,7 @@ class LocationCardModel extends ChangeNotifier {
   }
 
   void getReviews() async {
-    var reviewQuery = await _reviewQuery(locationId: _locationID, limit: 10);
+    var reviewQuery = await _reviewQuery(locationId: _locationID, limit: 100);
     reviewQuery.docs.forEach((document) {
       _reviews[document.id] = document.data();
     });
