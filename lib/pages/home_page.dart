@@ -26,9 +26,10 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> with TickerProviderStateMixin {
-  late BitmapDescriptor goodIcon;
-  late BitmapDescriptor warningIcon;
-  late BitmapDescriptor badIcon;
+  static late BitmapDescriptor goodIcon;
+  static late BitmapDescriptor warningIcon;
+  static late BitmapDescriptor badIcon;
+  static late UI.Image _clusterImage;
 
   late ClusterManager _clusterManager;
   List<ClusterItem> _clusterItems = [];
@@ -38,9 +39,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   final geo = GeoFlutterFire();
   GoogleMapController? mapController;
   final PanelController _panelController = PanelController();
-  static final CameraPosition _sanFranciso = CameraPosition(
-    target: LatLng(37.7749, -122.4194),
-    zoom: 2,
+  static final CameraPosition _centerOfWorld = CameraPosition(
+    target: LatLng(0, 0),
+    zoom: 0,
   );
   Location _location = Location();
   bool _isLocationGranted = false;
@@ -58,6 +59,16 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   Future<void> init() async {
     await Firebase.initializeApp();
+
+    double width = MediaQuery.of(context).devicePixelRatio.round() * 50;
+    _clusterImage = await _loadUiImage('assets/icons/cluster.png', width);
+
+    goodIcon = await BitmapDescriptor.fromAssetImage(
+        createLocalImageConfiguration(context), 'assets/icons/Good.png');
+    warningIcon = await BitmapDescriptor.fromAssetImage(
+        createLocalImageConfiguration(context), 'assets/icons/Warning.png');
+    badIcon = await BitmapDescriptor.fromAssetImage(
+        createLocalImageConfiguration(context), 'assets/icons/Bad.png');
   }
 
   BitmapDescriptor _ratingToMarker(double rating) {
@@ -121,14 +132,10 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final Map<String, Marker> tempMarkers = {};
 
     stream.listen((locationList) {
-      print("length ${locationList.length}");
-
       // Create Markers
       _createMarkers(locationList, tempMarkers);
-
       // Add Markers to Marker map
       _markers.addAll(tempMarkers);
-
       // Convert markers to ClusterItemList
       List<ClusterItem<Marker>> clusterItems = _markers.values
           .map((Marker marker) => ClusterItem<Marker>(
@@ -136,7 +143,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 item: marker,
               ))
           .toList();
-
       _clusterManager.setItems(clusterItems);
     });
   }
@@ -148,13 +154,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     });
 
     _moveCameraToUserLocation();
-
-    goodIcon = await BitmapDescriptor.fromAssetImage(
-        createLocalImageConfiguration(context), 'assets/icons/Good.png');
-    warningIcon = await BitmapDescriptor.fromAssetImage(
-        createLocalImageConfiguration(context), 'assets/icons/Warning.png');
-    badIcon = await BitmapDescriptor.fromAssetImage(
-        createLocalImageConfiguration(context), 'assets/icons/Bad.png');
   }
 
   void _getLocation() async {
@@ -190,8 +189,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   print('---- $cluster');
                   cluster.items.forEach((p) => print(p));
                 },
-                icon: await _getMarkerBitmap(width,
-                    text: cluster.count.toString()),
+                icon: await _getMarkerBitmap(width, cluster.count.toString()),
               )
             : cluster.items.first;
       };
@@ -210,29 +208,27 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return myBackground;
   }
 
-  Future<BitmapDescriptor> _getMarkerBitmap(double size, {String? text}) async {
+  Future<BitmapDescriptor> _getMarkerBitmap(double size, String text) async {
     final UI.PictureRecorder pictureRecorder = UI.PictureRecorder();
     final Canvas canvas = Canvas(pictureRecorder);
-    UI.Image image = await _loadUiImage('assets/icons/4.0x/cluster.png', size);
-    canvas.drawImage(image, Offset.zero, Paint());
 
-    if (text != null) {
-      TextPainter painter = TextPainter(textDirection: TextDirection.ltr);
-      painter.text = TextSpan(
-          text: text,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: Theme.of(context).textTheme.headline4?.fontSize,
-          ));
-      painter.layout();
-      painter.paint(
-        canvas,
-        Offset(
-          size / 2 - painter.width / 2,
-          size / 3.15 - painter.height / 2,
-        ),
-      );
-    }
+    canvas.drawImage(_clusterImage, Offset.zero, Paint());
+
+    TextPainter painter = TextPainter(textDirection: TextDirection.ltr);
+    painter.text = TextSpan(
+        text: text,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: Theme.of(context).textTheme.headline4?.fontSize,
+        ));
+    painter.layout();
+    painter.paint(
+      canvas,
+      Offset(
+        size / 2 - painter.width / 2,
+        size / 3.15 - painter.height / 2,
+      ),
+    );
 
     final img = await pictureRecorder
         .endRecording()
@@ -254,7 +250,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _updateMarkers(Set<Marker> markers) {
-    print('Updated ${markers.length} markers');
     setState(() {
       this.markers = markers;
     });
@@ -294,7 +289,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         body: Stack(
           children: [
             GoogleMap(
-              initialCameraPosition: _sanFranciso,
+              initialCameraPosition: _centerOfWorld,
               onMapCreated: _onMapCreated,
               myLocationEnabled: _isLocationGranted,
               myLocationButtonEnabled: false,
