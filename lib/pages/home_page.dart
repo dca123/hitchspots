@@ -1,7 +1,13 @@
+import 'dart:async';
 import 'dart:math';
+import 'dart:typed_data';
+import 'dart:ui' as UI;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geoflutterfire2/geoflutterfire2.dart';
+import 'package:google_maps_cluster_manager/google_maps_cluster_manager.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hitchspots/models/location_card.dart';
 import 'package:hitchspots/widgets/fabs/add_location_fab.dart';
@@ -24,9 +30,12 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late BitmapDescriptor warningIcon;
   late BitmapDescriptor badIcon;
 
+  late ClusterManager _clusterManager;
+  List<ClusterItem> _clusterItems = [];
   Map<String, Marker> _markers = {};
-  final geo = GeoFlutterFire();
+  Set<Marker> markers = {};
 
+  final geo = GeoFlutterFire();
   GoogleMapController? mapController;
   final PanelController _panelController = PanelController();
   static final CameraPosition _sanFranciso = CameraPosition(
@@ -51,7 +60,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     await Firebase.initializeApp();
   }
 
-  BitmapDescriptor ratingToMarker(double rating) {
+  BitmapDescriptor _ratingToMarker(double rating) {
     if (rating >= 4) {
       return goodIcon;
     } else if (rating >= 2.5) {
@@ -60,7 +69,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return badIcon;
   }
 
-  void maximizePanel() => _panelController.animatePanelToPosition(1);
+  void _maximizePanel() => _panelController.animatePanelToPosition(1);
 
   void _createMarkers(locationList, tempMarkers) {
     locationList.forEach((locationDocument) {
@@ -69,7 +78,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       tempMarkers[locationDocument.id] = Marker(
         markerId: MarkerId(locationDocument.id),
         position: LatLng(point.latitude, point.longitude),
-        icon: ratingToMarker(rating),
+        icon: _ratingToMarker(rating),
         onTap: () {
           Provider.of<LocationCardModel>(context, listen: false)
               .updateLocation(locationDocument.data(), locationDocument.id);
@@ -95,10 +104,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     double? zoom = await mapController!.getZoomLevel();
     var radius = r *
         acos(sin(lat1) * sin(lat2) + cos(lat1) * cos(lat2) * cos(lon2 - lon1));
-    // double radius = ((40000 / pow(2, zoom.floor())) * 2);
     print("zoom: $zoom");
-    // print("dis: $dis");
-    // int limit = 1;
     if (zoom < 5) return;
     int limit = zoom >= 4 ? 9 : 2;
     final _firestore = FirebaseFirestore.instance;
@@ -116,19 +122,32 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     stream.listen((locationList) {
       print("length ${locationList.length}");
+
+      // Create Markers
       _createMarkers(locationList, tempMarkers);
-      setState(() {
-        _markers.addAll(tempMarkers);
-      });
+
+      // Add Markers to Marker map
+      _markers.addAll(tempMarkers);
+
+      // Convert markers to ClusterItemList
+      List<ClusterItem<Marker>> clusterItems = _markers.values
+          .map((Marker marker) => ClusterItem<Marker>(
+                marker.position,
+                item: marker,
+              ))
+          .toList();
+
+      _clusterManager.setItems(clusterItems);
     });
   }
 
   Future<void> _onMapCreated(GoogleMapController mapController) async {
     setState(() {
       this.mapController = mapController;
+      _clusterManager.setMapController(mapController);
     });
 
-    moveCameraToUserLocation();
+    _moveCameraToUserLocation();
 
     goodIcon = await BitmapDescriptor.fromAssetImage(
         createLocalImageConfiguration(context), 'assets/icons/Good.png');
@@ -138,13 +157,13 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         createLocalImageConfiguration(context), 'assets/icons/Bad.png');
   }
 
-  void getLocation() async {
+  void _getLocation() async {
     if (await Permission.location.request().isGranted) {
-      moveCameraToUserLocation();
+      _moveCameraToUserLocation();
     }
   }
 
-  void moveCameraToUserLocation() async {
+  void _moveCameraToUserLocation() async {
     if (await Permission.location.isGranted) {
       setState(() {
         _isLocationGranted = true;
@@ -154,19 +173,99 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         CameraUpdate.newCameraPosition(
           CameraPosition(
             target: LatLng(locationData.latitude!, locationData.longitude!),
-            zoom: 11,
+            zoom: 12,
           ),
         ),
       );
     }
   }
 
+  Future<Marker> Function(Cluster) get _markerBuilder => (cluster) async {
+        double width = MediaQuery.of(context).devicePixelRatio.round() * 50;
+        return cluster.isMultiple
+            ? Marker(
+                markerId: MarkerId(cluster.getId()),
+                position: cluster.location,
+                onTap: () {
+                  print('---- $cluster');
+                  cluster.items.forEach((p) => print(p));
+                },
+                icon: await _getMarkerBitmap(width,
+                    text: cluster.count.toString()),
+              )
+            : cluster.items.first;
+      };
+
+  Future<UI.Image> _loadUiImage(String imageAssetPath, double width) async {
+    ByteData data = await rootBundle.load(imageAssetPath);
+    UI.Codec codec = await UI.instantiateImageCodec(data.buffer.asUint8List(),
+        targetWidth: width.round());
+    UI.FrameInfo fi = await codec.getNextFrame();
+    ByteData? imageAsByte =
+        await fi.image.toByteData(format: UI.ImageByteFormat.png);
+
+    Future<UI.Image> myBackground =
+        decodeImageFromList(imageAsByte!.buffer.asUint8List());
+
+    return myBackground;
+  }
+
+  Future<BitmapDescriptor> _getMarkerBitmap(double size, {String? text}) async {
+    final UI.PictureRecorder pictureRecorder = UI.PictureRecorder();
+    final Canvas canvas = Canvas(pictureRecorder);
+    UI.Image image = await _loadUiImage('assets/icons/4.0x/cluster.png', size);
+    canvas.drawImage(image, Offset.zero, Paint());
+
+    if (text != null) {
+      TextPainter painter = TextPainter(textDirection: TextDirection.ltr);
+      painter.text = TextSpan(
+          text: text,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: Theme.of(context).textTheme.headline4?.fontSize,
+          ));
+      painter.layout();
+      painter.paint(
+        canvas,
+        Offset(
+          size / 2 - painter.width / 2,
+          size / 3.15 - painter.height / 2,
+        ),
+      );
+    }
+
+    final img = await pictureRecorder
+        .endRecording()
+        .toImage(size.toInt(), size.toInt());
+    final data =
+        await img.toByteData(format: UI.ImageByteFormat.png) as ByteData;
+
+    return BitmapDescriptor.fromBytes(data.buffer.asUint8List());
+  }
+
+  ClusterManager _initClusterManager() {
+    return ClusterManager(
+      _clusterItems,
+      _updateMarkers,
+      markerBuilder: _markerBuilder,
+      initialZoom: 16,
+      stopClusteringZoom: 12,
+    );
+  }
+
+  void _updateMarkers(Set<Marker> markers) {
+    print('Updated ${markers.length} markers');
+    setState(() {
+      this.markers = markers;
+    });
+  }
+
   @override
   void initState() {
-    super.initState();
-
+    _clusterManager = _initClusterManager();
     _slidingPanelAnimationController =
         AnimationController(vsync: this, lowerBound: 0, upperBound: 1);
+    super.initState();
   }
 
   @override
@@ -184,7 +283,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         panel: LocationInfoCard(
           animationController: _slidingPanelAnimationController,
           radius: radius,
-          maximizePanel: maximizePanel,
+          maximizePanel: _maximizePanel,
         ),
         onPanelSlide: (slideValue) {
           _slidingPanelAnimationController.value = slideValue;
@@ -201,15 +300,19 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
               myLocationButtonEnabled: false,
               zoomControlsEnabled: false,
               mapToolbarEnabled: false,
-              markers: _markers.values.toSet(),
-              onCameraIdle: () => _getNearbySpots(screenCoordinate),
+              markers: markers,
+              onCameraMove: _clusterManager.onCameraMove,
+              onCameraIdle: () {
+                _getNearbySpots(screenCoordinate);
+                _clusterManager.updateMap();
+              },
             ),
             AddLocationWrapper(
               mapController: mapController,
               screenCoordinate: screenCoordinate,
             ),
             MyLocationFabAnimator(
-              getLocation: getLocation,
+              getLocation: _getLocation,
               animationController: _slidingPanelAnimationController,
             )
           ],
