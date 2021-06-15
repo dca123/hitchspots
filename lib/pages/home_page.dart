@@ -1,5 +1,8 @@
+import 'dart:async';
+import 'dart:io';
 import 'dart:math';
-import 'dart:ui';
+import 'dart:typed_data';
+import 'dart:ui' as UI;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -27,6 +30,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late BitmapDescriptor goodIcon;
   late BitmapDescriptor warningIcon;
   late BitmapDescriptor badIcon;
+  late BitmapDescriptor clusterIcon;
 
   Map<String, Marker> _markers = {};
   Set<Marker> markers = {};
@@ -148,6 +152,8 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         createLocalImageConfiguration(context), 'assets/icons/Warning.png');
     badIcon = await BitmapDescriptor.fromAssetImage(
         createLocalImageConfiguration(context), 'assets/icons/Bad.png');
+    clusterIcon = await BitmapDescriptor.fromAssetImage(
+        createLocalImageConfiguration(context), 'assets/icons/cluster.png');
   }
 
   void getLocation() async {
@@ -166,7 +172,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         CameraUpdate.newCameraPosition(
           CameraPosition(
             target: LatLng(locationData.latitude!, locationData.longitude!),
-            zoom: 11,
+            zoom: 12,
           ),
         ),
       );
@@ -175,6 +181,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   List<ClusterItem> items = [];
   Future<Marker> Function(Cluster) get _markerBuilder => (cluster) async {
+        double width = MediaQuery.of(context).devicePixelRatio.round() * 50;
         return cluster.isMultiple
             ? Marker(
                 markerId: MarkerId(cluster.getId()),
@@ -183,40 +190,65 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   print('---- $cluster');
                   cluster.items.forEach((p) => print(p));
                 },
-                icon: await _getMarkerBitmap(cluster.isMultiple ? 125 : 75,
+                // icon: clusterIcon,
+                icon: await _getMarkerBitmap(cluster.isMultiple ? width : 75,
                     text: cluster.isMultiple ? cluster.count.toString() : null),
               )
             : cluster.items.first;
       };
 
-  Future<BitmapDescriptor> _getMarkerBitmap(int size, {String? text}) async {
-    final PictureRecorder pictureRecorder = PictureRecorder();
-    final Canvas canvas = Canvas(pictureRecorder);
-    final Paint paint1 = Paint()..color = Colors.teal.shade300;
-    final Paint paint2 = Paint()..color = Theme.of(context).colorScheme.surface;
+  Future<UI.Image> loadUiImage(String imageAssetPath) async {
+    // final ByteData data = await rootBundle.load(imageAssetPath);
+    // final Completer<UI.Image> completer = Completer();
+    // UI.decodeImageFromList(Uint8List.view(data.buffer), (UI.Image img) {
+    //   return completer.complete(img);
+    // });
+    // return completer.future;
 
-    canvas.drawCircle(Offset(size / 2, size / 2), size / 2.0, paint1);
-    canvas.drawCircle(Offset(size / 2, size / 2), size / 2.2, paint2);
-    canvas.drawCircle(Offset(size / 2, size / 2), size / 2.8, paint1);
+    double pixelRatio = MediaQuery.of(context).devicePixelRatio;
+    ByteData data = await rootBundle.load(imageAssetPath);
+    print(pixelRatio);
+    UI.Codec codec = await UI.instantiateImageCodec(data.buffer.asUint8List(),
+        targetWidth: pixelRatio.round() * 50);
+    UI.FrameInfo fi = await codec.getNextFrame();
+    ByteData? imageAsByte =
+        await fi.image.toByteData(format: UI.ImageByteFormat.png);
+
+    Future<UI.Image> myBackground =
+        decodeImageFromList(imageAsByte!.buffer.asUint8List());
+
+    return myBackground;
+  }
+
+  Future<BitmapDescriptor> _getMarkerBitmap(double size, {String? text}) async {
+    final UI.PictureRecorder pictureRecorder = UI.PictureRecorder();
+    final Canvas canvas = Canvas(pictureRecorder);
+    UI.Image image = await loadUiImage('assets/icons/4.0x/cluster.png');
+    canvas.drawImage(image, Offset.zero, Paint());
 
     if (text != null) {
       TextPainter painter = TextPainter(textDirection: TextDirection.ltr);
       painter.text = TextSpan(
-        text: text,
-        style: TextStyle(
-            fontSize: size / 3,
+          text: text,
+          style: TextStyle(
             color: Colors.white,
-            fontWeight: FontWeight.normal),
-      );
+            fontSize: Theme.of(context).textTheme.headline4?.fontSize,
+          ));
       painter.layout();
       painter.paint(
         canvas,
-        Offset(size / 2 - painter.width / 2, size / 2 - painter.height / 2),
+        Offset(
+          size / 2 - painter.width / 2,
+          size / 3.15 - painter.height / 2,
+        ),
       );
     }
 
-    final img = await pictureRecorder.endRecording().toImage(size, size);
-    final data = await img.toByteData(format: ImageByteFormat.png) as ByteData;
+    final img = await pictureRecorder
+        .endRecording()
+        .toImage(size.toInt(), size.toInt());
+    final data =
+        await img.toByteData(format: UI.ImageByteFormat.png) as ByteData;
 
     return BitmapDescriptor.fromBytes(data.buffer.asUint8List());
   }
