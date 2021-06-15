@@ -29,10 +29,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late BitmapDescriptor badIcon;
 
   Map<String, Marker> _markers = {};
-  final geo = GeoFlutterFire();
-
   Set<Marker> markers = {};
 
+  final geo = GeoFlutterFire();
   GoogleMapController? mapController;
   final PanelController _panelController = PanelController();
   static final CameraPosition _sanFranciso = CameraPosition(
@@ -123,14 +122,15 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     stream.listen((locationList) {
       print("length ${locationList.length}");
       _createMarkers(locationList, tempMarkers);
-      print(tempMarkers.length);
-      List<ClusterItem<Marker>> clusterItems = tempMarkers.values
+
+      print("ITEMS - ${_manager.items.toList()}");
+      _markers.addAll(tempMarkers);
+
+      List<ClusterItem<Marker>> clusterItems = _markers.values
           .map((Marker marker) =>
               ClusterItem<Marker>(marker.position, item: marker))
           .toList();
-
       _manager.setItems(clusterItems);
-      // _markers.addAll(tempMarkers);
     });
   }
 
@@ -175,23 +175,25 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   List<ClusterItem> items = [];
   Future<Marker> Function(Cluster) get _markerBuilder => (cluster) async {
-        return Marker(
-          markerId: MarkerId(cluster.getId()),
-          position: cluster.location,
-          onTap: () {
-            print('---- $cluster');
-            cluster.items.forEach((p) => print(p));
-          },
-          icon: await _getMarkerBitmap(cluster.isMultiple ? 125 : 75,
-              text: cluster.isMultiple ? cluster.count.toString() : null),
-        );
+        return cluster.isMultiple
+            ? Marker(
+                markerId: MarkerId(cluster.getId()),
+                position: cluster.location,
+                onTap: () {
+                  print('---- $cluster');
+                  cluster.items.forEach((p) => print(p));
+                },
+                icon: await _getMarkerBitmap(cluster.isMultiple ? 125 : 75,
+                    text: cluster.isMultiple ? cluster.count.toString() : null),
+              )
+            : cluster.items.first;
       };
 
   Future<BitmapDescriptor> _getMarkerBitmap(int size, {String? text}) async {
     final PictureRecorder pictureRecorder = PictureRecorder();
     final Canvas canvas = Canvas(pictureRecorder);
-    final Paint paint1 = Paint()..color = Colors.orange;
-    final Paint paint2 = Paint()..color = Colors.white;
+    final Paint paint1 = Paint()..color = Colors.teal.shade300;
+    final Paint paint2 = Paint()..color = Theme.of(context).colorScheme.surface;
 
     canvas.drawCircle(Offset(size / 2, size / 2), size / 2.0, paint1);
     canvas.drawCircle(Offset(size / 2, size / 2), size / 2.2, paint2);
@@ -231,9 +233,11 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   ClusterManager _initClusterManager() {
     return ClusterManager(
-      items, _updateMarkers,
-      // initialZoom: 16,
-      stopClusteringZoom: 10.0,
+      items,
+      _updateMarkers,
+      markerBuilder: _markerBuilder,
+      initialZoom: 16,
+      stopClusteringZoom: 12,
     );
   }
 
@@ -277,7 +281,11 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
               zoomControlsEnabled: false,
               mapToolbarEnabled: false,
               markers: markers,
-              onCameraIdle: () => _getNearbySpots(screenCoordinate),
+              onCameraMove: _manager.onCameraMove,
+              onCameraIdle: () {
+                _getNearbySpots(screenCoordinate);
+                _manager.updateMap();
+              },
             ),
             AddLocationWrapper(
               mapController: mapController,
