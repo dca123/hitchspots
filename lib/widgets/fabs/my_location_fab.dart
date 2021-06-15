@@ -43,7 +43,7 @@ class MyLocationFAB extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton(
-      elevation: 2,
+      elevation: 6,
       backgroundColor: Theme.of(context).colorScheme.surface,
       child: Icon(
         Icons.gps_fixed,
