@@ -81,7 +81,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _maximizePanel() => _panelController.animatePanelToPosition(1);
-
+  bool hasImages = false;
   void _createMarkers(locationList, tempMarkers) {
     locationList.forEach((locationDocument) {
       GeoPoint point = locationDocument.get('position')['geopoint'];
@@ -90,11 +90,14 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         markerId: MarkerId(locationDocument.id),
         position: LatLng(point.latitude, point.longitude),
         icon: _ratingToMarker(rating),
-        onTap: () {
-          Provider.of<LocationCardModel>(context, listen: false)
+        onTap: () async {
+          await Provider.of<LocationCardModel>(context, listen: false)
               .updateLocation(locationDocument.data(), locationDocument.id);
-
-          _panelController.animatePanelToPosition(0.35);
+          setState(() {
+            hasImages = Provider.of<LocationCardModel>(context, listen: false)
+                .hasImages;
+          });
+          _panelController.animatePanelToPosition(hasImages ? 0.35 : 0.20);
         },
       );
     });
@@ -273,7 +276,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         controller: _panelController,
         minHeight: 0,
         maxHeight: MediaQuery.of(context).size.height,
-        snapPoint: 0.35,
+        snapPoint: hasImages ? 0.35 : 0.20,
         borderRadius: radius,
         panel: LocationInfoCard(
           animationController: _slidingPanelAnimationController,

@@ -14,7 +14,7 @@ class LocationInfoCard extends StatelessWidget {
     required this.radius,
     required this.maximizePanel,
     required this.animationController,
-  })  : imageSize = Tween<double>(begin: 100, end: 200).animate(
+  })  : imageSize = Tween<double>(begin: 0.55, end: 1).animate(
           CurvedAnimation(
             parent: animationController,
             curve: Interval(0.35, 1.0, curve: Curves.easeIn),
@@ -39,13 +39,28 @@ class LocationInfoCard extends StatelessWidget {
       topLeft: Radius.circular(borderRadius.value),
       topRight: Radius.circular(borderRadius.value),
     );
-    return Column(children: [
-      ReviewImageRow(radius: radius, imageSize: imageSize),
-      CardDetails(
-          maximizePanel: maximizePanel,
-          animationController: animationController),
-      ReviewList()
-    ]);
+
+    bool hasImages =
+        Provider.of<LocationCardModel>(context, listen: false).hasImages;
+
+    return Container(
+      child: Column(children: [
+        Flexible(
+          flex: 1,
+          child: FractionallySizedBox(
+            heightFactor: hasImages ? imageSize.value : 0,
+            child: ReviewImageRow(radius: radius, imageSize: imageSize),
+          ),
+        ),
+        CardDetails(
+            maximizePanel: maximizePanel,
+            animationController: animationController),
+        Expanded(
+          flex: 2,
+          child: ReviewList(),
+        ),
+      ]),
+    );
   }
 
   @override
@@ -56,28 +71,41 @@ class LocationInfoCard extends StatelessWidget {
 }
 
 class CardDetails extends StatelessWidget {
-  const CardDetails({
+  CardDetails({
     Key? key,
     required this.maximizePanel,
     required this.animationController,
-  }) : super(key: key);
+  })  : marginTop = Tween<double>(begin: 0, end: 20).animate(
+          CurvedAnimation(
+            parent: animationController,
+            curve: Interval(0.35, 1.0, curve: Curves.easeIn),
+          ),
+        ),
+        super(key: key);
 
   final Function maximizePanel;
   final AnimationController animationController;
+  final Animation<double> marginTop;
 
   @override
   Widget build(BuildContext context) {
+    bool hasImages =
+        Provider.of<LocationCardModel>(context, listen: false).hasImages;
+
     return Card(
       margin: EdgeInsets.all(0),
       elevation: 2,
-      child: Column(
-        children: [
-          LocationInfomation(),
-          ButtonBar(
-            maximizePanel: maximizePanel,
-            animationController: animationController,
-          ),
-        ],
+      child: Container(
+        padding: hasImages ? null : EdgeInsets.only(top: marginTop.value),
+        child: Column(
+          children: [
+            LocationInfomation(),
+            ButtonBar(
+              maximizePanel: maximizePanel,
+              animationController: animationController,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -100,7 +128,7 @@ class ReviewImageRow extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: radius,
       ),
-      height: imageSize.value,
+      // height: imageSize.value,
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
@@ -137,12 +165,6 @@ class ReviewImage extends StatelessWidget {
         fit: BoxFit.cover,
       );
     });
-
-    // return Image.asset(
-    //   "assets/locations/$imageName.jpg",
-    //   width: 144,
-    //   fit: BoxFit.cover,
-    // );
   }
 }
 
@@ -154,31 +176,29 @@ class ReviewList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<LocationCardModel>(builder: (context, locationCard, child) {
-      return Expanded(
-        child: ListView.separated(
-          itemCount: locationCard.reviews.length,
-          padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
-          separatorBuilder: (BuildContext context, int index) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4.0),
-            child: const Divider(),
-          ),
-          itemBuilder: (context, index) {
-            var review = locationCard.reviews[index];
-            int? reviewTimestamp = review['timestamp'];
-            String fuzzyTimeStamp = "Some time ago";
-            if (reviewTimestamp != null) {
-              DateTime dateTimeSinceEpoch =
-                  DateTime.fromMillisecondsSinceEpoch(reviewTimestamp);
-              fuzzyTimeStamp = timeago.format(dateTimeSinceEpoch);
-            }
-            return ReviewTile(
-              description: '${review['description']}',
-              fuzzyTimeAgo: '$fuzzyTimeStamp',
-              rating: (review['rating'] ?? 0).toDouble(),
-              displayName: '${review['createdByDisplayName']}',
-            );
-          },
+      return ListView.separated(
+        itemCount: locationCard.reviews.length,
+        padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+        separatorBuilder: (BuildContext context, int index) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
+          child: const Divider(),
         ),
+        itemBuilder: (context, index) {
+          var review = locationCard.reviews[index];
+          int? reviewTimestamp = review['timestamp'];
+          String fuzzyTimeStamp = "Some time ago";
+          if (reviewTimestamp != null) {
+            DateTime dateTimeSinceEpoch =
+                DateTime.fromMillisecondsSinceEpoch(reviewTimestamp);
+            fuzzyTimeStamp = timeago.format(dateTimeSinceEpoch);
+          }
+          return ReviewTile(
+            description: '${review['description']}',
+            fuzzyTimeAgo: '$fuzzyTimeStamp',
+            rating: (review['rating'] ?? 0).toDouble(),
+            displayName: '${review['createdByDisplayName']}',
+          );
+        },
       );
     });
   }
