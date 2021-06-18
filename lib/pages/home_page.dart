@@ -54,6 +54,8 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     topRight: Radius.circular(24.0),
   );
 
+  double snapPoint = 0.35;
+  late double height;
   HomePageState() {
     init();
   }
@@ -82,7 +84,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _maximizePanel() => _panelController.animatePanelToPosition(1);
-  bool hasImages = false;
   void _createMarkers(locationList, tempMarkers) {
     locationList.forEach((locationDocument) {
       GeoPoint point = locationDocument.get('position')['geopoint'];
@@ -94,11 +95,13 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         onTap: () async {
           await Provider.of<LocationCardModel>(context, listen: false)
               .updateLocation(locationDocument.data(), locationDocument.id);
-          // setState(() {
-          //   hasImages = Provider.of<LocationCardModel>(context, listen: false)
-          //       .hasImages;
-          // });
-          _panelController.animatePanelToPosition(0.35);
+          bool hasImages =
+              Provider.of<LocationCardModel>(context, listen: false).hasImages;
+          setState(() {
+            snapPoint = hasImages ? 0.35 : height;
+          });
+          print("SNAPPOINT - $snapPoint");
+          _panelController.animatePanelToPosition(snapPoint);
         },
       );
     });
@@ -156,7 +159,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       this.mapController = mapController;
       _clusterManager.setMapController(mapController);
     });
-
+    final double cardHeight = cardDetailsKey.currentContext!.size!.height;
+    final double screenHeight = MediaQuery.of(context).size.height;
+    height = cardHeight / screenHeight;
     _moveCameraToUserLocation();
   }
 
@@ -261,25 +266,29 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   @override
   void initState() {
+    super.initState();
     _clusterManager = _initClusterManager();
     _slidingPanelAnimationController =
         AnimationController(vsync: this, lowerBound: 0, upperBound: 1);
-    super.initState();
   }
 
+  final cardDetailsKey = GlobalKey();
   @override
   Widget build(BuildContext context) {
     final ScreenCoordinate screenCoordinate =
         getCenterOfScreenCoordinater(context);
-    return new Scaffold(
+
+    return Scaffold(
       resizeToAvoidBottomInset: false,
       body: SlidingUpPanel(
         controller: _panelController,
         minHeight: 0,
         maxHeight: MediaQuery.of(context).size.height,
-        snapPoint: 0.35,
+        snapPoint: snapPoint,
         borderRadius: radius,
-        panel: LocationInfoCard2(),
+        panel: LocationInfoCard2(
+          cardDetailsKey: cardDetailsKey,
+        ),
         // panel: LocationInfoCard(
         //   animationController: _slidingPanelAnimationController,
         //   radius: radius,

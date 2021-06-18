@@ -10,34 +10,50 @@ import '../pages/create_review_page.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class LocationInfoCard2 extends StatelessWidget {
+  LocationInfoCard2({required this.cardDetailsKey});
+  final cardDetailsKey;
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height * 0.35;
     // 0.35 : 0.65 => 7:13
     // 0.175 : 0.175 : 0.65 => 7 7 26
+    return Consumer<LocationCardModel>(builder: (context, locationCard, child) {
+      final screenHeight = MediaQuery.of(context).size.height *
+          (locationCard.hasImages ? 0.35 : 0.20);
 
-    return Column(
-      children: [
-        ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: screenHeight),
-          child: Column(
-            children: [
-              Flexible(
-                flex: 1,
-                fit: FlexFit.tight,
-                child: FractionallySizedBox(
-                  alignment: Alignment.topCenter,
-                  heightFactor: 1,
-                  child: ReviewImageRow(),
-                ),
+      if (locationCard.hasImages) {
+        return Column(
+          children: [
+            ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: screenHeight),
+              child: Column(
+                children: [
+                  Flexible(
+                    flex: 1,
+                    fit: FlexFit.tight,
+                    child: FractionallySizedBox(
+                      alignment: Alignment.topCenter,
+                      heightFactor: 1,
+                      child: ReviewImageRow(),
+                    ),
+                  ),
+                  CardDetails(),
+                ],
               ),
-              CardDetails(),
-            ],
-          ),
-        ),
-        Expanded(child: ReviewList())
-      ],
-    );
+            ),
+            Expanded(child: ReviewList())
+          ],
+        );
+      } else {
+        return Column(
+          children: [
+            CardDetails(
+              key: cardDetailsKey,
+            ),
+            Expanded(child: ReviewList())
+          ],
+        );
+      }
+    });
   }
 }
 
@@ -182,15 +198,30 @@ class ReviewTile extends StatelessWidget {
 class ButtonBar extends StatelessWidget {
   ButtonBar({
     Key? key,
-  }) : super(key: key);
+    // required this.maximizePanel,
+    // required this.animationController,
+  }) :
+        // opacity = Tween<double>(begin: 1, end: 0).animate(
+        //         CurvedAnimation(
+        //           parent: animationController,
+        //           curve: Interval(0.35, 1.0, curve: Curves.linear),
+        //         ),
+        //       ),
+        super(key: key);
+  // final Animation<double> opacity;
+  // final AnimationController animationController;
+  // final Function maximizePanel;
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: OpenContainer<bool>(
+    return Container(
+      child: Row(
+        children: [
+          OpenContainer<bool>(
+            clipBehavior: Clip.none,
+            tappable: false,
             openColor: Theme.of(context).canvasColor,
-            closedElevation: 2,
+            closedElevation: 0,
+            closedColor: Colors.transparent,
             onClosed: (success) {
               if (success == true) {
                 Future.delayed(const Duration(milliseconds: 500), () {
@@ -202,11 +233,10 @@ class ButtonBar extends StatelessWidget {
                 });
               }
             },
-            closedShape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-            closedColor: Colors.transparent,
+            // closedShape: const RoundedRectangleBorder(
+            //     borderRadius: BorderRadius.all(Radius.circular(4))),
             closedBuilder: (context, openContainer) {
-              return ElevatedButton(
+              return ElevatedButton.icon(
                 onPressed: () => Provider.of<AuthenticationState>(
                   context,
                   listen: false,
@@ -214,80 +244,30 @@ class ButtonBar extends StatelessWidget {
                   buildContext: context,
                   postLogin: () => openContainer(),
                 ),
-                child: Row(
-                  children: [
-                    Icon(Icons.add),
-                    Text(" Review"),
-                  ],
-                ),
+                icon: Icon(Icons.add),
+                label: Text("Review"),
               );
             },
             openBuilder: (context, closedContainer) {
               return CreateReviewPage();
             },
           ),
-        )
-      ],
+          SizedBox(width: 16.0),
+          // Opacity(
+          //   opacity: opacity.value,
+          //   child: OutlinedButton(
+          //     onPressed: () => maximizePanel(),
+          //     child: Row(
+          //       children: [
+          //         Icon(Icons.comment),
+          //         Text(" Comments"),
+          //       ],
+          //     ),
+          //   ),
+          // ),
+        ],
+      ),
     );
-    // return Container(
-    //   height: 40,
-    //   child: ListView(
-    //     scrollDirection: Axis.horizontal,
-    //     children: [
-    //       SizedBox(width: 24.0),
-    //       OpenContainer<bool>(
-    //         openColor: Theme.of(context).canvasColor,
-    //         closedElevation: 2,
-    //         onClosed: (success) {
-    //           if (success == true) {
-    //             Future.delayed(const Duration(milliseconds: 500), () {
-    //               ScaffoldMessenger.of(context).showSnackBar(
-    //                 SnackBar(
-    //                   content: const Text('Thank you for contributing!'),
-    //                 ),
-    //               );
-    //             });
-    //           }
-    //         },
-    //         closedShape:
-    //             RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-    //         closedBuilder: (context, openContainer) {
-    //           return ElevatedButton(
-    //             onPressed: () => Provider.of<AuthenticationState>(
-    //               context,
-    //               listen: false,
-    //             ).loginFlowWithAction(
-    //               buildContext: context,
-    //               postLogin: () => openContainer(),
-    //             ),
-    //             child: Row(
-    //               children: [
-    //                 Icon(Icons.add),
-    //                 Text(" Review"),
-    //               ],
-    //             ),
-    //           );
-    //         },
-    //         openBuilder: (context, closedContainer) {
-    //           return CreateReviewPage();
-    //         },
-    //       ),
-    //       SizedBox(width: 16.0),
-    //       Opacity(
-    //         opacity: 1,
-    //         child: OutlinedButton(
-    //           onPressed: () => () => {},
-    //           child: Row(
-    //             children: [
-    //               Icon(Icons.comment),
-    //               Text(" Comments"),
-    //             ],
-    //           ),
-    //         ),
-    //       ),
-    //     ],
-    //   ),
-    // );
   }
 }
 
@@ -360,38 +340,23 @@ class CardDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool hasImages =
+    final bool hasImages =
         Provider.of<LocationCardModel>(context, listen: false).hasImages;
-
+    final double paddingTop =
+        hasImages ? 16 : MediaQuery.of(context).padding.top + 16;
     return Card(
       margin: EdgeInsets.all(0),
       elevation: 2,
       child: Container(
-        padding: EdgeInsets.only(top: 8, bottom: 8, left: 16),
+        padding: EdgeInsets.only(top: paddingTop, bottom: 8, left: 16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             LocationInfomation(),
-            Container(
-              child: Row(
-                children: [
-                  OutlinedButton.icon(
-                    icon: Icon(Icons.image),
-                    onPressed: () {
-                      print('Received click');
-                    },
-                    label: const Text('Click Me'),
-                  ),
-                  OutlinedButton.icon(
-                    icon: Icon(Icons.image),
-                    onPressed: () {
-                      print('Received click');
-                    },
-                    label: const Text('Click Me'),
-                  ),
-                ],
-              ),
+            SizedBox(
+              height: 8,
             ),
+            ButtonBar(),
           ],
         ),
       ),
