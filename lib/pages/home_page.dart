@@ -54,7 +54,8 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   );
 
   double snapPoint = 0.35;
-  late double height;
+  double? height;
+
   HomePageState() {
     init();
   }
@@ -84,6 +85,12 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   void _maximizePanel() => _panelController.animatePanelToPosition(1);
   void _createMarkers(locationList, tempMarkers) {
+    if (height == null) {
+      final double cardHeight = cardDetailsKey.currentContext!.size!.height;
+      final double screenHeight = MediaQuery.of(context).size.height;
+      height = cardHeight / screenHeight;
+      // print("$screenHeight $cardHeight $height - SCREENHEIGHT");
+    }
     locationList.forEach((locationDocument) {
       GeoPoint point = locationDocument.get('position')['geopoint'];
       double rating = locationDocument.get('rating').toDouble();
@@ -97,9 +104,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
           bool hasImages =
               Provider.of<LocationCardModel>(context, listen: false).hasImages;
           setState(() {
-            snapPoint = hasImages ? 0.35 : height;
+            snapPoint = hasImages ? 0.35 : height!;
           });
-          print("SNAPPOINT - $snapPoint");
+          // print("SNAPPOINT - $snapPoint");
           _panelController.animatePanelToPosition(snapPoint);
         },
       );
@@ -158,10 +165,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       this.mapController = mapController;
       _clusterManager.setMapController(mapController);
     });
-    final double cardHeight = cardDetailsKey.currentContext!.size!.height;
-    final double screenHeight = MediaQuery.of(context).size.height;
-    height = cardHeight / screenHeight;
-    print("$screenHeight - SCREENHEIGHT");
     _moveCameraToUserLocation();
   }
 
