@@ -1,34 +1,44 @@
 import 'package:flutter/material.dart';
 
-class MyLocationFabAnimator extends StatelessWidget {
+class MyLocationFabAnimator extends StatefulWidget {
   MyLocationFabAnimator({
     Key? key,
     required this.getLocation,
     required this.animationController,
-  })  : bottom = Tween<double>(begin: 84.0, end: 265.0).animate(
-          CurvedAnimation(
-            parent: animationController,
-            curve: Interval(0.1, 0.35, curve: Curves.linear),
-          ),
-        ),
-        super(key: key);
+  }) : super(key: key);
 
   final AnimationController animationController;
-  final Animation<double> bottom;
   final Function getLocation;
+
+  @override
+  _MyLocationFabAnimatorState createState() => _MyLocationFabAnimatorState();
+}
+
+class _MyLocationFabAnimatorState extends State<MyLocationFabAnimator> {
+  late Animation<double> bottom;
 
   Widget _buildAnimation(BuildContext context, Widget? child) {
     return Positioned(
       bottom: bottom.value,
       right: 16,
-      child: MyLocationFAB(getLocation: getLocation),
+      child: MyLocationFAB(getLocation: widget.getLocation),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    bottom = Tween<double>(
+      begin: 84.0,
+      end: 0.35 * screenHeight + 16,
+    ).animate(
+      CurvedAnimation(
+        parent: widget.animationController,
+        curve: Interval(72 / screenHeight, 0.35, curve: Curves.linear),
+      ),
+    );
     return AnimatedBuilder(
-        animation: animationController, builder: _buildAnimation);
+        animation: widget.animationController, builder: _buildAnimation);
   }
 }
 

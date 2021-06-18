@@ -12,7 +12,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hitchspots/models/location_card.dart';
 import 'package:hitchspots/widgets/fabs/add_location_fab.dart';
 import 'package:hitchspots/widgets/fabs/my_location_fab.dart';
-import 'package:hitchspots/widgets/location_info_card_2.dart';
 import 'package:location/location.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
@@ -162,6 +161,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final double cardHeight = cardDetailsKey.currentContext!.size!.height;
     final double screenHeight = MediaQuery.of(context).size.height;
     height = cardHeight / screenHeight;
+    print("$screenHeight - SCREENHEIGHT");
     _moveCameraToUserLocation();
   }
 
@@ -286,14 +286,11 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         maxHeight: MediaQuery.of(context).size.height,
         snapPoint: snapPoint,
         borderRadius: radius,
-        panel: LocationInfoCard2(
+        panel: LocationInfoCard(
           cardDetailsKey: cardDetailsKey,
+          animationController: _slidingPanelAnimationController,
+          maximizePanel: _maximizePanel,
         ),
-        // panel: LocationInfoCard(
-        //   animationController: _slidingPanelAnimationController,
-        //   radius: radius,
-        //   maximizePanel: _maximizePanel,
-        // ),
         onPanelSlide: (slideValue) {
           _slidingPanelAnimationController.value = slideValue;
         },
