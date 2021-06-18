@@ -53,6 +53,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     topRight: Radius.circular(24.0),
   );
 
+  double snapPoint = 0.35;
+  double? noImagesCardSnapPoint;
+
   HomePageState() {
     init();
   }
@@ -81,8 +84,13 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _maximizePanel() => _panelController.animatePanelToPosition(1);
-
   void _createMarkers(locationList, tempMarkers) {
+    if (noImagesCardSnapPoint == null) {
+      final double cardHeight = cardDetailsKey.currentContext!.size!.height;
+      final double screenHeight = MediaQuery.of(context).size.height;
+      noImagesCardSnapPoint = cardHeight / screenHeight;
+      // print("$screenHeight $cardHeight $height - SCREENHEIGHT");
+    }
     locationList.forEach((locationDocument) {
       GeoPoint point = locationDocument.get('position')['geopoint'];
       double rating = locationDocument.get('rating').toDouble();
@@ -90,11 +98,16 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         markerId: MarkerId(locationDocument.id),
         position: LatLng(point.latitude, point.longitude),
         icon: _ratingToMarker(rating),
-        onTap: () {
-          Provider.of<LocationCardModel>(context, listen: false)
+        onTap: () async {
+          await Provider.of<LocationCardModel>(context, listen: false)
               .updateLocation(locationDocument.data(), locationDocument.id);
-
-          _panelController.animatePanelToPosition(0.35);
+          bool hasImages =
+              Provider.of<LocationCardModel>(context, listen: false).hasImages;
+          setState(() {
+            snapPoint = hasImages ? 0.35 : noImagesCardSnapPoint!;
+          });
+          // print("SNAPPOINT - $snapPoint");
+          _panelController.animatePanelToPosition(snapPoint);
         },
       );
     });
@@ -152,7 +165,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       this.mapController = mapController;
       _clusterManager.setMapController(mapController);
     });
-
     _moveCameraToUserLocation();
   }
 
@@ -257,27 +269,29 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   @override
   void initState() {
+    super.initState();
     _clusterManager = _initClusterManager();
     _slidingPanelAnimationController =
         AnimationController(vsync: this, lowerBound: 0, upperBound: 1);
-    super.initState();
   }
 
+  final cardDetailsKey = GlobalKey();
   @override
   Widget build(BuildContext context) {
     final ScreenCoordinate screenCoordinate =
         getCenterOfScreenCoordinater(context);
-    return new Scaffold(
+
+    return Scaffold(
       resizeToAvoidBottomInset: false,
       body: SlidingUpPanel(
         controller: _panelController,
         minHeight: 0,
         maxHeight: MediaQuery.of(context).size.height,
-        snapPoint: 0.35,
+        snapPoint: snapPoint,
         borderRadius: radius,
         panel: LocationInfoCard(
+          cardDetailsKey: cardDetailsKey,
           animationController: _slidingPanelAnimationController,
-          radius: radius,
           maximizePanel: _maximizePanel,
         ),
         onPanelSlide: (slideValue) {
