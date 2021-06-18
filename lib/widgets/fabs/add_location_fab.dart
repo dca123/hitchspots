@@ -42,7 +42,7 @@ class _AddLocationWrapperState extends State<AddLocationWrapper> {
           }
         },
         closedShape: widget.circleFabBorder,
-        closedElevation: 2,
+        closedElevation: 6,
         closedColor: theme.primaryColor,
         closedBuilder: (context, openContainer) {
           return InkWell(
