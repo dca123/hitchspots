@@ -12,6 +12,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hitchspots/models/location_card.dart';
 import 'package:hitchspots/widgets/fabs/add_location_fab.dart';
 import 'package:hitchspots/widgets/fabs/my_location_fab.dart';
+import 'package:hitchspots/widgets/location_info_card_2.dart';
 import 'package:location/location.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
@@ -93,11 +94,11 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         onTap: () async {
           await Provider.of<LocationCardModel>(context, listen: false)
               .updateLocation(locationDocument.data(), locationDocument.id);
-          setState(() {
-            hasImages = Provider.of<LocationCardModel>(context, listen: false)
-                .hasImages;
-          });
-          _panelController.animatePanelToPosition(hasImages ? 0.35 : 0.20);
+          // setState(() {
+          //   hasImages = Provider.of<LocationCardModel>(context, listen: false)
+          //       .hasImages;
+          // });
+          _panelController.animatePanelToPosition(0.35);
         },
       );
     });
@@ -276,13 +277,14 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         controller: _panelController,
         minHeight: 0,
         maxHeight: MediaQuery.of(context).size.height,
-        snapPoint: hasImages ? 0.35 : 0.20,
+        snapPoint: 0.35,
         borderRadius: radius,
-        panel: LocationInfoCard(
-          animationController: _slidingPanelAnimationController,
-          radius: radius,
-          maximizePanel: _maximizePanel,
-        ),
+        panel: LocationInfoCard2(),
+        // panel: LocationInfoCard(
+        //   animationController: _slidingPanelAnimationController,
+        //   radius: radius,
+        //   maximizePanel: _maximizePanel,
+        // ),
         onPanelSlide: (slideValue) {
           _slidingPanelAnimationController.value = slideValue;
         },

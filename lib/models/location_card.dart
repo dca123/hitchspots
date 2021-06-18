@@ -35,7 +35,7 @@ class LocationCardModel extends ChangeNotifier {
       _recentReview = reviewQuery.docs.length > 0
           ? reviewQuery.docs[0].get('description')
           : "";
-      _hasImages = await hasStreetViewImages(_coordinates);
+      // _hasImages = await hasStreetViewImages(_coordinates);
     }
     _locationRating = double.parse(locationData['rating'].toStringAsFixed(2));
     _reviewCount = locationData['reviewCount'];
