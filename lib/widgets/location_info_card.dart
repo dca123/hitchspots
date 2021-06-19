@@ -13,7 +13,13 @@ class LocationInfoCard extends StatelessWidget {
     required this.cardDetailsKey,
     required this.animationController,
     required this.maximizePanel,
-  }) : imageHeight = Tween<double>(begin: 0.35, end: 0.45).animate(
+  })  : imageHeight = Tween<double>(begin: 0.35, end: 0.45).animate(
+          CurvedAnimation(
+            parent: animationController,
+            curve: Interval(0.35, 1.0, curve: Curves.linear),
+          ),
+        ),
+        borderRadius = Tween<double>(begin: 24, end: 0).animate(
           CurvedAnimation(
             parent: animationController,
             curve: Interval(0.35, 1.0, curve: Curves.linear),
@@ -22,11 +28,14 @@ class LocationInfoCard extends StatelessWidget {
   final cardDetailsKey;
   final AnimationController animationController;
   final Animation<double> imageHeight;
+  final Animation<double> borderRadius;
   final Function maximizePanel;
-
   Widget _buildHeaderAnimation(BuildContext context, Widget? widget) {
     final screenHeight = MediaQuery.of(context).size.height * imageHeight.value;
-
+    final BorderRadiusGeometry imageRowRadius = BorderRadius.only(
+      topLeft: Radius.circular(borderRadius.value),
+      topRight: Radius.circular(borderRadius.value),
+    );
     return Column(
       children: [
         ConstrainedBox(
@@ -39,7 +48,9 @@ class LocationInfoCard extends StatelessWidget {
                 child: FractionallySizedBox(
                   alignment: Alignment.topCenter,
                   heightFactor: 1,
-                  child: ReviewImageRow(),
+                  child: ReviewImageRow(
+                    radius: imageRowRadius,
+                  ),
                 ),
               ),
               CardDetails(
@@ -81,15 +92,16 @@ class LocationInfoCard extends StatelessWidget {
 class ReviewImageRow extends StatelessWidget {
   const ReviewImageRow({
     Key? key,
+    required this.radius,
   }) : super(key: key);
-
+  final BorderRadiusGeometry radius;
   @override
   Widget build(BuildContext context) {
     return Container(
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
-          // borderRadius: radius,
-          ),
+        borderRadius: radius,
+      ),
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
