@@ -63,15 +63,13 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Future<void> init() async {
     await Firebase.initializeApp();
 
-    double width = MediaQuery.of(context).devicePixelRatio.round() * 50;
-    _clusterImage = await _loadUiImage('assets/icons/cluster.png', width);
-
     goodIcon = await BitmapDescriptor.fromAssetImage(
         createLocalImageConfiguration(context), 'assets/icons/Good.png');
     warningIcon = await BitmapDescriptor.fromAssetImage(
         createLocalImageConfiguration(context), 'assets/icons/Warning.png');
     badIcon = await BitmapDescriptor.fromAssetImage(
         createLocalImageConfiguration(context), 'assets/icons/Bad.png');
+    _clusterImage = await _loadClusterImage('assets/icons/cluster.png');
   }
 
   BitmapDescriptor _ratingToMarker(double rating) {
@@ -192,7 +190,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Future<Marker> Function(Cluster) get _markerBuilder => (cluster) async {
-        double width = MediaQuery.of(context).devicePixelRatio.round() * 50;
         return cluster.isMultiple
             ? Marker(
                 markerId: MarkerId(cluster.getId()),
@@ -201,28 +198,27 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   print('---- $cluster');
                   cluster.items.forEach((p) => print(p));
                 },
-                icon: await _getMarkerBitmap(width, cluster.count.toString()),
+                icon: await _getMarkerBitmap(cluster.count.toString()),
               )
             : cluster.items.first;
       };
 
-  Future<UI.Image> _loadUiImage(String imageAssetPath, double width) async {
-    ByteData data = await rootBundle.load(imageAssetPath);
-    UI.Codec codec = await UI.instantiateImageCodec(data.buffer.asUint8List(),
-        targetWidth: width.round());
-    UI.FrameInfo fi = await codec.getNextFrame();
-    ByteData? imageAsByte =
-        await fi.image.toByteData(format: UI.ImageByteFormat.png);
-
-    Future<UI.Image> myBackground =
-        decodeImageFromList(imageAsByte!.buffer.asUint8List());
-
-    return myBackground;
+  Future<UI.Image> _loadClusterImage(String imageAssetPath) async {
+    Image image = Image.asset(imageAssetPath);
+    Completer<ImageInfo> completer = Completer();
+    image.image
+        .resolve(createLocalImageConfiguration(context))
+        .addListener(ImageStreamListener((ImageInfo info, bool _) {
+      completer.complete(info);
+    }));
+    ImageInfo imageInfo = await completer.future;
+    return imageInfo.image;
   }
 
-  Future<BitmapDescriptor> _getMarkerBitmap(double size, String text) async {
+  Future<BitmapDescriptor> _getMarkerBitmap(String text) async {
     final UI.PictureRecorder pictureRecorder = UI.PictureRecorder();
     final Canvas canvas = Canvas(pictureRecorder);
+    final int width = _clusterImage.width;
 
     canvas.drawImage(_clusterImage, Offset.zero, Paint());
 
@@ -236,15 +232,14 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     painter.layout();
     painter.paint(
       canvas,
+      // Offset.zero,
       Offset(
-        size / 2 - painter.width / 2,
-        size / 3.15 - painter.height / 2,
+        width / 2 - painter.width / 2,
+        width / 3.15 - painter.height / 2,
       ),
     );
 
-    final img = await pictureRecorder
-        .endRecording()
-        .toImage(size.toInt(), size.toInt());
+    final img = await pictureRecorder.endRecording().toImage(width, width);
     final data =
         await img.toByteData(format: UI.ImageByteFormat.png) as ByteData;
 

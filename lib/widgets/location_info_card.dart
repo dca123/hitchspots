@@ -373,7 +373,7 @@ class _CardDetailsState extends State<CardDetails> {
       margin: EdgeInsets.all(0),
       elevation: 2,
       child: Container(
-        padding: EdgeInsets.only(top: paddingTop.value, bottom: 8, left: 16),
+        padding: EdgeInsets.only(top: paddingTop.value, bottom: 16, left: 16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
