@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../../pages/location_picker_page.dart';
+import 'package:hitchspots/models/location_picker_store.dart';
+import 'package:provider/provider.dart';
 
 class MapLocationFormField extends FormField<LatLng> {
   static GoogleMapController? mapController;
@@ -9,15 +10,19 @@ class MapLocationFormField extends FormField<LatLng> {
     required onSaved,
     required LatLng centerLatLng,
   }) : super(
+          initialValue:
+              Provider.of<LocationPickerStore>(buildContext, listen: false)
+                  .selectedLocation,
           onSaved: onSaved,
           validator: (LatLng? value) {
             if (value == null) {
               return "Please select a location";
             }
+            onSaved(value);
           },
-          builder: (context) {
+          builder: (formContext) {
             final CameraPosition centerCamPos = CameraPosition(
-              target: centerLatLng,
+              target: formContext.widget.initialValue ?? centerLatLng,
               zoom: 18,
             );
             return Column(
@@ -26,24 +31,15 @@ class MapLocationFormField extends FormField<LatLng> {
                   height: 100,
                   child: GestureDetector(
                     onTap: () async {
-                      final LatLng? result = await Navigator.push(
-                        buildContext,
-                        MaterialPageRoute(builder: (context) {
-                          return LocationPicker(centerOfScreen: centerCamPos);
-                        }),
-                      );
-                      if (result != null) {
-                        CameraUpdate updatedPosition =
-                            CameraUpdate.newLatLng(result);
-                        mapController!.moveCamera(updatedPosition);
-                        context.didChange(result);
-                        context.save();
-                      }
+                      Provider.of<LocationPickerStore>(buildContext,
+                              listen: false)
+                          .toggleLocationPicker();
                     },
                     child: Stack(
                       children: [
                         GoogleMap(
                           initialCameraPosition: centerCamPos,
+                          buildingsEnabled: false,
                           zoomControlsEnabled: false,
                           onMapCreated: (controller) {
                             mapController = controller;
@@ -65,11 +61,11 @@ class MapLocationFormField extends FormField<LatLng> {
                     ),
                   ),
                 ),
-                if (context.hasError)
+                if (formContext.hasError)
                   Container(
                     padding: EdgeInsets.only(top: 16),
                     child: Text(
-                      context.errorText!,
+                      formContext.errorText!,
                       style: Theme.of(buildContext)
                           .textTheme
                           .caption!

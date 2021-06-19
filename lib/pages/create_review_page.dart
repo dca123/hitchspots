@@ -6,13 +6,22 @@ import '../models/location_card.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class CreateReviewPage extends StatelessWidget {
+class CreateReviewPage extends StatefulWidget {
   CreateReviewPage({
     Key? key,
   }) : super(key: key);
+
+  @override
+  _CreateReviewPageState createState() => _CreateReviewPageState();
+}
+
+class _CreateReviewPageState extends State<CreateReviewPage> {
   final descriptionTextController = TextEditingController();
+
   final _formKey = GlobalKey<FormState>();
+
   double? ratingController;
+
   @override
   Widget build(BuildContext context) {
     void addLocation(String locationID) {
@@ -46,15 +55,8 @@ class CreateReviewPage extends StatelessWidget {
         });
         Provider.of<LocationCardModel>(context, listen: false).clearReviews();
         Provider.of<LocationCardModel>(context, listen: false).getReviews();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Thank you for contributing!'),
-          ),
-        );
 
-        Future.delayed(Duration(milliseconds: 100), () {
-          Navigator.pop(context);
-        });
+        Navigator.pop(context, true);
       }
     }
 

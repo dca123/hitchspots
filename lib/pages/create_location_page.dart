@@ -1,28 +1,26 @@
-import 'dart:convert';
-import 'dart:io';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
-import 'package:path/path.dart' as path;
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:geoflutterfire2/geoflutterfire2.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:hitchspots/models/location_picker_store.dart';
 import 'package:hitchspots/services/authentication.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import '../widgets/form_fields/rating_bar.dart';
 import '../widgets/form_fields/location_picker.dart';
+import 'location_picker_page.dart';
 
 class CreateLocationPage extends StatefulWidget {
   final LatLng _centerLatLng;
-
+  final Function closedContainer;
   CreateLocationPage({
     Key? key,
     required LatLng centerLatLng,
-  })  : _centerLatLng = centerLatLng,
+    required Function closedContainer,
+  })  : closedContainer = closedContainer,
+        _centerLatLng = centerLatLng,
         super(key: key);
 
   @override
@@ -34,10 +32,12 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
 
   final TextEditingController locationName = TextEditingController();
   final TextEditingController locationExperience = TextEditingController();
+  final geo = GeoFlutterFire();
+
   double ratingController = 0;
   late LatLng position;
-
   final geo = GeoFlutterFire();
+
 
   Future<bool> hasStreetViewImages(LatLng location) async {
     Uri imageParametersUrl =
@@ -111,7 +111,6 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
         'timestamp': DateTime.now().millisecondsSinceEpoch,
         'createdByDisplayName': displayName,
       });
-
       if (await hasStreetViewImages(position)) {
         await uploadImages(position, location.id);
       }
@@ -124,6 +123,9 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
       Future.delayed(Duration(milliseconds: 100), () {
         Navigator.pop(context);
       });
+
+      Navigator.pop(context, true);
+
     }
   }
 
@@ -143,7 +145,7 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
         toolbarHeight: 84,
         leading: IconButton(
           icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => widget.closedContainer(),
           color: Colors.black,
         ),
         title: Text(
@@ -222,6 +224,86 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
             ]),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SharedAxisTransitionSwitcher extends StatelessWidget {
+  const _SharedAxisTransitionSwitcher({
+    required this.fillColor,
+    required this.child,
+    required this.reverse,
+  });
+
+  final Widget child;
+  final Color fillColor;
+  final bool reverse;
+
+  @override
+  Widget build(BuildContext context) {
+    return PageTransitionSwitcher(
+      reverse: reverse,
+      transitionBuilder: (child, animation, secondaryAnimation) {
+        return SharedAxisTransition(
+          transitionType: SharedAxisTransitionType.scaled,
+          child: child,
+          animation: animation,
+          secondaryAnimation: secondaryAnimation,
+        );
+      },
+      child: child,
+    );
+  }
+}
+
+class _CreateLocationPageSwitcher extends StatelessWidget {
+  const _CreateLocationPageSwitcher({
+    Key? key,
+    required this.centerLatLng,
+    required this.closedContainer,
+  }) : super(key: key);
+  final LatLng centerLatLng;
+  final Function closedContainer;
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<LocationPickerStore>(
+      builder: (context, locationPickerStore, child) {
+        Widget pageSwitcher = locationPickerStore.isLocationPickerOpen
+            ? LocationPickerPage(
+                centerLatLng: centerLatLng,
+              )
+            : CreateLocationPage(
+                centerLatLng: centerLatLng,
+                closedContainer: closedContainer,
+              );
+        return _SharedAxisTransitionSwitcher(
+          fillColor: Colors.transparent,
+          reverse: !locationPickerStore.isLocationPickerOpen,
+          child: pageSwitcher,
+        );
+      },
+    );
+  }
+}
+
+class CreateLocationPageProvider extends StatelessWidget {
+  const CreateLocationPageProvider({
+    Key? key,
+    required this.centerLatLng,
+    required this.closedContainer,
+  }) : super(key: key);
+
+  final LatLng centerLatLng;
+  final Function closedContainer;
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (context) => LocationPickerStore(),
+      child: _CreateLocationPageSwitcher(
+        centerLatLng: centerLatLng,
+        closedContainer: closedContainer,
       ),
     );
   }
