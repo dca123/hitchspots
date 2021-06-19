@@ -1,11 +1,12 @@
-import 'package:animations/animations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:geoflutterfire2/geoflutterfire2.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hitchspots/models/location_picker_store.dart';
 import 'package:hitchspots/services/authentication.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import '../widgets/form_fields/rating_bar.dart';
 import '../widgets/form_fields/location_picker.dart';
@@ -28,12 +29,64 @@ class CreateLocationPage extends StatefulWidget {
 
 class _CreateLocationPageState extends State<CreateLocationPage> {
   final _formKey = GlobalKey<FormState>();
+
   final TextEditingController locationName = TextEditingController();
   final TextEditingController locationExperience = TextEditingController();
   final geo = GeoFlutterFire();
 
   double ratingController = 0;
   late LatLng position;
+  final geo = GeoFlutterFire();
+
+
+  Future<bool> hasStreetViewImages(LatLng location) async {
+    Uri imageParametersUrl =
+        Uri.https("maps.googleapis.com", "/maps/api/streetview/metadata", {
+      'location': '${location.latitude},${location.longitude}',
+      'size': '456x456',
+      'key': env['MAPS_API_KEY'],
+    });
+    final response = await http.get(imageParametersUrl);
+    if (response.statusCode == 200) {
+      String status = jsonDecode(response.body)['status'];
+      if (status == "OK") return true;
+    }
+    return false;
+  }
+
+  Future<void> uploadImages(LatLng location, String locationID) async {
+    // Heading in this context is the direction facing within 360 degrees
+    Uri imageUrl(String heading) =>
+        Uri.https("maps.googleapis.com", "/maps/api/streetview", {
+          'location': '${location.latitude},${location.longitude}',
+          'size': '456x456',
+          'fov': '120',
+          'heading': heading,
+          'key': env['MAPS_API_KEY'],
+        });
+
+    const headings = ['0', '120', '240'];
+    final documentDirectory = await getTemporaryDirectory();
+
+    final responses =
+        headings.map((heading) => http.get(imageUrl(heading))).toList();
+    final List<File> files = headings
+        .map((heading) =>
+            File(path.join(documentDirectory.path, '$heading.jpeg')))
+        .toList();
+
+    files.asMap().forEach((index, file) async {
+      var fileBodyBytes = (await responses[index]).bodyBytes;
+      file.writeAsBytesSync(fileBodyBytes);
+      try {
+        await FirebaseStorage.instance
+            .ref('street_view_images/$locationID/${headings[index]}.jpeg')
+            .putFile(file);
+      } on FirebaseException catch (e) {
+        // e.g, e.code == 'canceled'
+      }
+    });
+  }
 
   void addLocation() async {
     if (_formKey.currentState!.validate()) {
@@ -50,14 +103,29 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
 
       final String displayName =
           Provider.of<AuthenticationState>(context, listen: false).displayName!;
-      FirebaseFirestore.instance.collection('reviews').add({
+      DocumentReference location =
+          await FirebaseFirestore.instance.collection('reviews').add({
         'description': locationExperience.text,
         'locationID': locationID.id,
         'rating': ratingController,
         'timestamp': DateTime.now().millisecondsSinceEpoch,
         'createdByDisplayName': displayName,
       });
+      if (await hasStreetViewImages(position)) {
+        await uploadImages(position, location.id);
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Thank you for contributing!'),
+        ),
+      );
+      Future.delayed(Duration(milliseconds: 100), () {
+        Navigator.pop(context);
+      });
+
       Navigator.pop(context, true);
+
     }
   }
 

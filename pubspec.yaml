@@ -13,6 +13,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   device_preview: ^0.7.3
   firebase_auth: ^1.2.0
+  firebase_storage: ^8.1.1
   flutter_dotenv: 4.0.0-nullsafety.1
   flutter_rating_bar: ^4.0.0
   geoflutterfire2: ^2.3.5
@@ -21,6 +22,7 @@ dependencies:
   google_sign_in: ^5.0.4
   http: ^0.13.3
   location: ^4.1.1
+  path_provider: ^2.0.2
   permission_handler: ^8.0.1
   provider: ^5.0.0
   sliding_up_panel: ^2.0.0+1
