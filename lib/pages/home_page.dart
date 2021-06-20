@@ -82,7 +82,8 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _maximizePanel() => _panelController.animatePanelToPosition(1);
-  void _createMarkers(locationList, tempMarkers) {
+
+  void _createMarkers(List<DocumentSnapshot> locationList, tempMarkers) {
     if (_noImagesCardSnapPoint == null) {
       final double cardHeight = cardDetailsKey.currentContext!.size!.height;
       final double screenHeight = MediaQuery.of(context).size.height;
@@ -90,21 +91,20 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       // print("$screenHeight $cardHeight $height - SCREENHEIGHT");
     }
     locationList.forEach((locationDocument) {
+      dynamic locationData = locationDocument.data();
       GeoPoint point = locationDocument.get('position')['geopoint'];
       double rating = locationDocument.get('rating').toDouble();
+      bool hasImages = locationData['hasImages'] ?? false;
       tempMarkers[locationDocument.id] = Marker(
         markerId: MarkerId(locationDocument.id),
         position: LatLng(point.latitude, point.longitude),
         icon: _ratingToMarker(rating),
         onTap: () async {
           await Provider.of<LocationCardModel>(context, listen: false)
-              .updateLocation(locationDocument.data(), locationDocument.id);
-          bool hasImages =
-              Provider.of<LocationCardModel>(context, listen: false).hasImages;
+              .updateLocation(locationData, locationDocument.id);
           setState(() {
             _snapPoint = hasImages ? 0.35 : _noImagesCardSnapPoint!;
           });
-          // print("SNAPPOINT - $snapPoint");
           _panelController.animatePanelToPosition(_snapPoint);
         },
       );
