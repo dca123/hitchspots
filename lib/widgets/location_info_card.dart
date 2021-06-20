@@ -1,5 +1,5 @@
 import 'package:animations/animations.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:hitchspots/models/location_card.dart';
@@ -95,49 +95,72 @@ class ReviewImageRow extends StatelessWidget {
     required this.radius,
   }) : super(key: key);
   final BorderRadiusGeometry radius;
+
+  Future<List<String>> getImageUrl(String locationID) async {
+    Future<String> getUrl(String heading) async =>
+        await FirebaseStorage.instance
+            .ref('street_view_images/$locationID/$heading.jpeg')
+            .getDownloadURL();
+
+    const headings = ['0', '120', '240'];
+    List<Future<String>> x = headings.map((heading) async {
+      Future<String> data = getUrl(heading);
+      return data;
+    }).toList();
+    return await Future.wait(x);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      clipBehavior: Clip.hardEdge,
-      decoration: BoxDecoration(
-        borderRadius: radius,
-      ),
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        children: [
-          ReviewImage(
-            imageName: "image1",
-            heading: 0,
+    return Consumer<LocationCardModel>(
+      builder: (context, locationInfo, child) {
+        return Container(
+          clipBehavior: Clip.hardEdge,
+          decoration: BoxDecoration(
+            borderRadius: radius,
           ),
-          ReviewImage(
-            imageName: "image1",
-            heading: 120,
+          child: FutureBuilder<List<String>>(
+            future: getImageUrl(locationInfo.locationID),
+            builder:
+                (BuildContext context, AsyncSnapshot<List<String>> snapshot) {
+              if (snapshot.hasData) {
+                List<String> imageUrls = snapshot.data!;
+                return ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    ReviewImage(
+                      imageUrl: imageUrls[0],
+                    ),
+                    ReviewImage(
+                      imageUrl: imageUrls[1],
+                    ),
+                    ReviewImage(
+                      imageUrl: imageUrls[2],
+                    ),
+                  ],
+                );
+              }
+              return Center(child: CircularProgressIndicator());
+            },
           ),
-          ReviewImage(
-            imageName: "image1",
-            heading: 240,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
 
 class ReviewImage extends StatelessWidget {
-  const ReviewImage({Key? key, required this.imageName, required this.heading})
-      : super(key: key);
-  final String imageName;
-  final int heading;
+  const ReviewImage({Key? key, required this.imageUrl}) : super(key: key);
+  final String imageUrl;
+
   @override
-  Widget build(BuildContext context) {
-    return Consumer<LocationCardModel>(builder: (context, locationCard, child) {
-      return Image.network(
-        """https://maps.googleapis.com/maps/api/streetview?location=${locationCard.coordinates.latitude},${locationCard.coordinates.longitude}
-        &fov=120&heading=$heading&size=456x456&key=${env['MAPS_API_KEY']}""",
-        width: MediaQuery.of(context).size.width / 2,
-        fit: BoxFit.cover,
-      );
-    });
+  Widget build(BuildContext buildContext) {
+    final double width = MediaQuery.of(buildContext).size.width;
+    return Image.network(
+      imageUrl,
+      width: width,
+      fit: BoxFit.cover,
+    );
   }
 }
 
