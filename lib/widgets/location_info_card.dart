@@ -119,42 +119,38 @@ class ReviewImageRow extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: radius,
       ),
-      child: FutureBuilder<List<String>>(
-        future: getImageUrl(locationID),
-        builder: (BuildContext context, AsyncSnapshot<List<String>> snapshot) {
-          if (snapshot.hasData) {
-            List<String> imageUrls = snapshot.data!;
-            return ListView(
-              scrollDirection: Axis.horizontal,
-              children: [
-                ReviewImage(
-                  imageUrl: imageUrls[0],
-                ),
-                ReviewImage(
-                  imageUrl: imageUrls[1],
-                ),
-                ReviewImage(
-                  imageUrl: imageUrls[2],
-                ),
-              ],
-            );
-          }
-          return Center(child: CircularProgressIndicator());
-        },
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          ReviewImage(
+            heading: '0',
+            locationID: locationID,
+          ),
+          ReviewImage(
+            heading: '120',
+            locationID: locationID,
+          ),
+          ReviewImage(
+            heading: '240',
+            locationID: locationID,
+          ),
+        ],
       ),
     );
   }
 }
 
 class ReviewImage extends StatelessWidget {
-  const ReviewImage({Key? key, required this.imageUrl}) : super(key: key);
-  final String imageUrl;
+  const ReviewImage({Key? key, required this.heading, required this.locationID})
+      : super(key: key);
+  final String heading;
+  final String locationID;
 
   @override
   Widget build(BuildContext buildContext) {
     final double width = MediaQuery.of(buildContext).size.width;
     return Image.network(
-      imageUrl,
+      "https://storage.googleapis.com/hitchspots.appspot.com/street_view_images/$locationID/$heading.jpeg",
       width: width,
       fit: BoxFit.cover,
     );
