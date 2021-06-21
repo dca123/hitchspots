@@ -59,7 +59,10 @@ const uploadImage = async (locationID: number, heading: number) => {
     return responseFile[0].publicUrl();
 };
 
-// const updateDocument = () => {};
+// const getDownloadURL = () => {
+//     const  ref = storage();
+//     ref.bucket('teast').get
+// };
 
 export const uploadImages = functions.firestore
     .document("locations/{locationId}")
