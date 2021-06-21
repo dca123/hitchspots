@@ -1,19 +1,12 @@
-import 'dart:io';
 import 'package:animations/animations.dart';
-import 'package:hitchspots/utils/hasStreetViewImages.dart';
-import 'package:http/http.dart' as http;
-import 'package:path/path.dart' as path;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geoflutterfire2/geoflutterfire2.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hitchspots/models/location_picker_store.dart';
 import 'package:hitchspots/services/authentication.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import '../widgets/form_fields/rating_bar.dart';
 import '../widgets/form_fields/location_picker.dart';
@@ -44,48 +37,10 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
   double ratingController = 0;
   late LatLng position;
 
-  uploadImages(LatLng location, String locationID) async {
-    // Heading in this context is the direction facing within 360 degrees
-    Uri imageUrl(String heading) => Uri.https(
-          "maps.googleapis.com",
-          "/maps/api/streetview",
-          {
-            'location': '${location.latitude},${location.longitude}',
-            'size': '411x411',
-            'fov': '120',
-            'heading': heading,
-            'key': env['MAPS_API_KEY'],
-          },
-        );
-
-    const headings = ['0', '120', '240'];
-    final documentDirectory = await getTemporaryDirectory();
-
-    final responses =
-        headings.map((heading) => http.get(imageUrl(heading))).toList();
-    final List<File> files = headings
-        .map((heading) =>
-            File(path.join(documentDirectory.path, '$heading.jpeg')))
-        .toList();
-
-    files.asMap().forEach((index, file) async {
-      var fileBodyBytes = (await responses[index]).bodyBytes;
-      file.writeAsBytesSync(fileBodyBytes);
-      try {
-        await FirebaseStorage.instance
-            .ref('street_view_images/$locationID/${headings[index]}.jpeg')
-            .putFile(file);
-      } on FirebaseException catch (e) {
-        print(e);
-      }
-    });
-  }
-
   void addLocation() async {
     if (_formKey.currentState!.validate()) {
       GeoFirePoint newSpot =
           geo.point(latitude: position.latitude, longitude: position.longitude);
-      bool hasImages = await hasStreetViewImages(position);
 
       final locationID =
           await FirebaseFirestore.instance.collection('locations').add({
@@ -93,7 +48,7 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
         'position': newSpot.data,
         'rating': ratingController,
         'reviewCount': 1,
-        'hasImages': hasImages,
+        'hasImages': false,
         'createdBy': FirebaseAuth.instance.currentUser!.uid,
       });
 
@@ -106,10 +61,6 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
         'timestamp': DateTime.now().millisecondsSinceEpoch,
         'createdByDisplayName': displayName,
       });
-
-      if (hasImages) {
-        await uploadImages(position, locationID.id);
-      }
       print("CREATED LOCAITON WITH ID - ${locationID.id}");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

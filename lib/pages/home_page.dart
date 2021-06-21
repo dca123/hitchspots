@@ -62,6 +62,8 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   Future<void> init() async {
     await Firebase.initializeApp();
+    // FirebaseFirestore.instance.settings =
+    //     Settings(host: '192.168.1.2:8005', sslEnabled: false);
 
     _goodIcon = await BitmapDescriptor.fromAssetImage(
         createLocalImageConfiguration(context), 'assets/icons/Good.png');
