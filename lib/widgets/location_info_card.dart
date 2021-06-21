@@ -112,10 +112,6 @@ class ReviewImageRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final bool hasImages =
-    //     Provider.of<LocationCardModel>(context, listen: false).hasImages;
-
-    // if (hasImages) {
     final String locationID =
         Provider.of<LocationCardModel>(context, listen: false).locationID;
     return Container(
@@ -147,9 +143,6 @@ class ReviewImageRow extends StatelessWidget {
         },
       ),
     );
-    // } else {
-    //   return Center(child: CircularProgressIndicator());
-    // }
   }
 }
 
