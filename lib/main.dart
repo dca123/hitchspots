@@ -12,7 +12,7 @@ void main() async {
   // runApp(ProviderWrapper());
   runApp(
     DevicePreview(
-      enabled: !kReleaseMode,
+      enabled: false,
       builder: (context) => ProviderWrapper(),
     ),
   );

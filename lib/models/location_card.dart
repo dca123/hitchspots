@@ -26,13 +26,13 @@ class LocationCardModel extends ChangeNotifier {
       _reviews.clear();
       _locationName = locationData['name'];
       _locationID = locationID;
+      _hasImages = locationData['hasImages'] ?? false;
       final GeoPoint position = locationData['position']['geopoint'];
       _coordinates = LatLng(position.latitude, position.longitude);
       var reviewQuery = await _reviewQuery(locationId: _locationID, limit: 1);
       _recentReview = reviewQuery.docs.length > 0
           ? reviewQuery.docs[0].get('description')
           : "";
-      _hasImages = locationData['hasImages'] ?? false;
     }
     _locationRating = double.parse(locationData['rating'].toStringAsFixed(2));
     _reviewCount = locationData['reviewCount'];

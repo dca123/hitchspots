@@ -112,39 +112,36 @@ class ReviewImageRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LocationCardModel>(
-      builder: (context, locationInfo, child) {
-        return Container(
-          clipBehavior: Clip.hardEdge,
-          decoration: BoxDecoration(
-            borderRadius: radius,
-          ),
-          child: FutureBuilder<List<String>>(
-            future: getImageUrl(locationInfo.locationID),
-            builder:
-                (BuildContext context, AsyncSnapshot<List<String>> snapshot) {
-              if (snapshot.hasData) {
-                List<String> imageUrls = snapshot.data!;
-                return ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    ReviewImage(
-                      imageUrl: imageUrls[0],
-                    ),
-                    ReviewImage(
-                      imageUrl: imageUrls[1],
-                    ),
-                    ReviewImage(
-                      imageUrl: imageUrls[2],
-                    ),
-                  ],
-                );
-              }
-              return Center(child: CircularProgressIndicator());
-            },
-          ),
-        );
-      },
+    final String locationID =
+        Provider.of<LocationCardModel>(context, listen: false).locationID;
+    return Container(
+      clipBehavior: Clip.hardEdge,
+      decoration: BoxDecoration(
+        borderRadius: radius,
+      ),
+      child: FutureBuilder<List<String>>(
+        future: getImageUrl(locationID),
+        builder: (BuildContext context, AsyncSnapshot<List<String>> snapshot) {
+          if (snapshot.hasData) {
+            List<String> imageUrls = snapshot.data!;
+            return ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                ReviewImage(
+                  imageUrl: imageUrls[0],
+                ),
+                ReviewImage(
+                  imageUrl: imageUrls[1],
+                ),
+                ReviewImage(
+                  imageUrl: imageUrls[2],
+                ),
+              ],
+            );
+          }
+          return Center(child: CircularProgressIndicator());
+        },
+      ),
     );
   }
 }
