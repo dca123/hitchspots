@@ -90,5 +90,7 @@ export const uploadImages = functions.firestore
             );
 
             functions.logger.info("Document updated for", locationID);
+        } else {
+            functions.logger.info("Image doe not exist for", locationID);
         }
     });
