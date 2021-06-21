@@ -91,4 +91,4 @@ export const uploadImages = functions.firestore
 
             functions.logger.info("Document updated for", locationID);
         }
-});
+    });
