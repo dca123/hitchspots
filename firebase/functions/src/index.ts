@@ -1,21 +1,24 @@
 import * as functions from "firebase-functions";
 import axios from "axios";
 // eslint-disable-next-line no-unused-vars
-import { firestore, storage, initializeApp, apps } from "firebase-admin";
+import { firestore, storage, initializeApp } from "firebase-admin";
 import { createWriteStream, mkdirSync, existsSync } from "fs";
 import { resolve } from "path";
 import { tmpdir } from "os";
 // // Start writing Firebase Functions
 // // https://firebase.google.com/docs/functions/typescript
 //
+initializeApp();
 
 const doesImageExist = async (latitude: number, longitude: number): Promise<boolean> => {
     const mapDataResponse = await axios.get("https://maps.googleapis.com/maps/api/streetview/metadata", {
         params: {
             location: `${latitude},${longitude}`,
-            key: functions.config().map_api_key,
+            key: functions.config().maps.api_key,
         },
     });
+    console.log(mapDataResponse.data);
+
     if (mapDataResponse.data["status"] === "OK") {
         return true;
     }
@@ -23,10 +26,10 @@ const doesImageExist = async (latitude: number, longitude: number): Promise<bool
 };
 
 const downloadImage = async (locationID: number, latitude: number, longitude: number, heading: number) => {
-    if (!existsSync(resolve(tmpdir(), "gmaps_static_images", `${locationID}`))) {
-        mkdirSync(resolve(tmpdir(), "gmaps_static_images", `${locationID}`));
+    if (!existsSync(resolve(tmpdir(), `${locationID}`))) {
+        mkdirSync(resolve(tmpdir(), `${locationID}`));
     }
-    const path = resolve(tmpdir(), "gmaps_static_images", `${locationID}`, `${heading}.jpeg`);
+    const path = resolve(tmpdir(), `${locationID}`, `${heading}.jpeg`);
     const writer = createWriteStream(path);
     const response = await axios({
         url: "https://maps.googleapis.com/maps/api/streetview",
@@ -35,7 +38,7 @@ const downloadImage = async (locationID: number, latitude: number, longitude: nu
             size: "411x411",
             heading: heading,
             fov: 120,
-            key: functions.config().map_api_key,
+            key: functions.config().maps.api_key,
         },
         responseType: "stream",
         method: "GET",
@@ -51,12 +54,9 @@ const downloadImage = async (locationID: number, latitude: number, longitude: nu
 
 const uploadImage = async (locationID: number, heading: number) => {
     const bucket = storage().bucket();
-    const responseFile = await bucket.upload(
-        resolve(tmpdir(), "gmaps_static_images", `${locationID}`, `${heading}.jpeg`),
-        {
-            destination: `street_view_images/${locationID}/${heading}.jpeg`,
-        },
-    );
+    const responseFile = await bucket.upload(resolve(tmpdir(), `${locationID}`, `${heading}.jpeg`), {
+        destination: `street_view_images/${locationID}/${heading}.jpeg`,
+    });
     return responseFile[0].publicUrl();
 };
 
@@ -65,7 +65,6 @@ const uploadImage = async (locationID: number, heading: number) => {
 export const uploadImages = functions.firestore
     .document("locations/{locationId}")
     .onCreate(async (snapshot, context) => {
-        if (apps.length < 1) initializeApp();
         const location: firestore.GeoPoint = snapshot.get("position").geopoint;
         const locationID = context.params.locationId;
 
