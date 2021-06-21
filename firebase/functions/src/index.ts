@@ -17,7 +17,6 @@ const doesImageExist = async (latitude: number, longitude: number): Promise<bool
             key: functions.config().maps.api_key,
         },
     });
-    console.log(mapDataResponse.data);
 
     if (mapDataResponse.data["status"] === "OK") {
         return true;
@@ -78,7 +77,7 @@ export const uploadImages = functions.firestore
                 await downloadImage(locationID, location.latitude, location.longitude, heading);
                 imageUrls.push(await uploadImage(locationID, heading));
 
-                functions.logger.info("Image downloaded for", locationID, heading);
+                functions.logger.info("Image downloaded for", locationID, "with heading", heading);
             }
             snapshot.ref.set(
                 {
