@@ -41,4 +41,14 @@ const downloadImage = async (locationID: number, latitude: number, longitude: nu
         writer.on("error", reject);
     });
 };
+const uploadImage = async (locationID: number, heading: number) => {
+    const bucket = storage().bucket();
+    const responseFile = await bucket.upload(
+        resolve(tmpdir(), "gmaps_static_images", `${locationID}`, `${heading}.jpeg`),
+        {
+            destination: `street_view_images/${locationID}/${heading}.jpeg`,
+        },
+    );
+    return responseFile[0].publicUrl();
+};
 });
