@@ -1,8 +1,14 @@
 import * as functions from "firebase-functions";
-
+import axios from "axios";
+// eslint-disable-next-line no-unused-vars
+import { firestore, storage, initializeApp, apps } from "firebase-admin";
+import { createWriteStream, mkdirSync, existsSync } from "fs";
+import { resolve } from "path";
+import { tmpdir } from "os";
 // // Start writing Firebase Functions
 // // https://firebase.google.com/docs/functions/typescript
 //
+
 const doesImageExist = async (latitude: number, longitude: number): Promise<boolean> => {
     const mapDataResponse = await axios.get("https://maps.googleapis.com/maps/api/streetview/metadata", {
         params: {
@@ -15,6 +21,7 @@ const doesImageExist = async (latitude: number, longitude: number): Promise<bool
     }
     return false;
 };
+
 const downloadImage = async (locationID: number, latitude: number, longitude: number, heading: number) => {
     if (!existsSync(resolve(tmpdir(), "gmaps_static_images", `${locationID}`))) {
         mkdirSync(resolve(tmpdir(), "gmaps_static_images", `${locationID}`));
@@ -41,6 +48,7 @@ const downloadImage = async (locationID: number, latitude: number, longitude: nu
         writer.on("error", reject);
     });
 };
+
 const uploadImage = async (locationID: number, heading: number) => {
     const bucket = storage().bucket();
     const responseFile = await bucket.upload(
@@ -51,4 +59,36 @@ const uploadImage = async (locationID: number, heading: number) => {
     );
     return responseFile[0].publicUrl();
 };
+
+// const updateDocument = () => {};
+
+export const uploadImages = functions.firestore
+    .document("locations/{locationId}")
+    .onCreate(async (snapshot, context) => {
+        if (apps.length < 1) initializeApp();
+        const location: firestore.GeoPoint = snapshot.get("position").geopoint;
+        const locationID = context.params.locationId;
+
+        functions.logger.info("Started image upload for ", locationID);
+
+        if (await doesImageExist(location.latitude, location.longitude)) {
+            functions.logger.info("Image exists for", locationID);
+            const headings = [0, 120, 240];
+            const imageUrls = [];
+            for (const heading of headings) {
+                await downloadImage(locationID, location.latitude, location.longitude, heading);
+                imageUrls.push(await uploadImage(locationID, heading));
+
+                functions.logger.info("Image downloaded for", locationID, heading);
+            }
+            snapshot.ref.set(
+                {
+                    hasImages: true,
+                    imageUrls,
+                },
+                { merge: true },
+            );
+
+            functions.logger.info("Document updated for", locationID);
+        }
 });
