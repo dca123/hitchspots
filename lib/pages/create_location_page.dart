@@ -3,6 +3,7 @@ import 'package:animations/animations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:geoflutterfire2/geoflutterfire2.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hitchspots/models/location_picker_store.dart';
@@ -30,18 +31,23 @@ class CreateLocationPage extends StatefulWidget {
 class _CreateLocationPageState extends State<CreateLocationPage> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController locationName = TextEditingController();
-  final TextEditingController locationExperience = TextEditingController();
   final geo = GeoFlutterFire();
 
+  final TextEditingController locationName = TextEditingController();
+  final TextEditingController locationExperience = TextEditingController();
   double ratingController = 0;
   late LatLng position;
 
+  bool isSaving = false;
+
   void addLocation() async {
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        isSaving = !isSaving;
+      });
+
       GeoFirePoint newSpot =
           geo.point(latitude: position.latitude, longitude: position.longitude);
-
       final locationID =
           await FirebaseFirestore.instance.collection('locations').add({
         'name': locationName.text,
@@ -99,14 +105,22 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
         ),
         centerTitle: true,
         actions: [
-          Container(
-            padding: EdgeInsets.only(right: 16),
-            child: IconButton(
-              icon: const Icon(Icons.send),
-              onPressed: () => addLocation(),
-              color: Colors.black,
-            ),
-          )
+          isSaving
+              ? Padding(
+                  padding: const EdgeInsets.only(right: 28),
+                  child: SpinKitWave(
+                    color: Colors.black,
+                    size: 16,
+                  ),
+                )
+              : Container(
+                  padding: EdgeInsets.only(right: 16),
+                  child: IconButton(
+                    icon: const Icon(Icons.send),
+                    onPressed: () => addLocation(),
+                    color: Colors.black,
+                  ),
+                )
         ],
       ),
       body: Form(
