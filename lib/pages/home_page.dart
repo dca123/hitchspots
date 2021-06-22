@@ -184,7 +184,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         _findingLocation = true;
       });
       LocationData locationData = await _location.getLocation();
-      await Future.delayed(Duration(seconds: 10));
       setState(() {
         _findingLocation = false;
       });
