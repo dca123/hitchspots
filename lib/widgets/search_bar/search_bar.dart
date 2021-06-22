@@ -28,13 +28,20 @@ class _SearchBarState extends State<SearchBar> {
       FloatingSearchBarController();
 
   Set<SearchLocationPlaceMark> _searchLocationPlaceMarkSet = {};
+  bool _hasSearchError = false;
   void _onSubmitted(locationText) async {
     _searchLocationPlaceMarkSet.clear();
 
     List<dynamic> searchResults = [];
-
-    List<geocoding.Location> possibleLocations =
-        await geocoding.locationFromAddress(locationText);
+    late List<geocoding.Location> possibleLocations;
+    try {
+      possibleLocations = await geocoding.locationFromAddress(locationText);
+    } catch (e) {
+      setState(() {
+        _hasSearchError = true;
+      });
+      return;
+    }
 
     for (geocoding.Location location in possibleLocations) {
       List<geocoding.Placemark> placemark =
@@ -99,6 +106,7 @@ class _SearchBarState extends State<SearchBar> {
         fontWeight: FontWeight.w400,
       ),
       controller: _floatingSearchBarController,
+      backdropColor: Colors.black45,
       borderRadius: BorderRadius.circular(32),
       margins: const EdgeInsets.only(top: 45, right: 20, left: 20),
       scrollPadding: const EdgeInsets.only(top: 20, bottom: 56),
@@ -109,6 +117,11 @@ class _SearchBarState extends State<SearchBar> {
       openAxisAlignment: 0.0,
       width: 350,
       onSubmitted: _onSubmitted,
+      onFocusChanged: (hasFocus) {
+        setState(() {
+          _hasSearchError = false;
+        });
+      },
       transition: SlideFadeFloatingSearchBarTransition(),
       actions: [
         FloatingSearchBarAction.searchToClear(
@@ -117,28 +130,37 @@ class _SearchBarState extends State<SearchBar> {
         ),
       ],
       builder: (context, transition) {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Material(
-            color: Colors.white,
-            elevation: 4.0,
-            child: Column(
-              children: _searchLocationPlaceMarkSet
-                  .map(
-                    (place) => SearchLocationCard(
-                      street: place.street,
-                      adminArea: place.adminArea,
-                      country: place.country,
-                      distanceTo: place.distance,
-                      location: place.location,
-                      moveCameraToLocation: widget.moveCameraToLocation,
-                      floatingSearchBarController: _floatingSearchBarController,
-                    ),
-                  )
-                  .toList(),
-            ),
-          ),
-        );
+        return _hasSearchError
+            ? Container(
+                child: Text(
+                "No locations found. Try again with a generic location name !",
+                textAlign: TextAlign.center,
+                style:
+                    TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+              ))
+            : ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Material(
+                  color: Colors.white,
+                  elevation: 4.0,
+                  child: Column(
+                    children: _searchLocationPlaceMarkSet
+                        .map(
+                          (place) => SearchLocationCard(
+                            street: place.street,
+                            adminArea: place.adminArea,
+                            country: place.country,
+                            distanceTo: place.distance,
+                            location: place.location,
+                            moveCameraToLocation: widget.moveCameraToLocation,
+                            floatingSearchBarController:
+                                _floatingSearchBarController,
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+              );
       },
     );
   }
