@@ -199,6 +199,16 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
+  void _moveCameraToLocation(LatLng location) async {
+    _mapController!.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: LatLng(location.latitude, location.longitude),
+          zoom: 12,
+        ),
+      ),
+    );
+  }
   Future<Marker> Function(Cluster) get _markerBuilder => (cluster) async {
         return cluster.isMultiple
             ? Marker(
