@@ -260,6 +260,29 @@ class ButtonBar extends StatelessWidget {
   final Animation<double> opacity;
   final AnimationController animationController;
   final Function maximizePanel;
+
+  Widget icon(BuildContext context) {
+    return Consumer<AuthenticationState>(
+      builder: (context, authState, child) {
+        if (authState.isAuthenticating) {
+          return SizedBox(
+            height: 16,
+            width: 24,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: CircularProgressIndicator(
+                strokeWidth: 2.0,
+                color: Colors.white,
+              ),
+            ),
+          );
+        } else {
+          return Icon(Icons.add);
+        }
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -284,14 +307,20 @@ class ButtonBar extends StatelessWidget {
             },
             closedBuilder: (context, openContainer) {
               return ElevatedButton.icon(
-                onPressed: () => Provider.of<AuthenticationState>(
-                  context,
-                  listen: false,
-                ).loginFlowWithAction(
-                  buildContext: context,
-                  postLogin: () => openContainer(),
-                ),
-                icon: Icon(Icons.add),
+                onPressed: () {
+                  if (Provider.of<AuthenticationState>(context, listen: false)
+                          .isAuthenticating ==
+                      false) {
+                    Provider.of<AuthenticationState>(
+                      context,
+                      listen: false,
+                    ).loginFlowWithAction(
+                      buildContext: context,
+                      postLogin: () => openContainer(),
+                    );
+                  }
+                },
+                icon: icon(context),
                 label: Text("Review"),
               );
             },
