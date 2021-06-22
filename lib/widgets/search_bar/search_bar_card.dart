@@ -8,16 +8,16 @@ class SearchLocationCard extends StatelessWidget {
     required this.street,
     required this.country,
     required this.adminArea,
-    required this.distanceTo,
     required this.location,
     required this.moveCameraToLocation,
     required this.floatingSearchBarController,
+    this.distanceTo,
   }) : super(key: key);
 
   final String street;
   final String country;
   final String adminArea;
-  final int distanceTo;
+  final int? distanceTo;
   final LatLng location;
   final Function moveCameraToLocation;
   final FloatingSearchBarController floatingSearchBarController;
@@ -25,6 +25,8 @@ class SearchLocationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     TextTheme textThemes = Theme.of(context).textTheme;
+    bool isDistanceNull = distanceTo == null;
+
     return InkWell(
       onTap: () {
         moveCameraToLocation(location);
@@ -43,13 +45,10 @@ class SearchLocationCard extends StatelessWidget {
             Flexible(
               fit: FlexFit.tight,
               flex: 1,
-              child: Container(
-                // color: Colors.red,
-                child: Icon(
-                  Icons.location_on,
-                  size: 32,
-                  color: Theme.of(context).primaryColorDark,
-                ),
+              child: Icon(
+                Icons.location_on,
+                size: 32,
+                color: Theme.of(context).primaryColorDark,
               ),
             ),
             Flexible(
@@ -82,11 +81,13 @@ class SearchLocationCard extends StatelessWidget {
               flex: 1,
               child: Container(
                 padding: EdgeInsets.only(right: 16),
-                child: Text(
-                  "$distanceTo KM",
-                  style: textThemes.headline5,
-                  textAlign: TextAlign.center,
-                ),
+                child: isDistanceNull
+                    ? Container()
+                    : Text(
+                        "$distanceTo KM",
+                        style: textThemes.headline5,
+                        textAlign: TextAlign.center,
+                      ),
               ),
             )
           ],

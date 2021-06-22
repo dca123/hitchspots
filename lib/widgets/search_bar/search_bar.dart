@@ -23,23 +23,62 @@ class SearchBar extends StatefulWidget {
   _SearchBarState createState() => _SearchBarState();
 }
 
-int calculateDistance(LatLng position1, LatLng position2) {
-  var p = 0.017453292519943295;
-  var c = cos;
-  var a = 0.5 -
-      c((position2.latitude - position1.latitude) * p) / 2 +
-      c(position1.latitude * p) *
-          c(position2.latitude * p) *
-          (1 - c((position2.longitude - position1.longitude) * p)) /
-          2;
-  return (12742 * asin(sqrt(a))).round();
-}
-
 class _SearchBarState extends State<SearchBar> {
   FloatingSearchBarController _floatingSearchBarController =
       FloatingSearchBarController();
 
   Set<SearchLocationPlaceMark> _searchLocationPlaceMarkSet = {};
+  void _onSubmitted(locationText) async {
+    _searchLocationPlaceMarkSet.clear();
+
+    List<dynamic> searchResults = [];
+
+    List<geocoding.Location> possibleLocations =
+        await geocoding.locationFromAddress(locationText);
+
+    for (geocoding.Location location in possibleLocations) {
+      List<geocoding.Placemark> placemark =
+          await geocoding.placemarkFromCoordinates(
+        location.latitude,
+        location.longitude,
+      );
+      searchResults.add({'location': location, 'placemark': placemark.first});
+    }
+
+    LocationData? locationData;
+    if (widget.isLocationGranted) {
+      locationData = await widget.location.getLocation();
+    }
+
+    searchResults.forEach((result) {
+      geocoding.Location resultLocation = result['location'];
+      geocoding.Placemark resultPlacemark = result['placemark'];
+      int? distance;
+
+      if (locationData != null) {
+        LatLng myLocation =
+            LatLng(locationData.latitude!, locationData.longitude!);
+        distance = calculateDistance(myLocation,
+            LatLng(resultLocation.latitude, resultLocation.longitude));
+      }
+
+      _searchLocationPlaceMarkSet.add(
+        SearchLocationPlaceMark(
+          country: resultPlacemark.country ?? "",
+          street: resultPlacemark.street ?? "",
+          adminArea: resultPlacemark.administrativeArea ?? "",
+          distance: distance,
+          location: LatLng(
+            resultLocation.latitude,
+            resultLocation.longitude,
+          ),
+        ),
+      );
+    });
+
+    // Display the Found locations
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,80 +87,32 @@ class _SearchBarState extends State<SearchBar> {
     return FloatingSearchBar(
       hint: 'Type in an address',
       title: Text(
-        'Where are hitchiking to ...',
+        'Where are hitchiking to ?',
+        style: TextStyle(
+          color: Colors.black54,
+          fontWeight: FontWeight.w400,
+          fontSize: 16,
+        ),
+      ),
+      hintStyle: TextStyle(
+        color: Colors.black45,
+        fontWeight: FontWeight.w400,
       ),
       controller: _floatingSearchBarController,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(32),
       margins: const EdgeInsets.only(top: 40, right: 20, left: 20),
-      scrollPadding: const EdgeInsets.only(top: 16, bottom: 56),
+      scrollPadding: const EdgeInsets.only(top: 20, bottom: 56),
       transitionDuration: const Duration(milliseconds: 300),
       transitionCurve: Curves.easeInOut,
       physics: const BouncingScrollPhysics(),
       axisAlignment: isPortrait ? 0.0 : -1.0,
       openAxisAlignment: 0.0,
-      // width: isPortrait ? 600 : 500,
-      debounceDelay: const Duration(milliseconds: 500),
-      onQueryChanged: (query) {},
-      onSubmitted: (locationText) async {
-        _searchLocationPlaceMarkSet.clear();
-        List<geocoding.Location> locations =
-            await geocoding.locationFromAddress(locationText);
-
-        List<dynamic> searchResults = [];
-
-        for (geocoding.Location location in locations) {
-          geocoding.Placemark placemark =
-              (await geocoding.placemarkFromCoordinates(
-            location.latitude,
-            location.longitude,
-          ))
-                  .first;
-
-          searchResults.add({'location': location, 'placemark': placemark});
-        }
-
-        LocationData? locationData;
-        if (widget.isLocationGranted) {
-          locationData = await widget.location.getLocation();
-        }
-
-        searchResults.forEach((result) {
-          geocoding.Location resultLocation = result['location'];
-          geocoding.Placemark resultPlacemark = result['placemark'];
-          int? distance;
-          if (locationData != null) {
-            LatLng myLocation =
-                LatLng(locationData.latitude!, locationData.longitude!);
-            distance = calculateDistance(myLocation,
-                LatLng(resultLocation.latitude, resultLocation.longitude));
-          }
-          _searchLocationPlaceMarkSet.add(
-            SearchLocationPlaceMark(
-              country: resultPlacemark.country ?? "",
-              street: resultPlacemark.street ?? "",
-              adminArea: resultPlacemark.administrativeArea ?? "",
-              distance: distance,
-              location: LatLng(
-                resultLocation.latitude,
-                resultLocation.longitude,
-              ),
-            ),
-          );
-        });
-
-        // Display the Found locations
-        setState(() {});
-      },
+      width: 350,
+      onSubmitted: _onSubmitted,
       transition: SlideFadeFloatingSearchBarTransition(),
       actions: [
-        FloatingSearchBarAction(
-          showIfOpened: false,
-          child: CircularButton(
-            icon: const Icon(Icons.place),
-            onPressed: () {},
-          ),
-        ),
         FloatingSearchBarAction.searchToClear(
+          duration: const Duration(milliseconds: 300),
           showIfClosed: false,
         ),
       ],
@@ -138,7 +129,7 @@ class _SearchBarState extends State<SearchBar> {
                       street: place.street,
                       adminArea: place.adminArea,
                       country: place.country,
-                      distanceTo: place.distance ?? 0,
+                      distanceTo: place.distance,
                       location: place.location,
                       moveCameraToLocation: widget.moveCameraToLocation,
                       floatingSearchBarController: _floatingSearchBarController,
@@ -186,4 +177,16 @@ class SearchLocationPlaceMark {
         other.distance == distance &&
         other.street == street;
   }
+}
+
+int calculateDistance(LatLng position1, LatLng position2) {
+  var p = 0.017453292519943295;
+  var c = cos;
+  var a = 0.5 -
+      c((position2.latitude - position1.latitude) * p) / 2 +
+      c(position1.latitude * p) *
+          c(position2.latitude * p) *
+          (1 - c((position2.longitude - position1.longitude) * p)) /
+          2;
+  return (12742 * asin(sqrt(a))).round();
 }
