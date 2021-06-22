@@ -64,6 +64,10 @@ class _SetupProfilePageState extends State<SetupProfilePage> {
           padding: EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             children: [
+              Text(
+                "You will need to setup your profile once to add locations or reviews",
+                style: Theme.of(context).textTheme.caption,
+              ),
               SizedBox(
                 height: 8,
               ),

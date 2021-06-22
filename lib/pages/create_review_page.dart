@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:hitchspots/services/authentication.dart';
+import 'package:hitchspots/utils/icon_switcher.dart';
 import '../widgets/form_fields/rating_bar.dart';
 import 'package:hitchspots/widgets/form_fields/rating_bar.dart';
 import '../models/location_card.dart';
@@ -21,11 +23,15 @@ class _CreateReviewPageState extends State<CreateReviewPage> {
   final _formKey = GlobalKey<FormState>();
 
   double? ratingController;
+  bool isSaving = false;
 
   @override
   Widget build(BuildContext context) {
     void addLocation(String locationID) {
       if (_formKey.currentState!.validate()) {
+        setState(() {
+          isSaving = true;
+        });
         final String displayName =
             Provider.of<AuthenticationState>(context, listen: false)
                 .displayName!;
@@ -77,14 +83,26 @@ class _CreateReviewPageState extends State<CreateReviewPage> {
           ),
           centerTitle: true,
           actions: [
-            Container(
-              padding: EdgeInsets.only(right: 16),
-              child: IconButton(
-                icon: const Icon(Icons.send),
-                onPressed: () => addLocation(locationCard.locationID),
-                color: Colors.black,
+            Padding(
+              padding: const EdgeInsets.only(right: 2.0),
+              child: IconSwitcherWrapper(
+                condition: isSaving,
+                iconIfTrue: IconButton(
+                  key: ValueKey('spinner'),
+                  onPressed: () => {},
+                  icon: SpinKitWave(
+                    color: Colors.black,
+                    size: 16,
+                  ),
+                ),
+                iconIfFalse: IconButton(
+                  key: ValueKey('send'),
+                  icon: const Icon(Icons.send),
+                  onPressed: () => addLocation(locationCard.locationID),
+                  color: Colors.black,
+                ),
               ),
-            )
+            ),
           ],
         ),
         body: Container(
@@ -144,5 +162,11 @@ class _CreateReviewPageState extends State<CreateReviewPage> {
         ),
       );
     });
+  }
+
+  @override
+  void dispose() {
+    descriptionTextController.dispose();
+    super.dispose();
   }
 }

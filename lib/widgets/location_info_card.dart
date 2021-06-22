@@ -1,85 +1,92 @@
 import 'package:animations/animations.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:hitchspots/models/location_card.dart';
 import 'package:hitchspots/services/authentication.dart';
+import 'package:hitchspots/utils/icon_switcher.dart';
 import 'package:provider/provider.dart';
 import '../pages/create_review_page.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class LocationInfoCard extends StatelessWidget {
   LocationInfoCard({
-    Key? key,
-    required this.radius,
-    required this.maximizePanel,
+    required this.cardDetailsKey,
     required this.animationController,
-  })  : imageSize = Tween<double>(begin: 100, end: 200).animate(
+    required this.maximizePanel,
+  })  : imageHeight = Tween<double>(begin: 0.35, end: 0.45).animate(
           CurvedAnimation(
             parent: animationController,
-            curve: Interval(0.35, 1.0, curve: Curves.easeIn),
+            curve: Interval(0.35, 1.0, curve: Curves.linear),
           ),
         ),
         borderRadius = Tween<double>(begin: 24, end: 0).animate(
           CurvedAnimation(
             parent: animationController,
-            curve: Interval(0.35, 1.0, curve: Curves.easeIn),
+            curve: Interval(0.35, 1.0, curve: Curves.linear),
           ),
-        ),
-        super(key: key);
-
-  final BorderRadiusGeometry radius;
-  final Function maximizePanel;
+        );
+  final cardDetailsKey;
   final AnimationController animationController;
-  final Animation<double> imageSize;
+  final Animation<double> imageHeight;
   final Animation<double> borderRadius;
-
-  Widget _buildAnimation(BuildContext context, Widget? widget) {
-    final BorderRadiusGeometry radius = BorderRadius.only(
+  final Function maximizePanel;
+  Widget _buildHeaderAnimation(BuildContext context, Widget? widget) {
+    final screenHeight = MediaQuery.of(context).size.height * imageHeight.value;
+    final BorderRadiusGeometry imageRowRadius = BorderRadius.only(
       topLeft: Radius.circular(borderRadius.value),
       topRight: Radius.circular(borderRadius.value),
     );
-    return Column(children: [
-      ReviewImageRow(radius: radius, imageSize: imageSize),
-      CardDetails(
-          maximizePanel: maximizePanel,
-          animationController: animationController),
-      ReviewList()
-    ]);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-        animation: animationController, builder: _buildAnimation);
-  }
-}
-
-class CardDetails extends StatelessWidget {
-  const CardDetails({
-    Key? key,
-    required this.maximizePanel,
-    required this.animationController,
-  }) : super(key: key);
-
-  final Function maximizePanel;
-  final AnimationController animationController;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.all(0),
-      elevation: 2,
-      child: Column(
-        children: [
-          LocationInfomation(),
-          ButtonBar(
-            maximizePanel: maximizePanel,
-            animationController: animationController,
+    return Column(
+      children: [
+        ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: screenHeight),
+          child: Column(
+            children: [
+              Flexible(
+                flex: 1,
+                fit: FlexFit.tight,
+                child: FractionallySizedBox(
+                  alignment: Alignment.topCenter,
+                  heightFactor: 1,
+                  child: ReviewImageRow(
+                    radius: imageRowRadius,
+                  ),
+                ),
+              ),
+              CardDetails(
+                animationController: animationController,
+                maximizePanel: maximizePanel,
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        Expanded(child: ReviewList())
+      ],
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // 0.35 : 0.65 => 7:13
+    // 0.175 : 0.175 : 0.65 => 7 7 26
+    return Consumer<LocationCardModel>(builder: (context, locationCard, child) {
+      if (locationCard.hasImages) {
+        return AnimatedBuilder(
+            animation: animationController, builder: _buildHeaderAnimation);
+      } else {
+        return Column(
+          children: [
+            CardDetails(
+              key: cardDetailsKey,
+              animationController: animationController,
+              maximizePanel: maximizePanel,
+            ),
+            Expanded(child: ReviewList())
+          ],
+        );
+      }
+    });
   }
 }
 
@@ -87,34 +94,46 @@ class ReviewImageRow extends StatelessWidget {
   const ReviewImageRow({
     Key? key,
     required this.radius,
-    required this.imageSize,
   }) : super(key: key);
-
   final BorderRadiusGeometry radius;
-  final Animation<double> imageSize;
+
+  Future<List<String>> getImageUrl(String locationID) async {
+    Future<String> getUrl(String heading) async =>
+        await FirebaseStorage.instance
+            .ref('street_view_images/$locationID/$heading.jpeg')
+            .getDownloadURL();
+
+    const headings = ['0', '120', '240'];
+    List<Future<String>> x = headings.map((heading) async {
+      Future<String> data = getUrl(heading);
+      return data;
+    }).toList();
+    return await Future.wait(x);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final String locationID =
+        Provider.of<LocationCardModel>(context, listen: false).locationID;
     return Container(
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
         borderRadius: radius,
       ),
-      height: imageSize.value,
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
           ReviewImage(
-            imageName: "image1",
-            heading: 0,
+            heading: '0',
+            locationID: locationID,
           ),
           ReviewImage(
-            imageName: "image1",
-            heading: 120,
+            heading: '120',
+            locationID: locationID,
           ),
           ReviewImage(
-            imageName: "image1",
-            heading: 240,
+            heading: '240',
+            locationID: locationID,
           ),
         ],
       ),
@@ -123,26 +142,19 @@ class ReviewImageRow extends StatelessWidget {
 }
 
 class ReviewImage extends StatelessWidget {
-  const ReviewImage({Key? key, required this.imageName, required this.heading})
+  const ReviewImage({Key? key, required this.heading, required this.locationID})
       : super(key: key);
-  final String imageName;
-  final int heading;
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<LocationCardModel>(builder: (context, locationCard, child) {
-      return Image.network(
-        """https://maps.googleapis.com/maps/api/streetview?location=${locationCard.coordinates.latitude},${locationCard.coordinates.longitude}
-        &fov=120&heading=$heading&size=456x456&key=${env['MAPS_API_KEY']}""",
-        width: MediaQuery.of(context).size.width / 2,
-        fit: BoxFit.cover,
-      );
-    });
+  final String heading;
+  final String locationID;
 
-    // return Image.asset(
-    //   "assets/locations/$imageName.jpg",
-    //   width: 144,
-    //   fit: BoxFit.cover,
-    // );
+  @override
+  Widget build(BuildContext buildContext) {
+    final double width = MediaQuery.of(buildContext).size.width;
+    return Image.network(
+      "https://storage.googleapis.com/hitchspots.appspot.com/street_view_images/$locationID/$heading.jpeg",
+      width: width,
+      fit: BoxFit.cover,
+    );
   }
 }
 
@@ -154,31 +166,29 @@ class ReviewList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<LocationCardModel>(builder: (context, locationCard, child) {
-      return Expanded(
-        child: ListView.separated(
-          itemCount: locationCard.reviews.length,
-          padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
-          separatorBuilder: (BuildContext context, int index) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4.0),
-            child: const Divider(),
-          ),
-          itemBuilder: (context, index) {
-            var review = locationCard.reviews[index];
-            int? reviewTimestamp = review['timestamp'];
-            String fuzzyTimeStamp = "Some time ago";
-            if (reviewTimestamp != null) {
-              DateTime dateTimeSinceEpoch =
-                  DateTime.fromMillisecondsSinceEpoch(reviewTimestamp);
-              fuzzyTimeStamp = timeago.format(dateTimeSinceEpoch);
-            }
-            return ReviewTile(
-              description: '${review['description']}',
-              fuzzyTimeAgo: '$fuzzyTimeStamp',
-              rating: (review['rating'] ?? 0).toDouble(),
-              displayName: '${review['createdByDisplayName']}',
-            );
-          },
+      return ListView.separated(
+        itemCount: locationCard.reviews.length,
+        padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+        separatorBuilder: (BuildContext context, int index) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
+          child: const Divider(),
         ),
+        itemBuilder: (context, index) {
+          var review = locationCard.reviews[index];
+          int? reviewTimestamp = review['timestamp'];
+          String fuzzyTimeStamp = "Some time ago";
+          if (reviewTimestamp != null) {
+            DateTime dateTimeSinceEpoch =
+                DateTime.fromMillisecondsSinceEpoch(reviewTimestamp);
+            fuzzyTimeStamp = timeago.format(dateTimeSinceEpoch);
+          }
+          return ReviewTile(
+            description: '${review['description']}',
+            fuzzyTimeAgo: '$fuzzyTimeStamp',
+            rating: (review['rating'] ?? 0).toDouble(),
+            displayName: '${review['createdByDisplayName']}',
+          );
+        },
       );
     });
   }
@@ -237,11 +247,11 @@ class ReviewTile extends StatelessWidget {
 }
 
 class ButtonBar extends StatelessWidget {
-  ButtonBar(
-      {Key? key,
-      required this.maximizePanel,
-      required this.animationController})
-      : opacity = Tween<double>(begin: 1, end: 0).animate(
+  ButtonBar({
+    Key? key,
+    required this.maximizePanel,
+    required this.animationController,
+  })  : opacity = Tween<double>(begin: 1, end: 0).animate(
           CurvedAnimation(
             parent: animationController,
             curve: Interval(0.35, 1.0, curve: Curves.linear),
@@ -251,18 +261,44 @@ class ButtonBar extends StatelessWidget {
   final Animation<double> opacity;
   final AnimationController animationController;
   final Function maximizePanel;
+
+  Widget _icon(BuildContext context) {
+    return Consumer<AuthenticationState>(
+        key: UniqueKey(),
+        builder: (context, authState, child) {
+          return IconSwitcherWrapper(
+            condition: authState.isAuthenticating,
+            iconIfTrue: SizedBox(
+              key: ValueKey('loading'),
+              height: 16,
+              width: 24,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.0,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            iconIfFalse: Icon(
+              Icons.add,
+              key: ValueKey('ready'),
+            ),
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 40,
-      margin: EdgeInsets.only(bottom: 22),
-      child: ListView(
-        scrollDirection: Axis.horizontal,
+      child: Row(
         children: [
-          SizedBox(width: 24.0),
           OpenContainer<bool>(
+            clipBehavior: Clip.none,
+            tappable: false,
             openColor: Theme.of(context).canvasColor,
-            closedElevation: 2,
+            closedElevation: 0,
+            closedColor: Theme.of(context).canvasColor,
             onClosed: (success) {
               if (success == true) {
                 Future.delayed(const Duration(milliseconds: 500), () {
@@ -274,23 +310,23 @@ class ButtonBar extends StatelessWidget {
                 });
               }
             },
-            closedShape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
             closedBuilder: (context, openContainer) {
-              return ElevatedButton(
-                onPressed: () => Provider.of<AuthenticationState>(
-                  context,
-                  listen: false,
-                ).loginFlowWithAction(
-                  buildContext: context,
-                  postLogin: () => openContainer(),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.add),
-                    Text(" Review"),
-                  ],
-                ),
+              return ElevatedButton.icon(
+                onPressed: () {
+                  if (Provider.of<AuthenticationState>(context, listen: false)
+                          .isAuthenticating ==
+                      false) {
+                    Provider.of<AuthenticationState>(
+                      context,
+                      listen: false,
+                    ).loginFlowWithAction(
+                      buildContext: context,
+                      postLogin: () => openContainer(),
+                    );
+                  }
+                },
+                icon: _icon(context),
+                label: Text("Review"),
               );
             },
             openBuilder: (context, closedContainer) {
@@ -310,16 +346,6 @@ class ButtonBar extends StatelessWidget {
               ),
             ),
           ),
-          // SizedBox(width: 16.0),
-          // OutlinedButton(
-          //   onPressed: () => {},
-          //   child: Row(
-          //     children: [
-          //       Icon(Icons.navigation),
-          //       Text("Open in Google Maps"),
-          //     ],
-          //   ),
-          // ),
         ],
       ),
     );
@@ -331,43 +357,38 @@ class LocationInfomation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<LocationCardModel>(builder: (context, locationCard, child) {
-      return Container(
-        padding: EdgeInsets.only(top: 20.0, left: 24.0, bottom: 8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              margin: const EdgeInsets.only(right: 16.0),
-              child: Text(
-                "${locationCard.locationName}",
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.headline6,
-              ),
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          Container(
+            child: Text(
+              "${locationCard.locationName}",
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.headline6,
             ),
-            SizedBox(height: 4),
-            Row(
-              children: [
-                Text(
-                  "${locationCard.locationRating}",
-                  style: Theme.of(context).textTheme.caption,
-                ),
-                StarRatingsBar(rating: locationCard.locationRating),
-                Text(
-                  "(${locationCard.reviewCount})",
-                  style: Theme.of(context).textTheme.caption,
-                ),
-              ],
-            ),
-            Container(
-              margin: EdgeInsets.only(right: 24, bottom: 5),
-              child: Text(
-                "${locationCard.recentReview}",
-                overflow: TextOverflow.ellipsis,
+          ),
+          Row(
+            children: [
+              Text(
+                "${locationCard.locationRating}",
                 style: Theme.of(context).textTheme.caption,
               ),
-            )
-          ],
-        ),
+              StarRatingsBar(rating: locationCard.locationRating),
+              Text(
+                "(${locationCard.reviewCount})",
+                style: Theme.of(context).textTheme.caption,
+              ),
+            ],
+          ),
+          Container(
+            child: Text(
+              "${locationCard.recentReview}",
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.caption,
+            ),
+          ),
+        ],
       );
     });
   }
@@ -390,5 +411,63 @@ class StarRatingsBar extends StatelessWidget {
       itemSize: 13,
       unratedColor: Colors.yellow[700],
     );
+  }
+}
+
+class CardDetails extends StatefulWidget {
+  CardDetails({
+    Key? key,
+    required this.animationController,
+    required this.maximizePanel,
+  }) : super(key: key);
+  final AnimationController animationController;
+  final Function maximizePanel;
+
+  @override
+  _CardDetailsState createState() => _CardDetailsState();
+}
+
+class _CardDetailsState extends State<CardDetails> {
+  late Animation<double> paddingTop;
+
+  Widget _buildAnimation(BuildContext context, Widget? child) {
+    return Card(
+      margin: EdgeInsets.all(0),
+      elevation: 2,
+      child: Container(
+        padding: EdgeInsets.only(top: paddingTop.value, bottom: 16, left: 16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            LocationInfomation(),
+            SizedBox(
+              height: 8,
+            ),
+            ButtonBar(
+              animationController: widget.animationController,
+              maximizePanel: widget.maximizePanel,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool hasImages =
+        Provider.of<LocationCardModel>(context, listen: false).hasImages;
+
+    paddingTop = Tween<double>(
+      begin: 16,
+      end: !hasImages ? MediaQuery.of(context).padding.top + 16 : 16,
+    ).animate(
+      CurvedAnimation(
+        parent: widget.animationController,
+        curve: Interval(0.35, 1, curve: Curves.linear),
+      ),
+    );
+    return AnimatedBuilder(
+        animation: widget.animationController, builder: _buildAnimation);
   }
 }

@@ -5,6 +5,8 @@
         "pages/home_page",
         "widgets/location_info_card",
         "pages/create_review_page",
-        "lib/services/authentication"
+        "lib/services/authentication",
+        "lib/models/location_card",
+        "firebase/functions/src/index.ts"
     ]
 }
