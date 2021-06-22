@@ -100,7 +100,7 @@ class _SearchBarState extends State<SearchBar> {
       ),
       controller: _floatingSearchBarController,
       borderRadius: BorderRadius.circular(32),
-      margins: const EdgeInsets.only(top: 40, right: 20, left: 20),
+      margins: const EdgeInsets.only(top: 45, right: 20, left: 20),
       scrollPadding: const EdgeInsets.only(top: 20, bottom: 56),
       transitionDuration: const Duration(milliseconds: 300),
       transitionCurve: Curves.easeInOut,
@@ -113,7 +113,7 @@ class _SearchBarState extends State<SearchBar> {
       actions: [
         FloatingSearchBarAction.searchToClear(
           duration: const Duration(milliseconds: 300),
-          showIfClosed: false,
+          color: Colors.black45,
         ),
       ],
       builder: (context, transition) {
