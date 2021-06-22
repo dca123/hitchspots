@@ -13,8 +13,8 @@ import 'package:hitchspots/models/location_card.dart';
 import 'package:hitchspots/services/authentication.dart';
 import 'package:hitchspots/widgets/fabs/add_location_fab.dart';
 import 'package:hitchspots/widgets/fabs/my_location_fab.dart';
+import 'package:hitchspots/widgets/search_bar/search_bar.dart';
 import 'package:location/location.dart';
-import 'package:material_floating_search_bar/material_floating_search_bar.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
@@ -132,7 +132,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     double? zoom = await _mapController!.getZoomLevel();
     var radius = r *
         acos(sin(lat1) * sin(lat2) + cos(lat1) * cos(lat2) * cos(lon2 - lon1));
-    print("zoom: $zoom");
     if (zoom < 5) return;
     int limit = zoom >= 4 ? 9 : 2;
     final _firestore = FirebaseFirestore.instance;
@@ -199,13 +198,23 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
+  void _moveCameraToLocation(LatLng location) async {
+    _mapController!.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: LatLng(location.latitude, location.longitude),
+          zoom: 10,
+        ),
+      ),
+    );
+  }
+
   Future<Marker> Function(Cluster) get _markerBuilder => (cluster) async {
         return cluster.isMultiple
             ? Marker(
                 markerId: MarkerId(cluster.getId()),
                 position: cluster.location,
                 onTap: () {
-                  print('---- $cluster');
                   cluster.items.forEach((p) => print(p));
                 },
                 icon: await _getMarkerBitmap(cluster.count.toString()),
@@ -280,61 +289,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         AnimationController(vsync: this, lowerBound: 0, upperBound: 1);
   }
 
-
-  Widget buildFloatingSearchBar() {
-    final isPortrait =
-        MediaQuery.of(context).orientation == Orientation.portrait;
-
-    return FloatingSearchBar(
-      hint: 'Find a Location',
-      // hintStyle: Theme.of(context).textTheme.subtitle1,
-      borderRadius: BorderRadius.circular(16),
-      margins: const EdgeInsets.only(top: 40, right: 20, left: 20),
-      scrollPadding: const EdgeInsets.only(top: 16, bottom: 56),
-      transitionDuration: const Duration(milliseconds: 300),
-      transitionCurve: Curves.easeInOut,
-      physics: const BouncingScrollPhysics(),
-      axisAlignment: isPortrait ? 0.0 : -1.0,
-      openAxisAlignment: 0.0,
-      // width: isPortrait ? 600 : 500,
-      debounceDelay: const Duration(milliseconds: 500),
-      onQueryChanged: (query) {
-        // Call your model, bloc, controller here.
-      },
-      // Specify a custom transition to be used for
-      // animating between opened and closed stated.
-      transition: SlideFadeFloatingSearchBarTransition(),
-      actions: [
-        FloatingSearchBarAction(
-          showIfOpened: false,
-          child: CircularButton(
-            icon: const Icon(Icons.place),
-            onPressed: () {},
-          ),
-        ),
-        FloatingSearchBarAction.searchToClear(
-          showIfClosed: false,
-        ),
-      ],
-      builder: (context, transition) {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Material(
-            color: Colors.white,
-            elevation: 4.0,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(height: 112, color: Colors.red),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-
   final cardDetailsKey = GlobalKey();
   @override
   Widget build(BuildContext context) {
@@ -385,8 +339,11 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
               animationController: _slidingPanelAnimationController,
               findingLocation: _findingLocation,
             ),
-            buildFloatingSearchBar(),
-            )
+            SearchBar(
+              isLocationGranted: _isLocationGranted,
+              location: _location,
+              moveCameraToLocation: _moveCameraToLocation,
+            ),
           ],
         ),
       ),

@@ -7,6 +7,7 @@
         "pages/create_review_page",
         "lib/services/authentication",
         "lib/models/location_card",
-        "firebase/functions/src/index.ts"
+        "firebase/functions/src/index.ts",
+        "widgets/search_bar"
     ]
 }
