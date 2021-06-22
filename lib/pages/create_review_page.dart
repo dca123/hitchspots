@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:hitchspots/services/authentication.dart';
 import '../widgets/form_fields/rating_bar.dart';
 import 'package:hitchspots/widgets/form_fields/rating_bar.dart';
@@ -21,11 +22,15 @@ class _CreateReviewPageState extends State<CreateReviewPage> {
   final _formKey = GlobalKey<FormState>();
 
   double? ratingController;
+  bool isSaving = false;
 
   @override
   Widget build(BuildContext context) {
     void addLocation(String locationID) {
       if (_formKey.currentState!.validate()) {
+        setState(() {
+          isSaving = true;
+        });
         final String displayName =
             Provider.of<AuthenticationState>(context, listen: false)
                 .displayName!;
@@ -77,14 +82,22 @@ class _CreateReviewPageState extends State<CreateReviewPage> {
           ),
           centerTitle: true,
           actions: [
-            Container(
-              padding: EdgeInsets.only(right: 16),
-              child: IconButton(
-                icon: const Icon(Icons.send),
-                onPressed: () => addLocation(locationCard.locationID),
-                color: Colors.black,
-              ),
-            )
+            isSaving
+                ? Padding(
+                    padding: const EdgeInsets.only(right: 28),
+                    child: SpinKitWave(
+                      color: Colors.black,
+                      size: 16,
+                    ),
+                  )
+                : Container(
+                    padding: EdgeInsets.only(right: 16),
+                    child: IconButton(
+                      icon: const Icon(Icons.send),
+                      onPressed: () => addLocation(locationCard.locationID),
+                      color: Colors.black,
+                    ),
+                  )
           ],
         ),
         body: Container(
@@ -144,5 +157,11 @@ class _CreateReviewPageState extends State<CreateReviewPage> {
         ),
       );
     });
+  }
+
+  @override
+  void dispose() {
+    descriptionTextController.dispose();
+    super.dispose();
   }
 }
