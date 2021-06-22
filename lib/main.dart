@@ -13,7 +13,7 @@ void main() async {
   // runApp(ProviderWrapper());
   runApp(
     DevicePreview(
-      enabled: true,
+      enabled: false,
       builder: (context) => ProviderWrapper(),
     ),
   );
