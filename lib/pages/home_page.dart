@@ -10,6 +10,7 @@ import 'package:geoflutterfire2/geoflutterfire2.dart';
 import 'package:google_maps_cluster_manager/google_maps_cluster_manager.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hitchspots/models/location_card.dart';
+import 'package:hitchspots/services/authentication.dart';
 import 'package:hitchspots/widgets/fabs/add_location_fab.dart';
 import 'package:hitchspots/widgets/fabs/my_location_fab.dart';
 import 'package:location/location.dart';
@@ -45,6 +46,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   );
   Location _location = Location();
   bool _isLocationGranted = false;
+  bool _findingLocation = false;
 
   late AnimationController _slidingPanelAnimationController;
 
@@ -62,6 +64,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   Future<void> init() async {
     await Firebase.initializeApp();
+    await Provider.of<AuthenticationState>(context, listen: false).init();
     // FirebaseFirestore.instance.settings =
     //     Settings(host: '192.168.1.2:8005', sslEnabled: false);
 
@@ -178,8 +181,13 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     if (await Permission.location.isGranted) {
       setState(() {
         _isLocationGranted = true;
+        _findingLocation = true;
       });
       LocationData locationData = await _location.getLocation();
+      await Future.delayed(Duration(seconds: 10));
+      setState(() {
+        _findingLocation = false;
+      });
       _mapController!.animateCamera(
         CameraUpdate.newCameraPosition(
           CameraPosition(
@@ -320,6 +328,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
             MyLocationFabAnimator(
               getLocation: _getLocation,
               animationController: _slidingPanelAnimationController,
+              findingLocation: _findingLocation,
             )
           ],
         ),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:hitchspots/models/location_card.dart';
 import 'package:hitchspots/services/authentication.dart';
+import 'package:hitchspots/utils/icon_switcher.dart';
 import 'package:provider/provider.dart';
 import '../pages/create_review_page.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -260,6 +261,33 @@ class ButtonBar extends StatelessWidget {
   final Animation<double> opacity;
   final AnimationController animationController;
   final Function maximizePanel;
+
+  Widget _icon(BuildContext context) {
+    return Consumer<AuthenticationState>(
+        key: UniqueKey(),
+        builder: (context, authState, child) {
+          return IconSwitcherWrapper(
+            condition: authState.isAuthenticating,
+            iconIfTrue: SizedBox(
+              key: ValueKey('loading'),
+              height: 16,
+              width: 24,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.0,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            iconIfFalse: Icon(
+              Icons.add,
+              key: ValueKey('ready'),
+            ),
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -284,14 +312,20 @@ class ButtonBar extends StatelessWidget {
             },
             closedBuilder: (context, openContainer) {
               return ElevatedButton.icon(
-                onPressed: () => Provider.of<AuthenticationState>(
-                  context,
-                  listen: false,
-                ).loginFlowWithAction(
-                  buildContext: context,
-                  postLogin: () => openContainer(),
-                ),
-                icon: Icon(Icons.add),
+                onPressed: () {
+                  if (Provider.of<AuthenticationState>(context, listen: false)
+                          .isAuthenticating ==
+                      false) {
+                    Provider.of<AuthenticationState>(
+                      context,
+                      listen: false,
+                    ).loginFlowWithAction(
+                      buildContext: context,
+                      postLogin: () => openContainer(),
+                    );
+                  }
+                },
+                icon: _icon(context),
                 label: Text("Review"),
               );
             },

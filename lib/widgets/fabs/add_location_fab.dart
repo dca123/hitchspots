@@ -57,13 +57,17 @@ class _AddLocationWrapperState extends State<AddLocationWrapper> {
               ),
             ),
             onTap: () async {
-              middlePoint = await widget.mapController!
-                  .getLatLng(widget.screenCoordinate);
-              Provider.of<AuthenticationState>(context, listen: false)
-                  .loginFlowWithAction(
-                buildContext: context,
-                postLogin: () => openContainer(),
-              );
+              if (Provider.of<AuthenticationState>(context, listen: false)
+                      .isAuthenticating ==
+                  false) {
+                middlePoint = await widget.mapController!
+                    .getLatLng(widget.screenCoordinate);
+                Provider.of<AuthenticationState>(context, listen: false)
+                    .loginFlowWithAction(
+                  buildContext: context,
+                  postLogin: () => openContainer(),
+                );
+              }
             },
           );
         },
