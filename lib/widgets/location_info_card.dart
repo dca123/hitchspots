@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:hitchspots/models/location_card.dart';
 import 'package:hitchspots/services/authentication.dart';
+import 'package:hitchspots/utils/icon_switcher.dart';
 import 'package:provider/provider.dart';
 import '../pages/create_review_page.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -261,26 +262,30 @@ class ButtonBar extends StatelessWidget {
   final AnimationController animationController;
   final Function maximizePanel;
 
-  Widget icon(BuildContext context) {
+  Widget _icon(BuildContext context) {
     return Consumer<AuthenticationState>(
-      builder: (context, authState, child) {
-        if (authState.isAuthenticating) {
-          return SizedBox(
-            height: 16,
-            width: 24,
-            child: Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: CircularProgressIndicator(
-                strokeWidth: 2.0,
-                color: Colors.white,
+        key: UniqueKey(),
+        builder: (context, authState, child) {
+          return IconSwitcherWrapper(
+            condition: authState.isAuthenticating,
+            iconIfTrue: SizedBox(
+              key: ValueKey('loading'),
+              height: 16,
+              width: 24,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.0,
+                  color: Colors.white,
+                ),
               ),
             ),
+            iconIfFalse: Icon(
+              Icons.add,
+              key: ValueKey('ready'),
+            ),
           );
-        } else {
-          return Icon(Icons.add);
-        }
-      },
-    );
+        });
   }
 
   @override
@@ -320,7 +325,7 @@ class ButtonBar extends StatelessWidget {
                     );
                   }
                 },
-                icon: icon(context),
+                icon: _icon(context),
                 label: Text("Review"),
               );
             },

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hitchspots/utils/icon_switcher.dart';
 
 class MyLocationFabAnimator extends StatefulWidget {
   MyLocationFabAnimator({
@@ -90,19 +91,23 @@ class _MyLocationFABState extends State<MyLocationFAB>
     return FloatingActionButton(
       elevation: 6,
       backgroundColor: Theme.of(context).colorScheme.surface,
-      child: widget.findingLocation
-          ? ScaleTransition(
-              scale: animation,
-              child: Icon(
-                Icons.gps_not_fixed,
-                // Icons.gps_fixed,
-                color: Theme.of(context).primaryColor,
-              ),
-            )
-          : Icon(
-              Icons.gps_fixed,
-              color: Theme.of(context).primaryColor,
-            ),
+      child: IconSwitcherWrapper(
+        duration: 700,
+        condition: widget.findingLocation,
+        iconIfTrue: ScaleTransition(
+          key: ValueKey('gps_not_fixed'),
+          scale: animation,
+          child: Icon(
+            Icons.gps_not_fixed,
+            color: Theme.of(context).primaryColor,
+          ),
+        ),
+        iconIfFalse: Icon(
+          Icons.gps_fixed,
+          key: ValueKey('gps_fixed'),
+          color: Theme.of(context).primaryColor,
+        ),
+      ),
       onPressed: () => widget.getLocation(),
     );
   }

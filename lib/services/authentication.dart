@@ -39,18 +39,26 @@ class AuthenticationState extends ChangeNotifier {
       {required Function postLogin, required BuildContext buildContext}) async {
     _isAuthenticating = true;
     notifyListeners();
-    if (_loginState != LoginState.loggedIn) {
-      await signInWithGoogle();
-      if (_loginState == LoginState.oauthFailed) return;
-      await loadProfile();
-      if (_loginState == LoginState.profileSetup) {
-        await Navigator.push(
-          buildContext,
-          MaterialPageRoute(builder: (context) {
-            return SetupProfilePage();
-          }),
-        );
+    try {
+      if (_loginState != LoginState.loggedIn) {
+        await signInWithGoogle();
+        if (_loginState == LoginState.oauthFailed) {
+          _isAuthenticating = false;
+          notifyListeners();
+          return;
+        }
+        await loadProfile();
+        if (_loginState == LoginState.profileSetup) {
+          await Navigator.push(
+            buildContext,
+            MaterialPageRoute(builder: (context) {
+              return SetupProfilePage();
+            }),
+          );
+        }
       }
+    } catch (e) {
+      print("Error Authentication - $e");
     }
     _isAuthenticating = false;
     notifyListeners();
@@ -66,11 +74,7 @@ class AuthenticationState extends ChangeNotifier {
     if (fireAuthUser == null) {
       _loginState = LoginState.register;
       GoogleSignInAccount? googleUser;
-      try {
-        googleUser = await GoogleSignIn().signIn();
-      } catch (e) {
-        print(e);
-      }
+      googleUser = await GoogleSignIn().signIn();
 
       if (googleUser != null) {
         final GoogleSignInAuthentication googleAuth =

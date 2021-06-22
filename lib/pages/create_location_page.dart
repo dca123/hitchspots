@@ -8,6 +8,7 @@ import 'package:geoflutterfire2/geoflutterfire2.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hitchspots/models/location_picker_store.dart';
 import 'package:hitchspots/services/authentication.dart';
+import 'package:hitchspots/utils/icon_switcher.dart';
 import 'package:provider/provider.dart';
 import '../widgets/form_fields/rating_bar.dart';
 import '../widgets/form_fields/location_picker.dart';
@@ -105,22 +106,26 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
         ),
         centerTitle: true,
         actions: [
-          isSaving
-              ? Padding(
-                  padding: const EdgeInsets.only(right: 28),
-                  child: SpinKitWave(
-                    color: Colors.black,
-                    size: 16,
-                  ),
-                )
-              : Container(
-                  padding: EdgeInsets.only(right: 16),
-                  child: IconButton(
-                    icon: const Icon(Icons.send),
-                    onPressed: () => addLocation(),
-                    color: Colors.black,
-                  ),
-                )
+          Padding(
+            padding: const EdgeInsets.only(right: 2.0),
+            child: IconSwitcherWrapper(
+              condition: isSaving,
+              iconIfTrue: IconButton(
+                key: ValueKey('spinner'),
+                onPressed: () => {},
+                icon: SpinKitWave(
+                  color: Colors.black,
+                  size: 16,
+                ),
+              ),
+              iconIfFalse: IconButton(
+                key: ValueKey('send'),
+                icon: const Icon(Icons.send),
+                onPressed: () => addLocation(),
+                color: Colors.black,
+              ),
+            ),
+          )
         ],
       ),
       body: Form(
