@@ -1,9 +1,10 @@
 import 'package:animations/animations.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:hitchspots/models/location_card.dart';
 import 'package:hitchspots/services/authentication.dart';
+import 'package:hitchspots/utils/icon_switcher.dart';
 import 'package:provider/provider.dart';
 import '../pages/create_review_page.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -13,7 +14,13 @@ class LocationInfoCard extends StatelessWidget {
     required this.cardDetailsKey,
     required this.animationController,
     required this.maximizePanel,
-  }) : imageHeight = Tween<double>(begin: 0.35, end: 0.45).animate(
+  })  : imageHeight = Tween<double>(begin: 0.35, end: 0.45).animate(
+          CurvedAnimation(
+            parent: animationController,
+            curve: Interval(0.35, 1.0, curve: Curves.linear),
+          ),
+        ),
+        borderRadius = Tween<double>(begin: 24, end: 0).animate(
           CurvedAnimation(
             parent: animationController,
             curve: Interval(0.35, 1.0, curve: Curves.linear),
@@ -22,11 +29,14 @@ class LocationInfoCard extends StatelessWidget {
   final cardDetailsKey;
   final AnimationController animationController;
   final Animation<double> imageHeight;
+  final Animation<double> borderRadius;
   final Function maximizePanel;
-
   Widget _buildHeaderAnimation(BuildContext context, Widget? widget) {
     final screenHeight = MediaQuery.of(context).size.height * imageHeight.value;
-
+    final BorderRadiusGeometry imageRowRadius = BorderRadius.only(
+      topLeft: Radius.circular(borderRadius.value),
+      topRight: Radius.circular(borderRadius.value),
+    );
     return Column(
       children: [
         ConstrainedBox(
@@ -39,7 +49,9 @@ class LocationInfoCard extends StatelessWidget {
                 child: FractionallySizedBox(
                   alignment: Alignment.topCenter,
                   heightFactor: 1,
-                  child: ReviewImageRow(),
+                  child: ReviewImageRow(
+                    radius: imageRowRadius,
+                  ),
                 ),
               ),
               CardDetails(
@@ -81,29 +93,47 @@ class LocationInfoCard extends StatelessWidget {
 class ReviewImageRow extends StatelessWidget {
   const ReviewImageRow({
     Key? key,
+    required this.radius,
   }) : super(key: key);
+  final BorderRadiusGeometry radius;
+
+  Future<List<String>> getImageUrl(String locationID) async {
+    Future<String> getUrl(String heading) async =>
+        await FirebaseStorage.instance
+            .ref('street_view_images/$locationID/$heading.jpeg')
+            .getDownloadURL();
+
+    const headings = ['0', '120', '240'];
+    List<Future<String>> x = headings.map((heading) async {
+      Future<String> data = getUrl(heading);
+      return data;
+    }).toList();
+    return await Future.wait(x);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final String locationID =
+        Provider.of<LocationCardModel>(context, listen: false).locationID;
     return Container(
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
-          // borderRadius: radius,
-          ),
+        borderRadius: radius,
+      ),
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
           ReviewImage(
-            imageName: "image1",
-            heading: 0,
+            heading: '0',
+            locationID: locationID,
           ),
           ReviewImage(
-            imageName: "image1",
-            heading: 120,
+            heading: '120',
+            locationID: locationID,
           ),
           ReviewImage(
-            imageName: "image1",
-            heading: 240,
+            heading: '240',
+            locationID: locationID,
           ),
         ],
       ),
@@ -112,20 +142,19 @@ class ReviewImageRow extends StatelessWidget {
 }
 
 class ReviewImage extends StatelessWidget {
-  const ReviewImage({Key? key, required this.imageName, required this.heading})
+  const ReviewImage({Key? key, required this.heading, required this.locationID})
       : super(key: key);
-  final String imageName;
-  final int heading;
+  final String heading;
+  final String locationID;
+
   @override
-  Widget build(BuildContext context) {
-    return Consumer<LocationCardModel>(builder: (context, locationCard, child) {
-      return Image.network(
-        """https://maps.googleapis.com/maps/api/streetview?location=${locationCard.coordinates.latitude},${locationCard.coordinates.longitude}
-        &fov=120&heading=$heading&size=456x456&key=${env['MAPS_API_KEY']}""",
-        width: MediaQuery.of(context).size.width / 2,
-        fit: BoxFit.cover,
-      );
-    });
+  Widget build(BuildContext buildContext) {
+    final double width = MediaQuery.of(buildContext).size.width;
+    return Image.network(
+      "https://storage.googleapis.com/hitchspots.appspot.com/street_view_images/$locationID/$heading.jpeg",
+      width: width,
+      fit: BoxFit.cover,
+    );
   }
 }
 
@@ -232,6 +261,33 @@ class ButtonBar extends StatelessWidget {
   final Animation<double> opacity;
   final AnimationController animationController;
   final Function maximizePanel;
+
+  Widget _icon(BuildContext context) {
+    return Consumer<AuthenticationState>(
+        key: UniqueKey(),
+        builder: (context, authState, child) {
+          return IconSwitcherWrapper(
+            condition: authState.isAuthenticating,
+            iconIfTrue: SizedBox(
+              key: ValueKey('loading'),
+              height: 16,
+              width: 24,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.0,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            iconIfFalse: Icon(
+              Icons.add,
+              key: ValueKey('ready'),
+            ),
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -256,14 +312,20 @@ class ButtonBar extends StatelessWidget {
             },
             closedBuilder: (context, openContainer) {
               return ElevatedButton.icon(
-                onPressed: () => Provider.of<AuthenticationState>(
-                  context,
-                  listen: false,
-                ).loginFlowWithAction(
-                  buildContext: context,
-                  postLogin: () => openContainer(),
-                ),
-                icon: Icon(Icons.add),
+                onPressed: () {
+                  if (Provider.of<AuthenticationState>(context, listen: false)
+                          .isAuthenticating ==
+                      false) {
+                    Provider.of<AuthenticationState>(
+                      context,
+                      listen: false,
+                    ).loginFlowWithAction(
+                      buildContext: context,
+                      postLogin: () => openContainer(),
+                    );
+                  }
+                },
+                icon: _icon(context),
                 label: Text("Review"),
               );
             },
@@ -373,7 +435,7 @@ class _CardDetailsState extends State<CardDetails> {
       margin: EdgeInsets.all(0),
       elevation: 2,
       child: Container(
-        padding: EdgeInsets.only(top: paddingTop.value, bottom: 8, left: 16),
+        padding: EdgeInsets.only(top: paddingTop.value, bottom: 16, left: 16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [

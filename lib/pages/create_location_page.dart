@@ -1,11 +1,14 @@
 import 'package:animations/animations.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:geoflutterfire2/geoflutterfire2.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hitchspots/models/location_picker_store.dart';
 import 'package:hitchspots/services/authentication.dart';
+import 'package:hitchspots/utils/icon_switcher.dart';
 import 'package:provider/provider.dart';
 import '../widgets/form_fields/rating_bar.dart';
 import '../widgets/form_fields/location_picker.dart';
@@ -28,15 +31,22 @@ class CreateLocationPage extends StatefulWidget {
 
 class _CreateLocationPageState extends State<CreateLocationPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController locationName = TextEditingController();
-  final TextEditingController locationExperience = TextEditingController();
+
   final geo = GeoFlutterFire();
 
+  final TextEditingController locationName = TextEditingController();
+  final TextEditingController locationExperience = TextEditingController();
   double ratingController = 0;
   late LatLng position;
 
+  bool isSaving = false;
+
   void addLocation() async {
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        isSaving = !isSaving;
+      });
+
       GeoFirePoint newSpot =
           geo.point(latitude: position.latitude, longitude: position.longitude);
       final locationID =
@@ -45,25 +55,35 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
         'position': newSpot.data,
         'rating': ratingController,
         'reviewCount': 1,
+        'hasImages': false,
         'createdBy': FirebaseAuth.instance.currentUser!.uid,
       });
 
       final String displayName =
           Provider.of<AuthenticationState>(context, listen: false).displayName!;
-      FirebaseFirestore.instance.collection('reviews').add({
+      await FirebaseFirestore.instance.collection('reviews').add({
         'description': locationExperience.text,
         'locationID': locationID.id,
         'rating': ratingController,
         'timestamp': DateTime.now().millisecondsSinceEpoch,
         'createdByDisplayName': displayName,
       });
-      Navigator.pop(context, true);
+      print("CREATED LOCAITON WITH ID - ${locationID.id}");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Thank you for contributing!'),
+        ),
+      );
+      Future.delayed(Duration(milliseconds: 100), () {
+        Navigator.pop(context);
+      });
     }
   }
 
   @override
   void dispose() {
     locationName.dispose();
+    locationExperience.dispose();
     super.dispose();
   }
 
@@ -86,12 +106,24 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
         ),
         centerTitle: true,
         actions: [
-          Container(
-            padding: EdgeInsets.only(right: 16),
-            child: IconButton(
-              icon: const Icon(Icons.send),
-              onPressed: () => addLocation(),
-              color: Colors.black,
+          Padding(
+            padding: const EdgeInsets.only(right: 2.0),
+            child: IconSwitcherWrapper(
+              condition: isSaving,
+              iconIfTrue: IconButton(
+                key: ValueKey('spinner'),
+                onPressed: () => {},
+                icon: SpinKitWave(
+                  color: Colors.black,
+                  size: 16,
+                ),
+              ),
+              iconIfFalse: IconButton(
+                key: ValueKey('send'),
+                icon: const Icon(Icons.send),
+                onPressed: () => addLocation(),
+                color: Colors.black,
+              ),
             ),
           )
         ],

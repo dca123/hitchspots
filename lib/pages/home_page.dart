@@ -10,8 +10,10 @@ import 'package:geoflutterfire2/geoflutterfire2.dart';
 import 'package:google_maps_cluster_manager/google_maps_cluster_manager.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hitchspots/models/location_card.dart';
+import 'package:hitchspots/services/authentication.dart';
 import 'package:hitchspots/widgets/fabs/add_location_fab.dart';
 import 'package:hitchspots/widgets/fabs/my_location_fab.dart';
+import 'package:hitchspots/widgets/search_bar/search_bar.dart';
 import 'package:location/location.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
@@ -26,18 +28,18 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> with TickerProviderStateMixin {
-  static late BitmapDescriptor goodIcon;
-  static late BitmapDescriptor warningIcon;
-  static late BitmapDescriptor badIcon;
+  static late BitmapDescriptor _goodIcon;
+  static late BitmapDescriptor _warningIcon;
+  static late BitmapDescriptor _badIcon;
   static late UI.Image _clusterImage;
 
   late ClusterManager _clusterManager;
   List<ClusterItem> _clusterItems = [];
-  Map<String, Marker> _markers = {};
-  Set<Marker> markers = {};
+  Map<String, Marker> _markersMap = {};
+  Set<Marker> _clusterMarkers = {};
 
-  final geo = GeoFlutterFire();
-  GoogleMapController? mapController;
+  final _geo = GeoFlutterFire();
+  GoogleMapController? _mapController;
   final PanelController _panelController = PanelController();
   static final CameraPosition _centerOfWorld = CameraPosition(
     target: LatLng(0, 0),
@@ -45,16 +47,17 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   );
   Location _location = Location();
   bool _isLocationGranted = false;
+  bool _findingLocation = false;
 
   late AnimationController _slidingPanelAnimationController;
 
-  final BorderRadiusGeometry radius = BorderRadius.only(
+  final BorderRadiusGeometry _radius = BorderRadius.only(
     topLeft: Radius.circular(24.0),
     topRight: Radius.circular(24.0),
   );
 
-  double snapPoint = 0.35;
-  double? noImagesCardSnapPoint;
+  double _snapPoint = 0.35;
+  double? _noImagesCardSnapPoint;
 
   HomePageState() {
     init();
@@ -62,80 +65,80 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   Future<void> init() async {
     await Firebase.initializeApp();
+    await Provider.of<AuthenticationState>(context, listen: false).init();
+    // FirebaseFirestore.instance.settings =
+    //     Settings(host: '192.168.1.2:8005', sslEnabled: false);
 
-    double width = MediaQuery.of(context).devicePixelRatio.round() * 50;
-    _clusterImage = await _loadUiImage('assets/icons/cluster.png', width);
-
-    goodIcon = await BitmapDescriptor.fromAssetImage(
+    _goodIcon = await BitmapDescriptor.fromAssetImage(
         createLocalImageConfiguration(context), 'assets/icons/Good.png');
-    warningIcon = await BitmapDescriptor.fromAssetImage(
+    _warningIcon = await BitmapDescriptor.fromAssetImage(
         createLocalImageConfiguration(context), 'assets/icons/Warning.png');
-    badIcon = await BitmapDescriptor.fromAssetImage(
+    _badIcon = await BitmapDescriptor.fromAssetImage(
         createLocalImageConfiguration(context), 'assets/icons/Bad.png');
+    _clusterImage = await _loadClusterImage('assets/icons/cluster.png');
   }
 
   BitmapDescriptor _ratingToMarker(double rating) {
     if (rating >= 4) {
-      return goodIcon;
+      return _goodIcon;
     } else if (rating >= 2.5) {
-      return warningIcon;
+      return _warningIcon;
     }
-    return badIcon;
+    return _badIcon;
   }
 
   void _maximizePanel() => _panelController.animatePanelToPosition(1);
-  void _createMarkers(locationList, tempMarkers) {
-    if (noImagesCardSnapPoint == null) {
+
+  void _createMarkers(List<DocumentSnapshot> locationList, tempMarkers) {
+    if (_noImagesCardSnapPoint == null) {
       final double cardHeight = cardDetailsKey.currentContext!.size!.height;
       final double screenHeight = MediaQuery.of(context).size.height;
-      noImagesCardSnapPoint = cardHeight / screenHeight;
+      _noImagesCardSnapPoint = cardHeight / screenHeight;
       // print("$screenHeight $cardHeight $height - SCREENHEIGHT");
     }
     locationList.forEach((locationDocument) {
+      dynamic locationData = locationDocument.data();
       GeoPoint point = locationDocument.get('position')['geopoint'];
       double rating = locationDocument.get('rating').toDouble();
+      bool hasImages = locationData['hasImages'] ?? false;
       tempMarkers[locationDocument.id] = Marker(
         markerId: MarkerId(locationDocument.id),
         position: LatLng(point.latitude, point.longitude),
         icon: _ratingToMarker(rating),
         onTap: () async {
           await Provider.of<LocationCardModel>(context, listen: false)
-              .updateLocation(locationDocument.data(), locationDocument.id);
-          bool hasImages =
-              Provider.of<LocationCardModel>(context, listen: false).hasImages;
+              .updateLocation(locationData, locationDocument.id);
           setState(() {
-            snapPoint = hasImages ? 0.35 : noImagesCardSnapPoint!;
+            _snapPoint = hasImages ? 0.35 : _noImagesCardSnapPoint!;
           });
-          // print("SNAPPOINT - $snapPoint");
-          _panelController.animatePanelToPosition(snapPoint);
+          _panelController.animatePanelToPosition(_snapPoint);
         },
       );
     });
   }
 
   void _getNearbySpots(ScreenCoordinate screenCoordinate) async {
-    LatLngBounds bounds = await mapController!.getVisibleRegion();
+    LatLngBounds bounds = await _mapController!.getVisibleRegion();
     LatLng ne = bounds.northeast;
     double r = 3963.0;
-    LatLng middlePoint = await mapController!.getLatLng(screenCoordinate);
+    LatLng middlePoint = await _mapController!.getLatLng(screenCoordinate);
     var lat1 = middlePoint.latitude / 57.2958;
     var lon1 = middlePoint.longitude / 57.2958;
     var lat2 = ne.latitude / 57.2958;
     var lon2 = ne.longitude / 57.2958;
 
-    GeoFirePoint center = geo.point(
+    GeoFirePoint center = _geo.point(
         latitude: middlePoint.latitude, longitude: middlePoint.longitude);
-    double? zoom = await mapController!.getZoomLevel();
+    double? zoom = await _mapController!.getZoomLevel();
     var radius = r *
         acos(sin(lat1) * sin(lat2) + cos(lat1) * cos(lat2) * cos(lon2 - lon1));
-    print("zoom: $zoom");
     if (zoom < 5) return;
     int limit = zoom >= 4 ? 9 : 2;
     final _firestore = FirebaseFirestore.instance;
     var locationsCollection = _firestore.collection('locations').limit(limit);
 
     Stream<List<DocumentSnapshot>> stream =
-        geo.collection(collectionRef: locationsCollection).within(
+        _geo.collection(collectionRef: locationsCollection).within(
               center: center,
               radius: radius,
               field: 'position',
@@ -148,9 +151,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       // Create Markers
       _createMarkers(locationList, tempMarkers);
       // Add Markers to Marker map
-      _markers.addAll(tempMarkers);
+      _markersMap.addAll(tempMarkers);
       // Convert markers to ClusterItemList
-      List<ClusterItem<Marker>> clusterItems = _markers.values
+      List<ClusterItem<Marker>> clusterItems = _markersMap.values
           .map((Marker marker) => ClusterItem<Marker>(
                 marker.position,
                 item: marker,
@@ -162,7 +165,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   Future<void> _onMapCreated(GoogleMapController mapController) async {
     setState(() {
-      this.mapController = mapController;
+      this._mapController = mapController;
       _clusterManager.setMapController(mapController);
     });
     _moveCameraToUserLocation();
@@ -178,9 +181,13 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     if (await Permission.location.isGranted) {
       setState(() {
         _isLocationGranted = true;
+        _findingLocation = true;
       });
       LocationData locationData = await _location.getLocation();
-      mapController!.animateCamera(
+      setState(() {
+        _findingLocation = false;
+      });
+      _mapController!.animateCamera(
         CameraUpdate.newCameraPosition(
           CameraPosition(
             target: LatLng(locationData.latitude!, locationData.longitude!),
@@ -191,38 +198,46 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
+  void _moveCameraToLocation(LatLng location) async {
+    _mapController!.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: LatLng(location.latitude, location.longitude),
+          zoom: 10,
+        ),
+      ),
+    );
+  }
+
   Future<Marker> Function(Cluster) get _markerBuilder => (cluster) async {
-        double width = MediaQuery.of(context).devicePixelRatio.round() * 50;
         return cluster.isMultiple
             ? Marker(
                 markerId: MarkerId(cluster.getId()),
                 position: cluster.location,
                 onTap: () {
-                  print('---- $cluster');
                   cluster.items.forEach((p) => print(p));
                 },
-                icon: await _getMarkerBitmap(width, cluster.count.toString()),
+                icon: await _getMarkerBitmap(cluster.count.toString()),
               )
             : cluster.items.first;
       };
 
-  Future<UI.Image> _loadUiImage(String imageAssetPath, double width) async {
-    ByteData data = await rootBundle.load(imageAssetPath);
-    UI.Codec codec = await UI.instantiateImageCodec(data.buffer.asUint8List(),
-        targetWidth: width.round());
-    UI.FrameInfo fi = await codec.getNextFrame();
-    ByteData? imageAsByte =
-        await fi.image.toByteData(format: UI.ImageByteFormat.png);
-
-    Future<UI.Image> myBackground =
-        decodeImageFromList(imageAsByte!.buffer.asUint8List());
-
-    return myBackground;
+  Future<UI.Image> _loadClusterImage(String imageAssetPath) async {
+    Image image = Image.asset(imageAssetPath);
+    Completer<ImageInfo> completer = Completer();
+    image.image
+        .resolve(createLocalImageConfiguration(context))
+        .addListener(ImageStreamListener((ImageInfo info, bool _) {
+      completer.complete(info);
+    }));
+    ImageInfo imageInfo = await completer.future;
+    return imageInfo.image;
   }
 
-  Future<BitmapDescriptor> _getMarkerBitmap(double size, String text) async {
+  Future<BitmapDescriptor> _getMarkerBitmap(String text) async {
     final UI.PictureRecorder pictureRecorder = UI.PictureRecorder();
     final Canvas canvas = Canvas(pictureRecorder);
+    final int width = _clusterImage.width;
 
     canvas.drawImage(_clusterImage, Offset.zero, Paint());
 
@@ -236,15 +251,14 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     painter.layout();
     painter.paint(
       canvas,
+      // Offset.zero,
       Offset(
-        size / 2 - painter.width / 2,
-        size / 3.15 - painter.height / 2,
+        width / 2 - painter.width / 2,
+        width / 3.15 - painter.height / 2,
       ),
     );
 
-    final img = await pictureRecorder
-        .endRecording()
-        .toImage(size.toInt(), size.toInt());
+    final img = await pictureRecorder.endRecording().toImage(width, width);
     final data =
         await img.toByteData(format: UI.ImageByteFormat.png) as ByteData;
 
@@ -263,7 +277,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   void _updateMarkers(Set<Marker> markers) {
     setState(() {
-      this.markers = markers;
+      this._clusterMarkers = markers;
     });
   }
 
@@ -287,8 +301,8 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         controller: _panelController,
         minHeight: 0,
         maxHeight: MediaQuery.of(context).size.height,
-        snapPoint: snapPoint,
-        borderRadius: radius,
+        snapPoint: _snapPoint,
+        borderRadius: _radius,
         panel: LocationInfoCard(
           cardDetailsKey: cardDetailsKey,
           animationController: _slidingPanelAnimationController,
@@ -309,7 +323,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
               myLocationButtonEnabled: false,
               zoomControlsEnabled: false,
               mapToolbarEnabled: false,
-              markers: markers,
+              markers: _clusterMarkers,
               onCameraMove: _clusterManager.onCameraMove,
               onCameraIdle: () {
                 _getNearbySpots(screenCoordinate);
@@ -317,13 +331,19 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
               },
             ),
             AddLocationWrapper(
-              mapController: mapController,
+              mapController: _mapController,
               screenCoordinate: screenCoordinate,
             ),
             MyLocationFabAnimator(
               getLocation: _getLocation,
               animationController: _slidingPanelAnimationController,
-            )
+              findingLocation: _findingLocation,
+            ),
+            SearchBar(
+              isLocationGranted: _isLocationGranted,
+              location: _location,
+              moveCameraToLocation: _moveCameraToLocation,
+            ),
           ],
         ),
       ),
