@@ -2,7 +2,7 @@
     package="com.hitchspots">
    <uses-permission android:name="android.permission.INTERNET" />
    <application
-        android:label="Hitchspots"
+        android:label="HitchSpots"
         android:icon="@mipmap/ic_launcher">
         <meta-data android:name="com.google.android.geo.API_KEY"
                android:value="${MAPS_API_KEY}"/>

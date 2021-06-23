@@ -2,6 +2,11 @@
 
 Remake of the now broken hitchwiki.com/maps as a mobile app. Designed with Figma and developed with Flutter. 
 
+## Post Clone
+- app/google-services.json (Firebase Configuration)
+- .env (MAPS_API_KEY)
+- android/local.properties (MAPS_API_KEY after building)
+
 ## Features
 - Add hitching spots
 - Review and rate hitching spots
