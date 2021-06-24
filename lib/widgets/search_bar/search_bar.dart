@@ -94,7 +94,7 @@ class _SearchBarState extends State<SearchBar> {
     return FloatingSearchBar(
       hint: 'Type in an address',
       title: Text(
-        'Where are hitchiking to ?',
+        'Where are we hitchiking to ?',
         style: TextStyle(
           color: Colors.black54,
           fontWeight: FontWeight.w400,
