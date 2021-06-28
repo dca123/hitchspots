@@ -32,9 +32,9 @@ If you too learn by doing like me, here are the resources I used from flutter.de
 
 While this project also has multiple dependencies, most will automatically integrate with ios and android app. However, some such as firebase and google maps as we just saw need to be manually configured by being added specific lines of code in the ios folder. These packages are those which have per platform changes. 
 
-- [] [FlutterFire](https://firebase.flutter.dev/docs/installation/ios)
-- [] [Google Maps](https://pub.dev/packages/google_maps_flutter)
-- [] [Firebase crashlytics](https://firebase.flutter.dev/docs/crashlytics/overview/)
-- [] [Google Sign in](https://pub.dev/packages/google_sign_in)
-- [] [Location](https://pub.dev/packages/location)
-- [] [Permission Handler](https://pub.dev/packages/permission_handler)
+- [ ] [FlutterFire](https://firebase.flutter.dev/docs/installation/ios)
+- [ ] [Google Maps](https://pub.dev/packages/google_maps_flutter)
+- [ ] [Firebase crashlytics](https://firebase.flutter.dev/docs/crashlytics/overview/)
+- [ ] [Google Sign in](https://pub.dev/packages/google_sign_in)
+- [ ] [Location](https://pub.dev/packages/location)
+- [ ] [Permission Handler](https://pub.dev/packages/permission_handler)
