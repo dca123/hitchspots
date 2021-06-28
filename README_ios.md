@@ -10,8 +10,10 @@ To get this project started running two items are required. One is a firebase co
 - Firebase and its sub-features such as authentication & storage is managed by the package [FlutterFire](https://firebase.flutter.dev/)
 - Note: When it comes to releasing, I can provide the Firebase configuration file such that both iOS and Android apps use the same database.
 
-Remember - **DO NOT COMMIT YOUR GOOGLE MAPS API KEY OR THE CONFIGURATION FILE TO THE REPO**
-Pro tip - If you're asked to setup a billing account for the google console, remember [to add a budget](https://cloud.google.com/billing/docs/how-to/budgets) of $0 to the project so that you won't be charged in any edge case, whatsoever. 
+### Notes
+
+- Remember - **DO NOT COMMIT YOUR GOOGLE MAPS API KEY OR THE CONFIGURATION FILE TO THE REPO**
+- Pro tip - If you're asked to setup a billing account for the google console, remember [to add a budget](https://cloud.google.com/billing/docs/how-to/budgets) of $0 to the project so that you won't be charged in any edge case, whatsoever. 
 
 
 ## Language and Framework
