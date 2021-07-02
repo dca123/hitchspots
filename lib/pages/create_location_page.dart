@@ -136,7 +136,7 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
             child: Column(children: [
               MapLocationFormField(
                 buildContext: context,
-                onSaved: (value) => position = value,
+                onSaved: (value) => position = value!,
                 centerLatLng: widget._centerLatLng,
               ),
               SizedBox(height: 24),
