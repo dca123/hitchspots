@@ -65,7 +65,7 @@ class _AddLocationWrapperState extends State<AddLocationWrapper> {
                 Provider.of<AuthenticationState>(context, listen: false)
                     .loginFlowWithAction(
                   buildContext: context,
-                  postLogin: () => openContainer(),
+                  postLogin: openContainer,
                 );
               }
             },

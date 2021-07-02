@@ -84,6 +84,13 @@ class _MyLocationFABState extends State<MyLocationFAB>
   }
 
   @override
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     if (widget.findingLocation) {
       controller.forward();
