@@ -97,20 +97,6 @@ class ReviewImageRow extends StatelessWidget {
   }) : super(key: key);
   final BorderRadiusGeometry radius;
 
-  Future<List<String>> getImageUrl(String locationID) async {
-    Future<String> getUrl(String heading) async =>
-        await FirebaseStorage.instance
-            .ref('street_view_images/$locationID/$heading.jpeg')
-            .getDownloadURL();
-
-    const headings = ['0', '120', '240'];
-    List<Future<String>> x = headings.map((heading) async {
-      Future<String> data = getUrl(heading);
-      return data;
-    }).toList();
-    return await Future.wait(x);
-  }
-
   @override
   Widget build(BuildContext context) {
     final String locationID =
