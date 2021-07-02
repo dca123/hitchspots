@@ -7,7 +7,7 @@ class MapLocationFormField extends FormField<LatLng> {
   static GoogleMapController? mapController;
   MapLocationFormField({
     required BuildContext buildContext,
-    required onSaved,
+    required Function(LatLng?) onSaved,
     required LatLng centerLatLng,
   }) : super(
           initialValue:
@@ -30,7 +30,7 @@ class MapLocationFormField extends FormField<LatLng> {
                 Container(
                   height: 100,
                   child: GestureDetector(
-                    onTap: () async {
+                    onTap: () {
                       Provider.of<LocationPickerStore>(buildContext,
                               listen: false)
                           .toggleLocationPicker();
