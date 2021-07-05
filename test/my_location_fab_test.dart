@@ -10,7 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hitchspots/widgets/fabs/my_location_fab.dart';
 
 void main() {
-  group('Icon depends on findingLocation', () {
+  group('MyLocation Icon depends on findingLocation', () {
     testWidgets(
       "gps_not_fixed icon when finding location is true",
       (WidgetTester tester) async {
