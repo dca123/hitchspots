@@ -10,10 +10,7 @@ import 'pages/home_page.dart';
 void main() async {
   // runApp(ProviderWrapper());
   runApp(
-    DevicePreview(
-      enabled: false,
-      builder: (context) => ProviderWrapper(),
-    ),
+    ProviderWrapper(),
   );
 }
 

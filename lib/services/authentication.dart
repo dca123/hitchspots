@@ -47,6 +47,7 @@ class AuthenticationState extends ChangeNotifier {
     }
     _auth ??= FirebaseAuth.instance;
     _firestore ??= FirebaseFirestore.instance;
+    _googleSignIn ??= GoogleSignIn();
   }
 
   Future<void> loginFlowWithAction(

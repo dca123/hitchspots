@@ -34,7 +34,11 @@ dependencies:
   timeago: ^3.0.2
 
 dev_dependencies:
+  integration_test:
+    sdk: flutter
   flutter_test:
+    sdk: flutter
+  flutter_driver:
     sdk: flutter
   build_runner: ^2.0.5
   fake_cloud_firestore: ^1.1.2
