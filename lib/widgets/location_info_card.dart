@@ -1,5 +1,4 @@
 import 'package:animations/animations.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:hitchspots/models/location_card.dart';
@@ -171,7 +170,7 @@ class ReviewList extends StatelessWidget {
           return ReviewTile(
             description: '${review['description']}',
             fuzzyTimeAgo: '$fuzzyTimeStamp',
-            rating: (review['rating'] ?? 0).toDouble(),
+            rating: review['rating'],
             displayName: '${review['createdByDisplayName']}',
           );
         },
@@ -190,12 +189,13 @@ class ReviewTile extends StatelessWidget {
   }) : super(key: key);
 
   final String description;
-  final double rating;
+  final double? rating;
   final String fuzzyTimeAgo;
   final String displayName;
 
   @override
   Widget build(BuildContext context) {
+    double fuzzyTimePadding = (rating == null ? 0 : 2);
     return Container(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -211,9 +211,12 @@ class ReviewTile extends StatelessWidget {
                 StarRatingsBar(
                   rating: rating,
                 ),
-                Text(
-                  ' $fuzzyTimeAgo',
-                  style: Theme.of(context).textTheme.caption,
+                Padding(
+                  padding: EdgeInsets.only(left: fuzzyTimePadding),
+                  child: Text(
+                    '$fuzzyTimeAgo',
+                    style: Theme.of(context).textTheme.caption,
+                  ),
                 ),
               ],
             ),
@@ -382,21 +385,25 @@ class LocationInfomation extends StatelessWidget {
 
 class StarRatingsBar extends StatelessWidget {
   const StarRatingsBar({Key? key, required this.rating}) : super(key: key);
-  final double rating;
+  final double? rating;
   @override
   Widget build(BuildContext context) {
-    return RatingBarIndicator(
-      rating: rating,
-      itemBuilder: (context, index) {
-        return Icon(
-          index < rating ? Icons.star : Icons.star_outline,
-          color: Colors.yellow[700],
-        );
-      },
-      itemCount: 5,
-      itemSize: 13,
-      unratedColor: Colors.yellow[700],
-    );
+    if (rating == null) {
+      return SizedBox.shrink();
+    } else {
+      return RatingBarIndicator(
+        rating: rating!,
+        itemBuilder: (context, index) {
+          return Icon(
+            index < rating! ? Icons.star : Icons.star_outline,
+            color: Colors.yellow[700],
+          );
+        },
+        itemCount: 5,
+        itemSize: 13,
+        unratedColor: Colors.yellow[700],
+      );
+    }
   }
 }
 
