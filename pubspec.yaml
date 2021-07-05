@@ -50,7 +50,6 @@ flutter:
   assets:
     - assets/icons/
     - assets/locations/
-    - .env
 
 flutter_icons:
   android: true
