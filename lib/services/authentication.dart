@@ -20,19 +20,33 @@ class AuthenticationState extends ChangeNotifier {
   String? _displayName;
   bool _isAuthenticating = false;
 
-  // late FirebaseAuth _auth;
+  GoogleSignIn? _googleSignIn;
   FirebaseAuth? _auth;
+  FirebaseFirestore? _firestore;
 
   LoginState get loginState => _loginState;
   String? get uid => _uid;
   String? get displayName => _displayName;
   bool get isAuthenticating => _isAuthenticating;
 
+  AuthenticationState({
+    GoogleSignIn? mockSignIn,
+    FirebaseAuth? mockFirebaseAuth,
+    FirebaseFirestore? mockFirebaseFirestore,
+  }) {
+    if (mockSignIn != null) {
+      _googleSignIn = mockSignIn;
+      _auth = mockFirebaseAuth;
+      _firestore = mockFirebaseFirestore;
+    }
+  }
+
   Future<void> init() async {
     if (Firebase.apps.length < 1) {
       await Firebase.initializeApp();
     }
     _auth ??= FirebaseAuth.instance;
+    _firestore ??= FirebaseFirestore.instance;
   }
 
   Future<void> loginFlowWithAction(
@@ -41,13 +55,13 @@ class AuthenticationState extends ChangeNotifier {
     notifyListeners();
     try {
       if (_loginState != LoginState.loggedIn) {
-        await signInWithGoogle();
+        await _signInWithGoogle();
         if (_loginState == LoginState.oauthFailed) {
           _isAuthenticating = false;
           notifyListeners();
           return;
         }
-        await loadProfile();
+        await _loadProfile();
         if (_loginState == LoginState.profileSetup) {
           await Navigator.push(
             buildContext,
@@ -67,14 +81,15 @@ class AuthenticationState extends ChangeNotifier {
     }
   }
 
-  Future<void> signInWithGoogle() async {
+  Future<void> _signInWithGoogle() async {
     await init();
     final User? fireAuthUser = _auth?.currentUser;
     // Not Authenticated via FireAuth
     if (fireAuthUser == null) {
       _loginState = LoginState.register;
       GoogleSignInAccount? googleUser;
-      googleUser = await GoogleSignIn().signIn();
+      GoogleSignIn googleSignIn = _googleSignIn!;
+      googleUser = await googleSignIn.signIn();
 
       if (googleUser != null) {
         final GoogleSignInAuthentication googleAuth =
@@ -85,7 +100,7 @@ class AuthenticationState extends ChangeNotifier {
           idToken: googleAuth.idToken,
         );
         await _auth?.signInWithCredential(credential);
-        _uid = FirebaseAuth.instance.currentUser!.uid;
+        _uid = _auth?.currentUser!.uid;
       } else {
         _loginState = LoginState.oauthFailed;
       }
@@ -95,9 +110,9 @@ class AuthenticationState extends ChangeNotifier {
     }
   }
 
-  Future<void> loadProfile() async {
+  Future<void> _loadProfile() async {
     final DocumentSnapshot hitchSpotsUser =
-        await FirebaseFirestore.instance.collection('users').doc(_uid).get();
+        await _firestore!.collection('users').doc(_uid).get();
     if (hitchSpotsUser.exists) {
       _displayName = hitchSpotsUser.get("displayName");
       _loginState = LoginState.loggedIn;
