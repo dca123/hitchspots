@@ -4,6 +4,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:hitchspots/models/location_card.dart';
 import 'package:hitchspots/services/authentication.dart';
 import 'package:hitchspots/utils/icon_switcher.dart';
+import 'package:hitchspots/utils/show_dialog.dart';
 import 'package:provider/provider.dart';
 import '../pages/create_review_page.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -301,17 +302,31 @@ class ButtonBar extends StatelessWidget {
             },
             closedBuilder: (context, openContainer) {
               return ElevatedButton.icon(
-                onPressed: () {
+                onPressed: () async {
                   if (Provider.of<AuthenticationState>(context, listen: false)
                           .isAuthenticating ==
                       false) {
-                    Provider.of<AuthenticationState>(
-                      context,
-                      listen: false,
-                    ).loginFlowWithAction(
-                      buildContext: context,
-                      postLogin: () => openContainer(),
-                    );
+                    if (Provider.of<AuthenticationState>(context, listen: false)
+                            .loginState !=
+                        LoginState.loggedIn) {
+                      await showAlertDialog(
+                          context: context,
+                          title: "You're Not Signed In",
+                          body:
+                              "You will need to login or sign up before you can contribute",
+                          ActionOneTitle: "Continue",
+                          ActionTwoTitle: "Close",
+                          ActionOne: () async {
+                            Provider.of<AuthenticationState>(context,
+                                    listen: false)
+                                .loginFlowWithAction(
+                              buildContext: context,
+                              postLogin: openContainer,
+                            );
+                          });
+                    } else {
+                      openContainer();
+                    }
                   }
                 },
                 icon: _icon(context),

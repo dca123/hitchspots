@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hitchspots/pages/create_location_page.dart';
 import 'package:hitchspots/services/authentication.dart';
+import 'package:hitchspots/utils/show_dialog.dart';
 import 'package:provider/provider.dart';
 
 class AddLocationWrapper extends StatefulWidget {
@@ -60,13 +61,28 @@ class _AddLocationWrapperState extends State<AddLocationWrapper> {
               if (Provider.of<AuthenticationState>(context, listen: false)
                       .isAuthenticating ==
                   false) {
-                middlePoint = await widget.mapController!
-                    .getLatLng(widget.screenCoordinate);
-                Provider.of<AuthenticationState>(context, listen: false)
-                    .loginFlowWithAction(
-                  buildContext: context,
-                  postLogin: openContainer,
-                );
+                if (Provider.of<AuthenticationState>(context, listen: false)
+                        .loginState !=
+                    LoginState.loggedIn) {
+                  await showAlertDialog(
+                      context: context,
+                      title: "You're Not Signed In",
+                      body:
+                          "You will need to login or sign up before you can contribute",
+                      ActionOneTitle: "Continue",
+                      ActionTwoTitle: "Close",
+                      ActionOne: () async {
+                        middlePoint = await widget.mapController!
+                            .getLatLng(widget.screenCoordinate);
+                        Provider.of<AuthenticationState>(context, listen: false)
+                            .loginFlowWithAction(
+                          buildContext: context,
+                          postLogin: openContainer,
+                        );
+                      });
+                } else {
+                  openContainer();
+                }
               }
             },
           );

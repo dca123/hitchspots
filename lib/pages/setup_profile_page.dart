@@ -22,7 +22,6 @@ class _SetupProfilePageState extends State<SetupProfilePage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).canvasColor,
         elevation: 0,
-        // toolbarHeight: 64,
         toolbarHeight: 84,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -32,7 +31,7 @@ class _SetupProfilePageState extends State<SetupProfilePage> {
           color: Colors.black,
         ),
         title: Text(
-          "Setup your Profile",
+          "Create Your Profile",
           style: Theme.of(context).textTheme.headline6,
         ),
         centerTitle: true,
@@ -65,11 +64,11 @@ class _SetupProfilePageState extends State<SetupProfilePage> {
           child: Column(
             children: [
               Text(
-                "You will need to setup your profile once to add locations or reviews",
+                "Let's setup your profile before you can contribute",
                 style: Theme.of(context).textTheme.caption,
               ),
               SizedBox(
-                height: 8,
+                height: 16,
               ),
               TextFormField(
                 controller: _displayName,
@@ -83,8 +82,7 @@ class _SetupProfilePageState extends State<SetupProfilePage> {
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: "Display Name",
-                  // hintText: "Briefly describe the location ",
-                  helperText: "Public name for contributions",
+                  helperText: "Public name shown with reviews",
                 ),
               )
             ],

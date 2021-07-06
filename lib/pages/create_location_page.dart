@@ -93,7 +93,6 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).canvasColor,
         elevation: 0,
-        // toolbarHeight: 64,
         toolbarHeight: 84,
         leading: IconButton(
           icon: const Icon(Icons.close),

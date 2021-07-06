@@ -34,7 +34,6 @@ class _LocationPickerState extends State<LocationPickerPage> {
         appBar: AppBar(
           backgroundColor: Theme.of(context).canvasColor,
           elevation: 1,
-          // toolbarHeight: 64,
           toolbarHeight: 84,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),

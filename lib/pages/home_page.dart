@@ -393,7 +393,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       _clusterManager.updateMap();
                     },
                   )
-                : Center(child: Text("")),
+                : Center(child: Text("Initializing")),
             AddLocationWrapper(
               mapController: _mapController,
               screenCoordinate: screenCoordinate,
