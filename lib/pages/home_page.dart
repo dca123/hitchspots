@@ -256,12 +256,12 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return LatLng(locationData.latitude!, locationData.longitude!);
   }
 
-  void _moveCameraToLocation(LatLng location) async {
+  void _moveCameraToLocation(LatLng location, [double? zoom]) async {
     _mapController!.animateCamera(
       CameraUpdate.newCameraPosition(
         CameraPosition(
           target: LatLng(location.latitude, location.longitude),
-          zoom: 10,
+          zoom: zoom ?? 10,
         ),
       ),
     );
@@ -272,7 +272,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ? Marker(
                 markerId: MarkerId(cluster.getId()),
                 position: cluster.location,
-                onTap: () {
+                onTap: () async {
+                  double zoom = await _mapController!.getZoomLevel() + 0.5;
+                  _moveCameraToLocation(cluster.location, zoom);
                   cluster.items.forEach((p) => print(p));
                 },
                 icon: await _getMarkerBitmap(cluster.count.toString()),
@@ -329,7 +331,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       _updateMarkers,
       markerBuilder: _markerBuilder,
       initialZoom: 10,
+      levels: [1, 4.25, 6.75, 8.25, 11.5],
       stopClusteringZoom: 12,
+      extraPercent: 0.4,
     );
   }
 
