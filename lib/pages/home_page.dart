@@ -12,6 +12,7 @@ import 'package:google_maps_cluster_manager/google_maps_cluster_manager.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hitchspots/models/location_card.dart';
 import 'package:hitchspots/services/authentication.dart';
+import 'package:hitchspots/utils/show_dialog.dart';
 import 'package:hitchspots/widgets/fabs/add_location_fab.dart';
 import 'package:hitchspots/widgets/fabs/my_location_fab.dart';
 import 'package:hitchspots/widgets/search_bar/search_bar.dart';
@@ -192,41 +193,21 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     });
   }
 
-  Future<void> _showDialog({required String title, required String body}) {
-    return showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Container(
-          child: AlertDialog(
-            title: Text(title),
-            content: Text(body),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('OK'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   void _requestLocationPermission() async {
     if (await Permission.location.request().isGranted) {
       if (await _location.serviceEnabled()) {
         _moveCameraToUserLocation();
       } else {
-        await _showDialog(
+        await showAlertDialog(
+          context: context,
           title: "Location Services Disabled",
           body: "Please enable location services to use this feature",
         );
         _location.requestService();
       }
     } else if (await Permission.location.isDenied) {
-      await _showDialog(
+      await showAlertDialog(
+        context: context,
         title: "Location Permission Denied",
         body:
             "Please provide location permissions to HitchSpots in your settings",
