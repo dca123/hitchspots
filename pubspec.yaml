@@ -12,6 +12,7 @@ dependencies:
   cloud_firestore: ^2.0.0
   cupertino_icons: ^1.0.2
   device_preview: ^0.7.3
+  dio: ^4.0.0
   firebase_analytics: ^8.1.2
   firebase_auth: ^1.2.0
   firebase_crashlytics: ^2.0.6
@@ -34,11 +35,11 @@ dependencies:
   timeago: ^3.0.2
 
 dev_dependencies:
-  integration_test:
+  flutter_driver:
     sdk: flutter
   flutter_test:
     sdk: flutter
-  flutter_driver:
+  integration_test:
     sdk: flutter
   build_runner: ^2.0.5
   fake_cloud_firestore: ^1.1.2

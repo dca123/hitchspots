@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'dart:ui' as UI;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geoflutterfire2/geoflutterfire2.dart';
@@ -41,10 +42,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   final _geo = GeoFlutterFire();
   GoogleMapController? _mapController;
   final PanelController _panelController = PanelController();
-  static final CameraPosition _centerOfWorld = CameraPosition(
-    target: LatLng(0, 0),
-    zoom: 0,
-  );
+  static late CameraPosition _startLocation;
   Location _location = Location();
   bool _isLocationGranted = false;
   bool _findingLocation = false;
@@ -59,6 +57,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   double _snapPoint = 0.35;
   double? _noImagesCardSnapPoint;
 
+  bool _isInitialized = false;
   HomePageState() {
     init();
   }
@@ -69,6 +68,19 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     // FirebaseFirestore.instance.settings =
     //     Settings(host: '192.168.1.2:8005', sslEnabled: false);
 
+    if (await Permission.location.isGranted &&
+        await _location.serviceEnabled()) {
+      LatLng location = await _getLocation();
+      _startLocation = CameraPosition(target: location, zoom: 10);
+    } else {
+      LatLng ipLocation = await getIPLocation() ?? LatLng(0, 0);
+      _startLocation = CameraPosition(target: ipLocation, zoom: 10);
+    }
+
+    setState(() {
+      _isInitialized = true;
+    });
+
     _goodIcon = await BitmapDescriptor.fromAssetImage(
         createLocalImageConfiguration(context), 'assets/icons/Good.png');
     _warningIcon = await BitmapDescriptor.fromAssetImage(
@@ -78,10 +90,20 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _clusterImage = await _loadClusterImage('assets/icons/cluster.png');
   }
 
+  Future<LatLng?> getIPLocation() async {
+    try {
+      var response = await Dio()
+          .get('http://ip-api.com/json/62.210.188.30??fields=lat,lon');
+      return LatLng(response.data["lat"], response.data["lon"]);
+    } catch (e) {
+      print(e);
+    }
+  }
+
   BitmapDescriptor _ratingToMarker(double rating) {
-    if (rating >= 4) {
+    if (rating >= 3.0) {
       return _goodIcon;
-    } else if (rating >= 2.5) {
+    } else if (rating >= 2.0) {
       return _warningIcon;
     }
     return _badIcon;
@@ -168,12 +190,48 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       this._mapController = mapController;
       _clusterManager.setMapController(mapController);
     });
-    _moveCameraToUserLocation();
   }
 
-  void _getLocation() async {
+  Future<void> _showDialog({required String title, required String body}) {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          child: AlertDialog(
+            title: Text(title),
+            content: Text(body),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _requestLocationPermission() async {
     if (await Permission.location.request().isGranted) {
-      _moveCameraToUserLocation();
+      if (await _location.serviceEnabled()) {
+        _moveCameraToUserLocation();
+      } else {
+        await _showDialog(
+          title: "Location Services Disabled",
+          body: "Please enable location services to use this feature",
+        );
+        _location.requestService();
+      }
+    } else if (await Permission.location.isDenied) {
+      await _showDialog(
+        title: "Location Permission Denied",
+        body:
+            "Please provide location permissions to HitchSpots in your settings",
+      );
+      await openAppSettings();
     }
   }
 
@@ -183,19 +241,19 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         _isLocationGranted = true;
         _findingLocation = true;
       });
-      LocationData locationData = await _location.getLocation();
+      LatLng location = await _getLocation();
       setState(() {
         _findingLocation = false;
       });
-      _mapController!.animateCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(
-            target: LatLng(locationData.latitude!, locationData.longitude!),
-            zoom: 12,
-          ),
-        ),
-      );
+      _moveCameraToLocation(location);
     }
+  }
+
+  // Call only if location permission is enabled
+  Future<LatLng> _getLocation() async {
+    assert(await Permission.location.isGranted);
+    LocationData locationData = await _location.getLocation();
+    return LatLng(locationData.latitude!, locationData.longitude!);
   }
 
   void _moveCameraToLocation(LatLng location) async {
@@ -270,7 +328,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       _clusterItems,
       _updateMarkers,
       markerBuilder: _markerBuilder,
-      initialZoom: 16,
+      initialZoom: 10,
       stopClusteringZoom: 12,
     );
   }
@@ -316,26 +374,28 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         },
         body: Stack(
           children: [
-            GoogleMap(
-              initialCameraPosition: _centerOfWorld,
-              onMapCreated: _onMapCreated,
-              myLocationEnabled: _isLocationGranted,
-              myLocationButtonEnabled: false,
-              zoomControlsEnabled: false,
-              mapToolbarEnabled: false,
-              markers: _clusterMarkers,
-              onCameraMove: _clusterManager.onCameraMove,
-              onCameraIdle: () {
-                _getNearbySpots(screenCoordinate);
-                _clusterManager.updateMap();
-              },
-            ),
+            _isInitialized
+                ? GoogleMap(
+                    initialCameraPosition: _startLocation,
+                    onMapCreated: _onMapCreated,
+                    myLocationEnabled: _isLocationGranted,
+                    myLocationButtonEnabled: false,
+                    zoomControlsEnabled: false,
+                    mapToolbarEnabled: false,
+                    markers: _clusterMarkers,
+                    onCameraMove: _clusterManager.onCameraMove,
+                    onCameraIdle: () {
+                      _getNearbySpots(screenCoordinate);
+                      _clusterManager.updateMap();
+                    },
+                  )
+                : Center(child: Text("")),
             AddLocationWrapper(
               mapController: _mapController,
               screenCoordinate: screenCoordinate,
             ),
             MyLocationFabAnimator(
-              getLocation: _getLocation,
+              getLocation: _requestLocationPermission,
               animationController: _slidingPanelAnimationController,
               findingLocation: _findingLocation,
             ),
