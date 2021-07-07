@@ -8,8 +8,11 @@ import 'pages/home_page.dart';
 void main() async {
   // runApp(ProviderWrapper());
   runApp(
-    ProviderWrapper(
-      app: HitchSpotApp(),
+    DevicePreview(
+      enabled: false,
+      builder: (context) => ProviderWrapper(
+        app: HitchSpotApp(),
+      ),
     ),
   );
 }
@@ -28,6 +31,7 @@ class HitchSpotApp extends StatelessWidget {
         builder: DevicePreview.appBuilder,
         theme: ThemeData(
           primarySwatch: Colors.blue,
+          accentColor: Color.fromRGBO(6, 214, 160, 1),
         ),
         home: FirstRunWrapper(homePage: HomePage()),
       ),

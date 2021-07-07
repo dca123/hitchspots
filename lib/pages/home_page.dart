@@ -284,18 +284,20 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     TextPainter painter = TextPainter(textDirection: TextDirection.ltr);
     painter.text = TextSpan(
-        text: text,
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: Theme.of(context).textTheme.headline4?.fontSize,
-        ));
+      text: text,
+      style: TextStyle(
+        color: Colors.white,
+        fontSize: 30,
+        fontWeight: FontWeight.w400,
+      ),
+    );
     painter.layout();
     painter.paint(
       canvas,
       // Offset.zero,
       Offset(
         width / 2 - painter.width / 2,
-        width / 3.15 - painter.height / 2,
+        width / 3.25 - painter.height / 2,
       ),
     );
 
