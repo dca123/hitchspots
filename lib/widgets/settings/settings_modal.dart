@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hitchspots/services/authentication.dart';
+import 'package:provider/provider.dart';
 
 class SettingsCard extends StatelessWidget {
   const SettingsCard({
@@ -42,7 +44,6 @@ class SettingsCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   titleWidget(context),
-                  // SizedBox(height: 16),
                   Expanded(
                     flex: 4,
                     child: Column(
@@ -58,14 +59,19 @@ class SettingsCard extends StatelessWidget {
                           onTap: () => {},
                         ),
                         ListTile(
-                          title: Text("Logout"),
-                          leading: Icon(Icons.logout),
-                          onTap: () => {},
-                        ),
-                        ListTile(
                           title: Text("About"),
                           leading: Icon(Icons.info),
                           onTap: () => {},
+                        ),
+                        ListTile(
+                          title: Text("Logout"),
+                          leading: Icon(Icons.logout),
+                          enabled: false,
+                          onTap: () {
+                            Provider.of<AuthenticationState>(context,
+                                    listen: false)
+                                .logout();
+                          },
                         ),
                       ],
                     ),

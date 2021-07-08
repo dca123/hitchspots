@@ -127,7 +127,7 @@ class AuthenticationState extends ChangeNotifier {
     _loginState = LoginState.loggedIn;
   }
 
-  void signOut() {
+  void logout() {
     _auth?.signOut();
     _loginState = LoginState.loggedOut;
   }
