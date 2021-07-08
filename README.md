@@ -1,5 +1,6 @@
 # HitchSpots
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org)
+[Download on Google Play](https://play.google.com/store/apps/details?id=com.hitchspots&hl=en_US&gl=US)
 
 # Problem
 
@@ -17,35 +18,30 @@ I'm not looking to monetize this project but if I run into extreme server costs,
 
 - [Flutter](flutter.dev/)
 - [Firebase](https://firebase.google.com/)
-- [Figma for wireframing](https://www.figma.com/file/hNgH2qIOakEKw8kp2Z8uur/HitchApp?node-id=2%3A5814)
+- [Figma for wireframing](https://www.figma.com/file/hNgH2qIOakEKw8kp2Z8uur/HitchApp?node-id=2%3A5814) - [Demo](https://www.figma.com/file/hNgH2qIOakEKw8kp2Z8uur/HitchApp?node-id=2%3A5814)
 
 Remake of the now broken hitchwiki.com/maps as a mobile app. Designed with Figma and developed with Flutter. 
 
 ## Post Clone
-- app/google-services.json (Firebase Configuration)
-- .env (MAPS_API_KEY)
+- android/google-services.json (Firebase Configuration)
 - android/local.properties (MAPS_API_KEY after building)
 
 ## Features
 - Add hitching spots
 - Review and rate hitching spots
-- View nearby hitchiking spots by rating
-    - Red => Bad
-    - Orange => Medium
-    - Green => Good
+- View nearby hitchiking spots
+
 
 ## Contributing
 
 - Please use the [conventional commit](https://www.conventionalcommits.org/en/v1.0.0/) specification make commits.  There is a vscode extension called conventional commits that makes this super easy
 
-## Designs
-Design demo avaiable on [figma](https://www.figma.com/file/hNgH2qIOakEKw8kp2Z8uur/HitchApp?node-id=2%3A5814)
+## Screencaps
 
-![image](https://user-images.githubusercontent.com/3579142/124671676-76f27900-ded3-11eb-811d-0e50492a4acc.png)
-![image](https://user-images.githubusercontent.com/3579142/124671689-7ce85a00-ded3-11eb-9b07-de56c2ffaf2b.png)
-![image](https://user-images.githubusercontent.com/3579142/124671780-a0130980-ded3-11eb-9bf8-d6dd7c87f361.png)
-![image](https://user-images.githubusercontent.com/3579142/124671653-6e01a780-ded3-11eb-98f1-8608f6322e62.png)
-
+<img src="https://user-images.githubusercontent.com/3579142/124671676-76f27900-ded3-11eb-811d-0e50492a4acc.png" width="250" >
+<img src="https://user-images.githubusercontent.com/3579142/124671689-7ce85a00-ded3-11eb-9b07-de56c2ffaf2b.png" width="250" >
+<img src="https://user-images.githubusercontent.com/3579142/124671780-a0130980-ded3-11eb-9bf8-d6dd7c87f361.png" width="250" >
+<img src="https://user-images.githubusercontent.com/3579142/124671653-6e01a780-ded3-11eb-98f1-8608f6322e62.png" width="250" >
 
 ### Made with my Keyboard
 
