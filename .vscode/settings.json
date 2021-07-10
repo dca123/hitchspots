@@ -10,6 +10,7 @@
         "firebase/functions/src/index.ts",
         "widgets/search_bar",
         "lib/onboard_page",
-        "utils/first_run_wrapper"
+        "utils/first_run_wrapper",
+        "tests/"
     ]
 }
