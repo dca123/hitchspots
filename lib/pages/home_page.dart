@@ -39,6 +39,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   List<ClusterItem> _clusterItems = [];
   Map<String, Marker> _markersMap = {};
   Set<Marker> _clusterMarkers = {};
+  final double _initialZoomLevel = 12;
 
   final _geo = GeoFlutterFire();
   GoogleMapController? _mapController;
@@ -73,10 +74,12 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     if (await Permission.location.isGranted &&
         await _location.serviceEnabled()) {
       LatLng location = await _getLocation();
-      _startLocation = CameraPosition(target: location, zoom: 10);
+      _startLocation =
+          CameraPosition(target: location, zoom: _initialZoomLevel);
     } else {
       LatLng ipLocation = await getIPLocation() ?? LatLng(0, 0);
-      _startLocation = CameraPosition(target: ipLocation, zoom: 10);
+      _startLocation =
+          CameraPosition(target: ipLocation, zoom: _initialZoomLevel);
     }
 
     setState(() {
@@ -243,7 +246,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       CameraUpdate.newCameraPosition(
         CameraPosition(
           target: LatLng(location.latitude, location.longitude),
-          zoom: zoom ?? 10,
+          zoom: zoom ?? 12,
         ),
       ),
     );
@@ -314,10 +317,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       _clusterItems,
       _updateMarkers,
       markerBuilder: _markerBuilder,
-      initialZoom: 10,
-      levels: [1, 4.25, 6.75, 8.25, 11.5],
-      stopClusteringZoom: 12,
-      extraPercent: 0.4,
+      initialZoom: _initialZoomLevel,
+      stopClusteringZoom: 10,
+      extraPercent: 0.25,
     );
   }
 
