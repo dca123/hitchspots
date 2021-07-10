@@ -22,7 +22,7 @@ class _CreateReviewPageState extends State<CreateReviewPage> {
 
   final _formKey = GlobalKey<FormState>();
 
-  double? ratingController;
+  double ratingController = 0;
   bool isSaving = false;
 
   @override
@@ -54,7 +54,7 @@ class _CreateReviewPageState extends State<CreateReviewPage> {
           double oldRatingTotal =
               location.get('rating').toDouble() * oldReviewCount;
           double newRating =
-              (oldRatingTotal + ratingController!) / newReviewCount;
+              (oldRatingTotal + ratingController) / newReviewCount;
 
           transaction.update(locationDocumentRef,
               {'rating': newRating, 'reviewCount': newReviewCount});
@@ -116,14 +116,10 @@ class _CreateReviewPageState extends State<CreateReviewPage> {
                 children: [
                   SizedBox(height: 24),
                   RatingBarFormField(
-                      buildContext: context,
-                      validator: (value) {
-                        if (value == null) {
-                          return 'Please select a rating';
-                        }
-                        ratingController = value;
-                        return null;
-                      }),
+                    buildContext: context,
+                    initialValue: ratingController,
+                    onSaved: (double? rating) => ratingController = rating!,
+                  ),
                   SizedBox(height: 24),
                   TextFormField(
                     controller: descriptionTextController,
