@@ -3,7 +3,6 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 class RatingBarFormField extends FormField<double> {
   RatingBarFormField({
-    required BuildContext buildContext,
     required Function(double?) onSaved,
     required double initialValue,
   }) : super(
@@ -37,10 +36,12 @@ class RatingBarFormField extends FormField<double> {
                       SizedBox(height: 16),
                       Text(
                         ratingFormContext.errorText!,
-                        style: Theme.of(buildContext)
+                        style: Theme.of(ratingFormContext.context)
                             .textTheme
                             .caption!
-                            .apply(color: Theme.of(buildContext).errorColor),
+                            .apply(
+                                color: Theme.of(ratingFormContext.context)
+                                    .errorColor),
                       ),
                     ],
                   ),
