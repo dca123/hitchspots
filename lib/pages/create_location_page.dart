@@ -11,7 +11,7 @@ import 'package:hitchspots/services/authentication.dart';
 import 'package:hitchspots/utils/icon_switcher.dart';
 import 'package:provider/provider.dart';
 import '../widgets/form_fields/rating_bar.dart';
-import '../widgets/form_fields/location_picker.dart';
+import '../widgets/form_fields/location_picker_form_field.dart';
 import 'location_picker_page.dart';
 
 class CreateLocationPage extends StatefulWidget {
@@ -152,7 +152,7 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
           padding: EdgeInsets.symmetric(horizontal: 24.0),
           child: SingleChildScrollView(
             child: Column(children: [
-              MapLocationFormField(
+              LocationPickerFormField(
                 buildContext: context,
                 onSaved: (value) => position = value,
                 centerLatLng: widget._centerLatLng,
