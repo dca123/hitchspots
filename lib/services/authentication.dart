@@ -29,19 +29,18 @@ class AuthenticationState extends ChangeNotifier {
   String? get displayName => _displayName;
   bool get isAuthenticating => _isAuthenticating;
 
-  AuthenticationState({
-    GoogleSignIn? mockSignIn,
-    FirebaseAuth? mockFirebaseAuth,
-    FirebaseFirestore? mockFirebaseFirestore,
-  }) {
-    if (mockSignIn != null) {
-      _googleSignIn = mockSignIn;
-      _auth = mockFirebaseAuth;
-      _firestore = mockFirebaseFirestore;
-    }
+  AuthenticationState(
+      {GoogleSignIn? mockSignIn,
+      FirebaseAuth? mockFirebaseAuth,
+      FirebaseFirestore? mockFirebaseFirestore,
+      String? displayName}) {
+    _googleSignIn = mockSignIn;
+    _auth = mockFirebaseAuth;
+    _firestore = mockFirebaseFirestore;
+    _displayName = displayName;
   }
 
-  Future<void> init() async {
+  Future<void> ensureFirebaseInit() async {
     if (Firebase.apps.length < 1) {
       await Firebase.initializeApp();
     }
@@ -101,7 +100,7 @@ class AuthenticationState extends ChangeNotifier {
 
   /// Sign in via google when not authenticated via FireAuth
   Future<void> _signInWithGoogle() async {
-    await init();
+    await ensureFirebaseInit();
     _loginState = LoginState.register;
     GoogleSignInAccount? googleUser;
     GoogleSignIn googleSignIn = _googleSignIn!;

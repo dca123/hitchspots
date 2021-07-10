@@ -7,12 +7,14 @@ import 'package:hitchspots/widgets/form_fields/rating_bar.dart';
 import '../models/location_card.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 class CreateReviewPage extends StatefulWidget {
-  CreateReviewPage({
-    Key? key,
-  }) : super(key: key);
-
+  CreateReviewPage({Key? key, FirebaseFirestore? fakeFirestore})
+      : super(key: key) {
+    firestoreInstance = fakeFirestore;
+  }
+  late final FirebaseFirestore? firestoreInstance;
   @override
   _CreateReviewPageState createState() => _CreateReviewPageState();
 }
@@ -25,17 +27,25 @@ class _CreateReviewPageState extends State<CreateReviewPage> {
   double ratingController = 0;
   bool isSaving = false;
 
+  Future<void> ensureFirebaseInit() async {
+    if (Firebase.apps.length < 1) {
+      await Firebase.initializeApp();
+    }
+    widget.firestoreInstance ??= FirebaseFirestore.instance;
+  }
+
   @override
   Widget build(BuildContext context) {
-    void addLocation(String locationID) {
+    void addLocation(String locationID) async {
       if (_formKey.currentState!.validate()) {
         setState(() {
           isSaving = true;
         });
+        await ensureFirebaseInit();
         final String displayName =
             Provider.of<AuthenticationState>(context, listen: false)
                 .displayName!;
-        FirebaseFirestore.instance.collection('reviews').add({
+        widget.firestoreInstance!.collection('reviews').add({
           'description': descriptionTextController.text,
           'locationID': locationID,
           'rating': ratingController,
@@ -44,8 +54,8 @@ class _CreateReviewPageState extends State<CreateReviewPage> {
         });
 
         DocumentReference locationDocumentRef =
-            FirebaseFirestore.instance.collection('locations').doc(locationID);
-        FirebaseFirestore.instance.runTransaction((transaction) async {
+            widget.firestoreInstance!.collection('locations').doc(locationID);
+        widget.firestoreInstance!.runTransaction((transaction) async {
           DocumentSnapshot location =
               await transaction.get(locationDocumentRef);
           int oldReviewCount = location.get('reviewCount');
@@ -116,7 +126,6 @@ class _CreateReviewPageState extends State<CreateReviewPage> {
                 children: [
                   SizedBox(height: 24),
                   RatingBarFormField(
-                    buildContext: context,
                     initialValue: ratingController,
                     onSaved: (double? rating) => ratingController = rating!,
                   ),
@@ -125,12 +134,12 @@ class _CreateReviewPageState extends State<CreateReviewPage> {
                     controller: descriptionTextController,
                     maxLength: 300,
                     decoration: InputDecoration(
-                        alignLabelWithHint: true,
-                        border: OutlineInputBorder(),
-                        labelText: "Experience",
-                        helperText:
-                            "How long did you wait ? It is a busy area ?",
-                        hintText: "Describe your experience briefly"),
+                      alignLabelWithHint: true,
+                      border: OutlineInputBorder(),
+                      labelText: "Experience",
+                      helperText: "How long did you wait ? It is a busy area ?",
+                      hintText: "Describe your experience briefly",
+                    ),
                     maxLines: 3,
                     keyboardType: TextInputType.multiline,
                     validator: (value) {
@@ -140,17 +149,6 @@ class _CreateReviewPageState extends State<CreateReviewPage> {
                       return null;
                     },
                   ),
-                  // SizedBox(height: 24),
-                  // OutlinedButton(
-                  //   onPressed: () => {},
-                  //   child: Row(
-                  //     mainAxisAlignment: MainAxisAlignment.center,
-                  //     children: [
-                  //       Icon(Icons.camera_enhance),
-                  //       Text("Add Photos"),
-                  //     ],
-                  // ),
-                  // ),
                 ],
               ),
             ),
