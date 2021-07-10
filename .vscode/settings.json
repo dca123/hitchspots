@@ -11,6 +11,7 @@
         "widgets/search_bar",
         "lib/onboard_page",
         "utils/first_run_wrapper",
+        "tests/",
         "widgets/settings/settings_modal"
     ]
 }

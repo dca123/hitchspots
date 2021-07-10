@@ -29,25 +29,28 @@ class AuthenticationState extends ChangeNotifier {
   String? get displayName => _displayName;
   bool get isAuthenticating => _isAuthenticating;
 
-  AuthenticationState({
-    GoogleSignIn? mockSignIn,
-    FirebaseAuth? mockFirebaseAuth,
-    FirebaseFirestore? mockFirebaseFirestore,
-  }) {
-    if (mockSignIn != null) {
-      _googleSignIn = mockSignIn;
-      _auth = mockFirebaseAuth;
-      _firestore = mockFirebaseFirestore;
-    }
+  AuthenticationState(
+      {GoogleSignIn? mockSignIn,
+      FirebaseAuth? mockFirebaseAuth,
+      FirebaseFirestore? mockFirebaseFirestore,
+      String? displayName}) {
+    _googleSignIn = mockSignIn;
+    _auth = mockFirebaseAuth;
+    _firestore = mockFirebaseFirestore;
+    _displayName = displayName;
   }
 
-  Future<void> init() async {
+  Future<void> ensureFirebaseInit() async {
     if (Firebase.apps.length < 1) {
       await Firebase.initializeApp();
     }
     _auth ??= FirebaseAuth.instance;
     _firestore ??= FirebaseFirestore.instance;
     _googleSignIn ??= GoogleSignIn();
+    if (_checkandLoadFireAuthUser()) {
+      await _loadProfile();
+    }
+    ;
   }
 
   Future<void> loginFlowWithAction(
@@ -56,7 +59,9 @@ class AuthenticationState extends ChangeNotifier {
     notifyListeners();
     try {
       if (_loginState != LoginState.loggedIn) {
-        await _signInWithGoogle();
+        if (!_checkandLoadFireAuthUser()) {
+          await _signInWithGoogle();
+        }
         if (_loginState == LoginState.oauthFailed) {
           _isAuthenticating = false;
           notifyListeners();
@@ -82,32 +87,37 @@ class AuthenticationState extends ChangeNotifier {
     }
   }
 
-  Future<void> _signInWithGoogle() async {
-    await init();
+  ///Checks for the firebase auth user and loads it if it exists
+  bool _checkandLoadFireAuthUser() {
     final User? fireAuthUser = _auth?.currentUser;
-    // Not Authenticated via FireAuth
-    if (fireAuthUser == null) {
-      _loginState = LoginState.register;
-      GoogleSignInAccount? googleUser;
-      GoogleSignIn googleSignIn = _googleSignIn!;
-      googleUser = await googleSignIn.signIn();
-
-      if (googleUser != null) {
-        final GoogleSignInAuthentication googleAuth =
-            await googleUser.authentication;
-
-        final credential = GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
-          idToken: googleAuth.idToken,
-        );
-        await _auth?.signInWithCredential(credential);
-        _uid = _auth?.currentUser!.uid;
-      } else {
-        _loginState = LoginState.oauthFailed;
-      }
-    } else {
+    if (fireAuthUser != null) {
       _loginState = LoginState.oauthCompleted;
       _uid = fireAuthUser.uid;
+      return true;
+    }
+    return false;
+  }
+
+  /// Sign in via google when not authenticated via FireAuth
+  Future<void> _signInWithGoogle() async {
+    await ensureFirebaseInit();
+    _loginState = LoginState.register;
+    GoogleSignInAccount? googleUser;
+    GoogleSignIn googleSignIn = _googleSignIn!;
+    googleUser = await googleSignIn.signIn();
+
+    if (googleUser != null) {
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      await _auth?.signInWithCredential(credential);
+      _uid = _auth?.currentUser!.uid;
+    } else {
+      _loginState = LoginState.oauthFailed;
     }
   }
 

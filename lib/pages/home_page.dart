@@ -66,7 +66,8 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   Future<void> init() async {
     await Firebase.initializeApp();
-    await Provider.of<AuthenticationState>(context, listen: false).init();
+    await Provider.of<AuthenticationState>(context, listen: false)
+        .ensureFirebaseInit();
     // FirebaseFirestore.instance.settings =
     //     Settings(host: '192.168.1.2:8005', sslEnabled: false);
 

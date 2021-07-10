@@ -1,5 +1,6 @@
 # HitchSpots
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org)
+[![codecov](https://codecov.io/gh/dca123/hitchspots/branch/master/graph/badge.svg?token=kQp2CZw71w)](https://codecov.io/gh/dca123/hitchspots)
 [Download on Google Play](https://play.google.com/store/apps/details?id=com.hitchspots&hl=en_US&gl=US)
 
 # Problem
