@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 
 void main() {
   test('toggleLocationPicker toggles state', () {
-    LocationPickerStore store = LocationPickerStore();
+    CreateLocationPageStore store = CreateLocationPageStore();
     expect(store.isLocationPickerOpen, isFalse);
 
     store.toggleLocationPicker();
@@ -20,11 +20,11 @@ void main() {
   testWidgets(
     "toggleLocationPicker updates consumers",
     (WidgetTester tester) async {
-      LocationPickerStore store = LocationPickerStore();
+      CreateLocationPageStore store = CreateLocationPageStore();
       await tester.pumpWidget(
         ChangeNotifierProvider(
           create: (context) => store,
-          child: Consumer<LocationPickerStore>(
+          child: Consumer<CreateLocationPageStore>(
             builder: (context, locationPickerStore, child) {
               return locationPickerStore.isLocationPickerOpen
                   ? Text(
@@ -50,7 +50,7 @@ void main() {
     },
   );
   test('setLocation sets location', () {
-    LocationPickerStore store = LocationPickerStore();
+    CreateLocationPageStore store = CreateLocationPageStore();
     expect(store.selectedLocation, isNull);
 
     LatLng myLocation = LatLng(10, -10);
@@ -61,12 +61,12 @@ void main() {
   testWidgets(
     "setLocation updates consumers",
     (WidgetTester tester) async {
-      LocationPickerStore store = LocationPickerStore();
+      CreateLocationPageStore store = CreateLocationPageStore();
 
       await tester.pumpWidget(
         ChangeNotifierProvider(
           create: (context) => store,
-          child: Consumer<LocationPickerStore>(
+          child: Consumer<CreateLocationPageStore>(
             builder: (context, locationPickerStore, child) {
               return Text(
                 locationPickerStore.selectedLocation.toString(),
@@ -86,4 +86,38 @@ void main() {
       expect(find.text(myLocation.toString()), findsOneWidget);
     },
   );
+
+  test('locationData provides no null values', () {
+    CreateLocationPageStore store = CreateLocationPageStore();
+    Map locationData = store.locationData;
+
+    for (var value in locationData.values) {
+      expect(value, isNotNull);
+    }
+  });
+
+  test('updateLocationName updates LocationName', () {
+    {
+      CreateLocationPageStore store = CreateLocationPageStore();
+      String testText = "TestData";
+      store.updateLocationName(testText);
+      expect(store.locationData["name"], equals(testText));
+    }
+  });
+  test('updateLocationExperience updates LocationExperience', () {
+    {
+      CreateLocationPageStore store = CreateLocationPageStore();
+      String testText = "TestData";
+      store.updateLocationExperience(testText);
+      expect(store.locationData["experience"], equals(testText));
+    }
+  });
+  test('updateRating updates Rating', () {
+    {
+      CreateLocationPageStore store = CreateLocationPageStore();
+      double testRating = 3;
+      store.updateRating(testRating);
+      expect(store.locationData["rating"], equals(testRating));
+    }
+  });
 }
