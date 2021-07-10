@@ -10,7 +10,7 @@ class CreateLocationPageStore extends ChangeNotifier {
 
   bool get isLocationPickerOpen => _isLocationPickerOpen;
   LatLng? get selectedLocation => _selectedLocation;
-  dynamic get locationData => {
+  Map<String, dynamic> get locationData => {
         "name": _locationName,
         "experience": _locationExperience,
         "rating": _locationRating,
