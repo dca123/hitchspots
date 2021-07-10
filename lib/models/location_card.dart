@@ -23,9 +23,7 @@ class LocationCardModel extends ChangeNotifier {
   bool get hasImages => _hasImages;
 
   LocationCardModel({FirebaseFirestore? firestoreInstance}) {
-    if (firestoreInstance != null) {
-      _firestoreInstance = firestoreInstance;
-    }
+    _firestoreInstance = firestoreInstance ?? FirebaseFirestore.instance;
   }
 
   Future<void> updateLocation(dynamic locationData, String locationID) async {
@@ -62,9 +60,6 @@ class LocationCardModel extends ChangeNotifier {
     required locationId,
     required limit,
   }) async {
-    if (_firestoreInstance == null) {
-      _firestoreInstance = FirebaseFirestore.instance;
-    }
     return await _firestoreInstance!
         .collection("reviews")
         .orderBy('timestamp', descending: true)

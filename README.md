@@ -1,6 +1,6 @@
 # HitchSpots
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org)
-
+[![codecov](https://codecov.io/gh/dca123/hitchspots/branch/master/graph/badge.svg?token=kQp2CZw71w)](https://codecov.io/gh/dca123/hitchspots)
 # Problem
 
 When I started hitchhiking, I learnt everything through reading up on [hitchwiki.org](https://hitchwiki.org/en/Main_Page). It used to have a really cool function, a map that users all around the world could contribute to. When I started out, this was an amazing resource but at the time, I wasn't able to submit locations. Fast forward to today, it seems that the map itself is not functional. The page is broken and you cannot see any links. However, I was able to retrieve a datadump of the entire hitchwiki maps project containing over 20 000 locations.

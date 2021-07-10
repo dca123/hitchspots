@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hitchspots/main.dart';
 import 'package:hitchspots/utils/provider_wrapper.dart';
 import 'package:hitchspots/widgets/fabs/add_location_fab.dart';
