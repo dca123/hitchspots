@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:geoflutterfire2/geoflutterfire2.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:hitchspots/models/location_picker_store.dart';
+import 'package:hitchspots/models/create_location_page_store.dart';
 import 'package:hitchspots/services/authentication.dart';
 import 'package:hitchspots/utils/icon_switcher.dart';
 import 'package:provider/provider.dart';
