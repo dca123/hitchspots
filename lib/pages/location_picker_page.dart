@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:hitchspots/models/location_picker_store.dart';
+import 'package:hitchspots/models/create_location_page_store.dart';
 import 'package:provider/provider.dart';
 import './home_page.dart';
 
