@@ -26,7 +26,7 @@ class _LocationPickerState extends State<LocationPickerPage> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        Provider.of<LocationPickerStore>(context, listen: false)
+        Provider.of<CreateLocationPageStore>(context, listen: false)
             .toggleLocationPicker();
         return false;
       },
@@ -38,7 +38,7 @@ class _LocationPickerState extends State<LocationPickerPage> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () =>
-                Provider.of<LocationPickerStore>(context, listen: false)
+                Provider.of<CreateLocationPageStore>(context, listen: false)
                     .toggleLocationPicker(),
             color: Colors.black,
           ),
@@ -58,7 +58,7 @@ class _LocationPickerState extends State<LocationPickerPage> {
 
                   final LatLng middlePoint =
                       await mapController.getLatLng(screenCoordinate);
-                  Provider.of<LocationPickerStore>(context, listen: false)
+                  Provider.of<CreateLocationPageStore>(context, listen: false)
                       .setLocation(middlePoint);
                 },
                 color: Colors.black,
