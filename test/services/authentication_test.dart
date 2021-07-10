@@ -17,10 +17,6 @@ class SampleAction {
   testAction() {}
 }
 
-class MockBuildContext extends Mock implements BuildContext {}
-
-class MockNavigatorObserver extends Mock implements NavigatorObserver {}
-
 @GenerateMocks([SampleAction])
 main() {
   setupFirebaseAuthMocks();
@@ -59,11 +55,8 @@ main() {
         mockFirebaseFirestore: mockFireStore,
       );
 
-      MockNavigatorObserver mockNavigatorObserver = MockNavigatorObserver();
-
       await tester.pumpWidget(
         MaterialApp(
-          navigatorObservers: [mockNavigatorObserver],
           home: Builder(
             builder: (buildContext) {
               buildContext = buildContext;
@@ -103,11 +96,8 @@ main() {
         mockFirebaseFirestore: mockFireStore,
       );
 
-      MockNavigatorObserver navigatorObserver = MockNavigatorObserver();
-
       await tester.pumpWidget(
         MaterialApp(
-          navigatorObservers: [navigatorObserver],
           home: Builder(
             builder: (buildContext) {
               buildContext = buildContext;
@@ -155,11 +145,8 @@ main() {
         mockFirebaseFirestore: mockFireStore,
       );
 
-      MockNavigatorObserver navigatorObserver = MockNavigatorObserver();
-
       await tester.pumpWidget(
         MaterialApp(
-          navigatorObservers: [navigatorObserver],
           home: Builder(
             builder: (buildContext) {
               buildContext = buildContext;

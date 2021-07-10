@@ -61,6 +61,8 @@ class _AddLocationWrapperState extends State<AddLocationWrapper> {
               if (Provider.of<AuthenticationState>(context, listen: false)
                       .isAuthenticating ==
                   false) {
+                middlePoint = await widget.mapController!
+                    .getLatLng(widget.screenCoordinate);
                 if (Provider.of<AuthenticationState>(context, listen: false)
                         .loginState !=
                     LoginState.loggedIn) {
@@ -71,9 +73,7 @@ class _AddLocationWrapperState extends State<AddLocationWrapper> {
                           "You will need to login or sign up before you can contribute",
                       ActionOneTitle: "Continue",
                       ActionTwoTitle: "Close",
-                      ActionOne: () async {
-                        middlePoint = await widget.mapController!
-                            .getLatLng(widget.screenCoordinate);
+                      ActionOne: () {
                         Provider.of<AuthenticationState>(context, listen: false)
                             .loginFlowWithAction(
                           buildContext: context,
