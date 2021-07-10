@@ -2,14 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 class RatingBarFormField extends FormField<double> {
-  RatingBarFormField({required BuildContext buildContext, required validator})
-      : super(
-          validator: validator,
+  RatingBarFormField({
+    required BuildContext buildContext,
+    required Function(double?) onSaved,
+    required double initialValue,
+  }) : super(
+          validator: (value) {
+            if (value == null || value == 0) {
+              return 'Please select a rating';
+            }
+            onSaved(value);
+            return null;
+          },
+          onSaved: onSaved,
+          initialValue: initialValue,
           builder: (FormFieldState<double> ratingFormContext) {
             return Column(
               children: [
                 RatingBar(
-                  initialRating: 0,
+                  initialRating: initialValue,
                   glow: false,
                   itemPadding: EdgeInsets.symmetric(horizontal: 8.0),
                   allowHalfRating: true,
@@ -18,7 +29,7 @@ class RatingBarFormField extends FormField<double> {
                     half: Icon(Icons.star_half, color: Colors.yellow[700]),
                     empty: Icon(Icons.star_outline, color: Colors.yellow[700]),
                   ),
-                  onRatingUpdate: (value) => ratingFormContext.setValue(value),
+                  onRatingUpdate: (value) => ratingFormContext.didChange(value),
                 ),
                 if (ratingFormContext.hasError)
                   Column(
