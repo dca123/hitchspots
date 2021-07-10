@@ -39,7 +39,8 @@ void main() {
     final firestore = FakeFirebaseFirestore();
     await firestore.collection("reviews").add(locationReviewData);
 
-    LocationCardModel cardModel = LocationCardModel(instance: firestore);
+    LocationCardModel cardModel =
+        LocationCardModel(firestoreInstance: firestore);
     await cardModel.updateLocation(locationData, locationID);
 
     expect(cardModel.locationID, equals(locationID));
@@ -57,7 +58,8 @@ void main() {
     await firestore.collection("reviews").add(locationReviewData);
     await firestore.collection("reviews").add(locationReviewData);
 
-    LocationCardModel cardModel = LocationCardModel(instance: firestore);
+    LocationCardModel cardModel =
+        LocationCardModel(firestoreInstance: firestore);
 
     await cardModel.updateLocation(locationData, locationID);
     await cardModel.getReviews();
@@ -72,7 +74,8 @@ void main() {
     await firestore.collection("reviews").add(locationReviewData);
     await firestore.collection("reviews").add(locationReviewData);
 
-    LocationCardModel cardModel = LocationCardModel(instance: firestore);
+    LocationCardModel cardModel =
+        LocationCardModel(firestoreInstance: firestore);
 
     await cardModel.updateLocation(locationData, locationID);
     await cardModel.getReviews();

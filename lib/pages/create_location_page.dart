@@ -160,7 +160,6 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
               ),
               SizedBox(height: 24),
               RatingBarFormField(
-                  buildContext: context,
                   initialValue: ratingValue,
                   onSaved: (double? value) {
                     Provider.of<CreateLocationPageStore>(context, listen: false)

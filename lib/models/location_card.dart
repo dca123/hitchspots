@@ -22,9 +22,9 @@ class LocationCardModel extends ChangeNotifier {
   List get reviews => _reviews.values.toList();
   bool get hasImages => _hasImages;
 
-  LocationCardModel({FirebaseFirestore? instance}) {
-    if (instance != null) {
-      _firestoreInstance = instance;
+  LocationCardModel({FirebaseFirestore? firestoreInstance}) {
+    if (firestoreInstance != null) {
+      _firestoreInstance = firestoreInstance;
     }
   }
 
