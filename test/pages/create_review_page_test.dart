@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hitchspots/models/location_card.dart';
 import 'package:hitchspots/pages/create_review_page.dart';
 import 'package:hitchspots/services/authentication.dart';
-import 'package:integration_test/integration_test.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -31,8 +30,6 @@ Widget applicationWrapper({
 }
 
 main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-
   group("Shows Errors when data is invalid", () {
     testWidgets(
       "Shows error for empty text",
