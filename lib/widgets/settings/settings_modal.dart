@@ -1,6 +1,9 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:hitchspots/pages/edit_profile_page.dart';
 import 'package:hitchspots/services/authentication.dart';
+import 'package:hitchspots/utils/icon_switcher.dart';
+import 'package:hitchspots/utils/show_dialog.dart';
 import 'package:provider/provider.dart';
 
 class SettingsCard extends StatefulWidget {
@@ -13,39 +16,36 @@ class SettingsCard extends StatefulWidget {
 }
 
 class _SettingsCardState extends State<SettingsCard> {
-  Widget titleWidget(context, displayName) => Flexible(
-        flex: 1,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Flexible(
-              flex: 2,
-              child: Text(
-                "Settings",
-                style: Theme.of(context).textTheme.headline5,
-              ),
-            ),
-            Flexible(
-              fit: FlexFit.tight,
-              child: Text(
-                displayName,
-                style: Theme.of(context).textTheme.caption,
-              ),
-            ),
-          ],
-        ),
-      );
+  bool isLogginIn = false;
+  void logout() async {
+    setState(() {
+      Provider.of<AuthenticationState>(context, listen: false).logout();
+    });
+    Navigator.of(context).pop();
+    showAlertDialog(
+      title: "Logout",
+      body: "You've been succesfully logged out",
+      context: context,
+    );
+  }
 
-  Widget loginToolipIfLoggedOut(
-      {required Widget child, required bool isLoggedIn}) {
-    if (isLoggedIn) {
-      return child;
-    } else {
-      return Tooltip(
-        message: "You have to be logged in",
-        child: child,
-      );
-    }
+  void login() async {
+    setState(() {
+      isLogginIn = true;
+    });
+    await Provider.of<AuthenticationState>(context, listen: false)
+        .loginFlowWithAction(
+      postLogin: () async {
+        Navigator.pop(context);
+        showAlertDialog(
+          title: "Login",
+          body: "You've been succesfully logged in",
+          context: context,
+        );
+        isLogginIn = false;
+      },
+      buildContext: context,
+    );
   }
 
   @override
@@ -59,72 +59,183 @@ class _SettingsCardState extends State<SettingsCard> {
     return Center(
       child: Card(
         child: Container(
-          height: MediaQuery.of(context).size.height * 0.50,
+          height: MediaQuery.of(context).size.height * 0.60,
           width: MediaQuery.of(context).size.width * 0.75,
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  titleWidget(context, displayName),
-                  Expanded(
-                    flex: 4,
-                    child: Column(
-                      children: [
-                        loginToolipIfLoggedOut(
-                          isLoggedIn: isLoggedIn,
-                          child: ListTile(
-                            title: Text("Edit Profile"),
-                            leading: Icon(Icons.manage_accounts),
-                            enabled: isLoggedIn,
-                            onTap: () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (BuildContext buildContext) {
-                                return EditProfilePage();
-                              }));
-                            },
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                UserDisplayTitle(
+                  displayName: displayName,
+                  isLoggedIn: isLoggedIn,
+                ),
+                Expanded(
+                  flex: 4,
+                  child: Column(
+                    children: [
+                      Row(children: [
+                        Flexible(child: Divider()),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Text(
+                            "User Settings",
+                            style: Theme.of(context).textTheme.caption,
                           ),
                         ),
-                        ListTile(
-                          title: Text("Offline Mode"),
-                          leading: Icon(Icons.download_for_offline),
-                          enabled: false,
-                          onTap: () => {},
-                        ),
-                        ListTile(
-                          title: Text("About"),
-                          leading: Icon(Icons.info),
-                          onTap: () {
-                            Navigator.of(context).push(MaterialPageRoute(
-                                builder: (BuildContext buildContext) {
-                              return AboutPage();
-                            }));
-                          },
-                        ),
-                        loginToolipIfLoggedOut(
-                          isLoggedIn: isLoggedIn,
-                          child: ListTile(
-                            title: Text("Logout"),
-                            leading: Icon(Icons.logout),
-                            enabled: isLoggedIn,
-                            onTap: () {
-                              setState(() {
-                                Provider.of<AuthenticationState>(context,
-                                        listen: false)
-                                    .logout();
-                              });
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
+                        Expanded(child: Divider()),
+                      ]),
+                      OpenContainerListTile(
+                        title: "Edit Profile",
+                        icon: Icon(Icons.manage_accounts),
+                        openPage: EditProfilePage(),
+                        isLoggedIn: isLoggedIn,
+                      ),
+                      isLoggedIn
+                          ? ListTile(
+                              title: Text("Logout"),
+                              leading: Icon(Icons.logout),
+                              enabled: isLoggedIn,
+                              onTap: logout,
+                            )
+                          : IconSwitcherWrapper(
+                              condition: isLogginIn,
+                              iconIfTrue: ListTile(
+                                title: Text("Logging In"),
+                                leading: SizedBox(
+                                    height: IconTheme.of(context).size,
+                                    width: IconTheme.of(context).size,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    )),
+                                enabled: !isLoggedIn,
+                                onTap: login,
+                              ),
+                              iconIfFalse: ListTile(
+                                title: Text("Login"),
+                                leading: Icon(Icons.login),
+                                enabled: !isLoggedIn,
+                                onTap: login,
+                              ),
+                            ),
+                      Divider(),
+                      ListTile(
+                        title: Text("Offline Mode"),
+                        leading: Icon(Icons.download_for_offline),
+                        enabled: false,
+                        onTap: () => {},
+                      ),
+                      OpenContainerListTile(
+                        title: "About",
+                        icon: Icon(Icons.info),
+                        openPage: AboutPage(),
+                      ),
+                    ],
                   ),
-                ]),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+}
+
+class UserDisplayTitle extends StatelessWidget {
+  const UserDisplayTitle({
+    Key? key,
+    required this.displayName,
+    required this.isLoggedIn,
+  }) : super(key: key);
+
+  final String displayName;
+  final bool isLoggedIn;
+
+  @override
+  Widget build(BuildContext context) => Flexible(
+        flex: 1,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Flexible(
+              flex: 2,
+              child: Text(
+                "Settings",
+                style: Theme.of(context).textTheme.headline6,
+              ),
+            ),
+            if (isLoggedIn)
+              Flexible(
+                fit: FlexFit.tight,
+                child: Text(
+                  displayName,
+                  style: Theme.of(context).textTheme.subtitle1,
+                ),
+              ),
+          ],
+        ),
+      );
+}
+
+class OpenContainerListTile extends StatelessWidget {
+  const OpenContainerListTile({
+    Key? key,
+    this.isLoggedIn = true,
+    required this.title,
+    required this.openPage,
+    required this.icon,
+  }) : super(key: key);
+
+  final bool isLoggedIn;
+  final String title;
+  final Widget openPage;
+  final Icon icon;
+  @override
+  Widget build(BuildContext context) {
+    return OpenContainer(
+      closedElevation: 0,
+      tappable: false,
+      closedBuilder: (context, openContainer) {
+        return LoginToolTipOnLogout(
+            isLoggedIn: isLoggedIn,
+            child: ListTile(
+              title: Text(title),
+              leading: icon,
+              enabled: isLoggedIn,
+              onTap: () {
+                openContainer();
+              },
+            ));
+      },
+      openBuilder: (context, closeContainer) {
+        return openPage;
+      },
+    );
+  }
+}
+
+class LoginToolTipOnLogout extends StatelessWidget {
+  const LoginToolTipOnLogout({
+    Key? key,
+    required this.child,
+    required this.isLoggedIn,
+  }) : super(key: key);
+
+  final Widget child;
+  final bool isLoggedIn;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoggedIn) {
+      return child;
+    } else {
+      return Tooltip(
+        message: "You have to be logged in",
+        child: child,
+      );
+    }
   }
 }
 
@@ -182,6 +293,19 @@ class AboutPage extends StatelessWidget {
                 Text("""
                 Lectus nulla at volutpat diam ut venenatis tellus. Pulvinar mattis nunc sed blandit libero volutpat sed cras. At varius vel pharetra vel turpis nunc eget. Mauris a diam maecenas sed enim ut sem viverra. Maecenas accumsan lacus vel facilisis volutpat est velit egestas dui. Volutpat est velit egestas dui id. Elementum sagittis vitae et leo duis ut diam. Vel turpis nunc eget lorem dolor. Donec pretium vulputate sapien nec sagittis aliquam malesuada. Augue eget arcu dictum varius duis at. Arcu bibendum at varius vel pharetra vel turpis nunc eget. Ac turpis egestas integer eget aliquet nibh praesent tristique. Urna porttitor rhoncus dolor purus non enim. Rhoncus aenean vel elit scelerisque mauris pellentesque pulvinar pellentesque. At lectus urna duis convallis convallis tellus id interdum.
                 """),
+                Center(
+                  child: RichText(
+                    text: TextSpan(
+                        style: Theme.of(context).textTheme.bodyText2,
+                        children: [
+                          TextSpan(text: "Made with a "),
+                          WidgetSpan(
+                              child: Icon(Icons.keyboard_alt_outlined),
+                              alignment: PlaceholderAlignment.middle),
+                          TextSpan(text: " by Dev")
+                        ]),
+                  ),
+                )
               ],
             ),
           ),
