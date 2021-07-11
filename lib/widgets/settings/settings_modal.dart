@@ -2,7 +2,7 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:hitchspots/pages/edit_profile_page.dart';
 import 'package:hitchspots/services/authentication.dart';
-import 'package:hitchspots/utils/icon_switcher.dart';
+import 'package:hitchspots/utils/widget_switcher.dart';
 import 'package:hitchspots/utils/show_dialog.dart';
 import 'package:provider/provider.dart';
 
@@ -99,9 +99,9 @@ class _SettingsCardState extends State<SettingsCard> {
                               enabled: isLoggedIn,
                               onTap: logout,
                             )
-                          : IconSwitcherWrapper(
+                          : WidgetSwitcherWrapper(
                               condition: isLogginIn,
-                              iconIfTrue: ListTile(
+                              widgetIfTrue: ListTile(
                                 title: Text("Logging In"),
                                 leading: SizedBox(
                                     height: IconTheme.of(context).size,
@@ -112,7 +112,7 @@ class _SettingsCardState extends State<SettingsCard> {
                                 enabled: !isLoggedIn,
                                 onTap: login,
                               ),
-                              iconIfFalse: ListTile(
+                              widgetIfFalse: ListTile(
                                 title: Text("Login"),
                                 leading: Icon(Icons.login),
                                 enabled: !isLoggedIn,

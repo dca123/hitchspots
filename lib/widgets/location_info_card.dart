@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:hitchspots/models/location_card.dart';
 import 'package:hitchspots/services/authentication.dart';
-import 'package:hitchspots/utils/icon_switcher.dart';
+import 'package:hitchspots/utils/widget_switcher.dart';
 import 'package:hitchspots/utils/show_dialog.dart';
 import 'package:provider/provider.dart';
 import '../pages/create_review_page.dart';
@@ -256,9 +256,9 @@ class ButtonBar extends StatelessWidget {
     return Consumer<AuthenticationState>(
         key: UniqueKey(),
         builder: (context, authState, child) {
-          return IconSwitcherWrapper(
+          return WidgetSwitcherWrapper(
             condition: authState.isAuthenticating,
-            iconIfTrue: SizedBox(
+            widgetIfTrue: SizedBox(
               key: ValueKey('loading'),
               height: 16,
               width: 24,
@@ -270,7 +270,7 @@ class ButtonBar extends StatelessWidget {
                 ),
               ),
             ),
-            iconIfFalse: Icon(
+            widgetIfFalse: Icon(
               Icons.add,
               key: ValueKey('ready'),
             ),
