@@ -125,17 +125,14 @@ class _SearchBarState extends State<SearchBar> {
         });
       },
       transition: SlideFadeFloatingSearchBarTransition(),
+      automaticallyImplyBackButton: false,
       actions: [
         FloatingSearchBarAction.icon(
             icon: Icon(
               Icons.tune,
-              color: Colors.black45,
+              color: Colors.black38,
             ),
             onTap: () {
-              // Navigator.push(context,
-              //     MaterialPageRoute(builder: (BuildContext context) {
-              //   return SettingsCard();
-              // }));
               showModal(
                 context: context,
                 builder: (BuildContext context) {
