@@ -13,7 +13,7 @@ import 'package:google_maps_cluster_manager/google_maps_cluster_manager.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hitchspots/models/location_card.dart';
 import 'package:hitchspots/services/authentication.dart';
-import 'package:hitchspots/utils/icon_switcher.dart';
+import 'package:hitchspots/utils/widget_switcher.dart';
 import 'package:hitchspots/utils/show_dialog.dart';
 import 'package:hitchspots/widgets/fabs/add_location_fab.dart';
 import 'package:hitchspots/widgets/fabs/my_location_fab.dart';
@@ -371,16 +371,16 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
             FutureBuilder<bool>(
               future: _initialize(),
               builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
-                return IconSwitcherWrapper(
+                return WidgetSwitcherWrapper(
                   condition: snapshot.hasData,
                   fillColor: Theme.of(context).cardColor,
-                  iconIfFalse: Center(
+                  widgetIfFalse: Center(
                     child: SpinKitPulse(
                       color: Theme.of(context).primaryColor,
                     ),
                   ),
                   duration: 400,
-                  iconIfTrue: GoogleMap(
+                  widgetIfTrue: GoogleMap(
                     initialCameraPosition: _startLocation,
                     onMapCreated: _onMapCreated,
                     myLocationEnabled: _isLocationGranted,

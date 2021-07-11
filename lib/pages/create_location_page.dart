@@ -8,7 +8,7 @@ import 'package:geoflutterfire2/geoflutterfire2.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hitchspots/models/create_location_page_store.dart';
 import 'package:hitchspots/services/authentication.dart';
-import 'package:hitchspots/utils/icon_switcher.dart';
+import 'package:hitchspots/utils/widget_switcher.dart';
 import 'package:provider/provider.dart';
 import '../widgets/form_fields/rating_bar.dart';
 import '../widgets/form_fields/location_picker_form_field.dart';
@@ -126,9 +126,9 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 2.0),
-            child: IconSwitcherWrapper(
+            child: WidgetSwitcherWrapper(
               condition: isSaving,
-              iconIfTrue: IconButton(
+              widgetIfTrue: IconButton(
                 key: ValueKey('spinner'),
                 onPressed: () => {},
                 icon: SpinKitWave(
@@ -136,7 +136,7 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
                   size: 16,
                 ),
               ),
-              iconIfFalse: IconButton(
+              widgetIfFalse: IconButton(
                 key: ValueKey('send'),
                 icon: const Icon(Icons.send),
                 onPressed: () => addLocation(),

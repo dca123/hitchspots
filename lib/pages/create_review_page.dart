@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:hitchspots/services/authentication.dart';
-import 'package:hitchspots/utils/icon_switcher.dart';
+import 'package:hitchspots/utils/widget_switcher.dart';
 import '../widgets/form_fields/rating_bar.dart';
 import 'package:hitchspots/widgets/form_fields/rating_bar.dart';
 import '../models/location_card.dart';
@@ -95,9 +95,9 @@ class _CreateReviewPageState extends State<CreateReviewPage> {
           actions: [
             Padding(
               padding: const EdgeInsets.only(right: 2.0),
-              child: IconSwitcherWrapper(
+              child: WidgetSwitcherWrapper(
                 condition: isSaving,
-                iconIfTrue: IconButton(
+                widgetIfTrue: IconButton(
                   key: ValueKey('spinner'),
                   onPressed: () => {},
                   icon: SpinKitWave(
@@ -105,7 +105,7 @@ class _CreateReviewPageState extends State<CreateReviewPage> {
                     size: 16,
                   ),
                 ),
-                iconIfFalse: IconButton(
+                widgetIfFalse: IconButton(
                   key: ValueKey('send'),
                   icon: const Icon(Icons.send),
                   onPressed: () => addLocation(locationCard.locationID),
