@@ -50,7 +50,6 @@ class AuthenticationState extends ChangeNotifier {
     if (_checkandLoadFireAuthUser()) {
       await _loadProfile();
     }
-    ;
   }
 
   Future<void> loginFlowWithAction(
@@ -138,7 +137,13 @@ class AuthenticationState extends ChangeNotifier {
   }
 
   void logout() {
-    _auth?.signOut();
+    _auth!.signOut();
+    _resetAuthState();
     _loginState = LoginState.loggedOut;
+  }
+
+  void _resetAuthState() {
+    _uid = null;
+    _displayName = null;
   }
 }
