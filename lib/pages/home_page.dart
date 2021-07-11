@@ -7,11 +7,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:geoflutterfire2/geoflutterfire2.dart';
 import 'package:google_maps_cluster_manager/google_maps_cluster_manager.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hitchspots/models/location_card.dart';
 import 'package:hitchspots/services/authentication.dart';
+import 'package:hitchspots/utils/icon_switcher.dart';
 import 'package:hitchspots/utils/show_dialog.dart';
 import 'package:hitchspots/widgets/fabs/add_location_fab.dart';
 import 'package:hitchspots/widgets/fabs/my_location_fab.dart';
@@ -44,7 +46,13 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   final _geo = GeoFlutterFire();
   GoogleMapController? _mapController;
   final PanelController _panelController = PanelController();
-  static late CameraPosition _startLocation;
+  late CameraPosition _startLocation = CameraPosition(
+    target: LatLng(
+      0,
+      0,
+    ),
+    zoom: _initialZoomLevel,
+  );
   Location _location = Location();
   bool _isLocationGranted = false;
   bool _findingLocation = false;
@@ -58,13 +66,11 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   double _snapPoint = 0.35;
   double? _noImagesCardSnapPoint;
+  final cardDetailsKey = GlobalKey();
 
-  bool _isInitialized = false;
-  HomePageState() {
-    init();
-  }
+  HomePageState() {}
 
-  Future<void> init() async {
+  Future<bool> _initialize() async {
     await Firebase.initializeApp();
     await Provider.of<AuthenticationState>(context, listen: false)
         .ensureFirebaseInit();
@@ -77,14 +83,10 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       _startLocation =
           CameraPosition(target: location, zoom: _initialZoomLevel);
     } else {
-      LatLng ipLocation = await getIPLocation() ?? LatLng(0, 0);
+      LatLng ipLocation = await _getIPLocation() ?? LatLng(0, 0);
       _startLocation =
           CameraPosition(target: ipLocation, zoom: _initialZoomLevel);
     }
-
-    setState(() {
-      _isInitialized = true;
-    });
 
     _goodIcon = await BitmapDescriptor.fromAssetImage(
         createLocalImageConfiguration(context), 'assets/icons/Good.png');
@@ -93,9 +95,11 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _badIcon = await BitmapDescriptor.fromAssetImage(
         createLocalImageConfiguration(context), 'assets/icons/Bad.png');
     _clusterImage = await _loadClusterImage('assets/icons/cluster.png');
+
+    return true;
   }
 
-  Future<LatLng?> getIPLocation() async {
+  Future<LatLng?> _getIPLocation() async {
     try {
       //TODO : Remove IP HERE
       var response = await Dio()
@@ -338,7 +342,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         AnimationController(vsync: this, lowerBound: 0, upperBound: 1);
   }
 
-  final cardDetailsKey = GlobalKey();
   @override
   Widget build(BuildContext context) {
     final ScreenCoordinate screenCoordinate =
@@ -365,8 +368,19 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         },
         body: Stack(
           children: [
-            _isInitialized
-                ? GoogleMap(
+            FutureBuilder<bool>(
+              future: _initialize(),
+              builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+                return IconSwitcherWrapper(
+                  condition: snapshot.hasData,
+                  fillColor: Theme.of(context).cardColor,
+                  iconIfFalse: Center(
+                    child: SpinKitPulse(
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                  duration: 400,
+                  iconIfTrue: GoogleMap(
                     initialCameraPosition: _startLocation,
                     onMapCreated: _onMapCreated,
                     myLocationEnabled: _isLocationGranted,
@@ -379,8 +393,10 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       _getNearbySpots(screenCoordinate);
                       _clusterManager.updateMap();
                     },
-                  )
-                : Center(child: Text("Initializing")),
+                  ),
+                );
+              },
+            ),
             AddLocationWrapper(
               mapController: _mapController,
               screenCoordinate: screenCoordinate,
