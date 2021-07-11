@@ -4,20 +4,25 @@ import 'package:flutter/material.dart';
 import 'package:hitchspots/services/authentication.dart';
 import 'package:provider/provider.dart';
 
-class SetupProfilePage extends StatefulWidget {
-  const SetupProfilePage({
+class EditProfilePage extends StatefulWidget {
+  const EditProfilePage({
     Key? key,
   }) : super(key: key);
 
   @override
-  _SetupProfilePageState createState() => _SetupProfilePageState();
+  _EditProfilePageState createState() => _EditProfilePageState();
 }
 
-class _SetupProfilePageState extends State<SetupProfilePage> {
+class _EditProfilePageState extends State<EditProfilePage> {
   TextEditingController _displayName = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
   @override
   Widget build(BuildContext context) {
+    final String authUserDisplayName =
+        Provider.of<AuthenticationState>(context).displayName ?? "test";
+    _displayName.text = authUserDisplayName;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).canvasColor,
@@ -31,7 +36,7 @@ class _SetupProfilePageState extends State<SetupProfilePage> {
           color: Colors.black,
         ),
         title: Text(
-          "Create Your Profile",
+          "Edit Your Profile",
           style: Theme.of(context).textTheme.headline6,
         ),
         centerTitle: true,
@@ -46,7 +51,7 @@ class _SetupProfilePageState extends State<SetupProfilePage> {
                   FirebaseFirestore.instance
                       .collection('users')
                       .doc(userUid)
-                      .set({'uid': userUid, 'displayName': _displayName.text});
+                      .update({'displayName': _displayName.text});
                   Provider.of<AuthenticationState>(context, listen: false)
                       .createProfile(_displayName.text);
                   Navigator.pop(context);
@@ -64,7 +69,7 @@ class _SetupProfilePageState extends State<SetupProfilePage> {
           child: Column(
             children: [
               Text(
-                "Let's setup your profile before you can contribute",
+                "Only future contributions will have your new display name",
                 style: Theme.of(context).textTheme.caption,
               ),
               SizedBox(

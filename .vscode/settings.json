@@ -1,18 +1,19 @@
 {
     "conventionalCommits.scopes": [
         "main.dart",
-        "lib/pages/create_location_page.dart",
+        "pages/create_location_page.dart",
         "pages/home_page",
         "widgets/location_info_card",
         "pages/create_review_page",
-        "lib/services/authentication",
-        "lib/models/location_card",
+        "services/authentication",
+        "models/location_card",
         "firebase/functions/src/index.ts",
         "widgets/search_bar",
-        "lib/onboard_page",
+        "onboard_page",
         "utils/first_run_wrapper",
         "tests/",
         "widgets/settings/settings_modal",
-        "widgets/settings"
+        "widgets/settings",
+        "pages/edit_profile_page"
     ]
 }
