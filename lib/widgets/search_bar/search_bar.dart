@@ -109,7 +109,7 @@ class _SearchBarState extends State<SearchBar> {
       ),
       controller: _floatingSearchBarController,
       backdropColor: Colors.black45,
-      borderRadius: BorderRadius.circular(32),
+      borderRadius: BorderRadius.circular(8),
       margins: const EdgeInsets.only(top: 45, right: 20, left: 20),
       scrollPadding: const EdgeInsets.only(top: 20, bottom: 56),
       transitionDuration: const Duration(milliseconds: 300),
