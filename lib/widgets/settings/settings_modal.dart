@@ -2,7 +2,6 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:hitchspots/pages/edit_profile_page.dart';
 import 'package:hitchspots/services/authentication.dart';
-import 'package:hitchspots/utils/widget_switcher.dart';
 import 'package:hitchspots/utils/show_dialog.dart';
 import 'package:provider/provider.dart';
 
@@ -16,38 +15,6 @@ class SettingsCard extends StatefulWidget {
 }
 
 class _SettingsCardState extends State<SettingsCard> {
-  bool isLogginIn = false;
-  void logout() async {
-    setState(() {
-      Provider.of<AuthenticationState>(context, listen: false).logout();
-    });
-    Navigator.of(context).pop();
-    showAlertDialog(
-      title: "Logout",
-      body: "You've been succesfully logged out",
-      context: context,
-    );
-  }
-
-  void login() async {
-    setState(() {
-      isLogginIn = true;
-    });
-    await Provider.of<AuthenticationState>(context, listen: false)
-        .loginFlowWithAction(
-      postLogin: () async {
-        Navigator.pop(context);
-        showAlertDialog(
-          title: "Login",
-          body: "You've been succesfully logged in",
-          context: context,
-        );
-        isLogginIn = false;
-      },
-      buildContext: context,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     String displayName =
@@ -92,40 +59,14 @@ class _SettingsCardState extends State<SettingsCard> {
                         openPage: EditProfilePage(),
                         isLoggedIn: isLoggedIn,
                       ),
-                      isLoggedIn
-                          ? ListTile(
-                              title: Text("Logout"),
-                              leading: Icon(Icons.logout),
-                              enabled: isLoggedIn,
-                              onTap: logout,
-                            )
-                          : WidgetSwitcherWrapper(
-                              condition: isLogginIn,
-                              widgetIfTrue: ListTile(
-                                title: Text("Logging In"),
-                                leading: SizedBox(
-                                    height: IconTheme.of(context).size,
-                                    width: IconTheme.of(context).size,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    )),
-                                enabled: !isLoggedIn,
-                                onTap: login,
-                              ),
-                              widgetIfFalse: ListTile(
-                                title: Text("Login"),
-                                leading: Icon(Icons.login),
-                                enabled: !isLoggedIn,
-                                onTap: login,
-                              ),
-                            ),
+                      LoginTile(),
                       Divider(),
-                      ListTile(
-                        title: Text("Offline Mode"),
-                        leading: Icon(Icons.download_for_offline),
-                        enabled: false,
-                        onTap: () => {},
-                      ),
+                      // ListTile(
+                      //   title: Text("Offline Mode"),
+                      //   leading: Icon(Icons.download_for_offline),
+                      //   enabled: false,
+                      //   onTap: () => {},
+                      // ),
                       OpenContainerListTile(
                         title: "About",
                         icon: Icon(Icons.info),
@@ -139,6 +80,77 @@ class _SettingsCardState extends State<SettingsCard> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class LoginTile extends StatefulWidget {
+  const LoginTile({Key? key}) : super(key: key);
+
+  @override
+  _LoginTileState createState() => _LoginTileState();
+}
+
+class _LoginTileState extends State<LoginTile> {
+  static late double iconSize;
+
+  void logout() async {
+    setState(() {
+      Provider.of<AuthenticationState>(context, listen: false).logout();
+    });
+    await showAlertDialog(
+      title: "Logout",
+      body: "You've been succesfully logged out",
+      context: context,
+    );
+    Navigator.of(context).pop();
+  }
+
+  void login() async {
+    await Provider.of<AuthenticationState>(context, listen: false)
+        .loginFlowWithAction(
+      postLogin: () async {
+        await showAlertDialog(
+          title: "Login",
+          body: "You've been succesfully logged in",
+          context: context,
+        );
+        Navigator.pop(context);
+      },
+      buildContext: context,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    iconSize = IconTheme.of(context).size! - 5;
+    return Consumer<AuthenticationState>(
+      builder: (context, authState, child) {
+        if (authState.loginState == LoginState.loggedIn) {
+          return ListTile(
+            title: Text("Logout"),
+            leading: Icon(Icons.logout),
+            onTap: logout,
+          );
+        }
+        if (authState.isAuthenticating) {
+          return ListTile(
+            title: Text("Logging In"),
+            leading: SizedBox(
+              height: iconSize,
+              width: iconSize,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+              ),
+            ),
+          );
+        }
+        return ListTile(
+          title: Text("Login"),
+          leading: Icon(Icons.login),
+          onTap: login,
+        );
+      },
     );
   }
 }
@@ -196,6 +208,7 @@ class OpenContainerListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return OpenContainer(
       closedElevation: 0,
+      middleColor: Theme.of(context).cardColor,
       tappable: false,
       closedBuilder: (context, openContainer) {
         return LoginToolTipOnLogout(
@@ -248,30 +261,30 @@ class AboutPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
       return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).canvasColor,
+          elevation: 0,
+          toolbarHeight: 84,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            color: Colors.black,
+          ),
+          title: Text(
+            "About",
+            style: Theme.of(context).textTheme.headline6,
+          ),
+          centerTitle: true,
+          actions: [],
+        ),
         body: Container(
           padding: EdgeInsets.symmetric(horizontal: 24),
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AppBar(
-                  backgroundColor: Theme.of(context).canvasColor,
-                  elevation: 0,
-                  toolbarHeight: 84,
-                  leading: IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    color: Colors.black,
-                  ),
-                  title: Text(
-                    "About",
-                    style: Theme.of(context).textTheme.headline6,
-                  ),
-                  centerTitle: true,
-                  actions: [],
-                ),
                 Text(
                   "Credits & Attributions",
                   style: TextStyle(
@@ -298,10 +311,7 @@ class AboutPage extends StatelessWidget {
                     text: TextSpan(
                         style: Theme.of(context).textTheme.bodyText2,
                         children: [
-                          TextSpan(text: "Made with a "),
-                          WidgetSpan(
-                              child: Icon(Icons.keyboard_alt_outlined),
-                              alignment: PlaceholderAlignment.middle),
+                          TextSpan(text: "Made with a keyboard"),
                           TextSpan(text: " by Dev")
                         ]),
                   ),
