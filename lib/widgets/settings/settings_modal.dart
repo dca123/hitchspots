@@ -1,9 +1,11 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:hitchspots/pages/edit_profile_page.dart';
 import 'package:hitchspots/services/authentication.dart';
 import 'package:hitchspots/utils/show_dialog.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsCard extends StatefulWidget {
   const SettingsCard({
@@ -279,41 +281,59 @@ class AboutPage extends StatelessWidget {
           centerTitle: true,
           actions: [],
         ),
-        body: Container(
-          padding: EdgeInsets.symmetric(horizontal: 24),
-          child: SingleChildScrollView(
+        body: SingleChildScrollView(
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Credits & Attributions",
+                  "Credits",
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w100,
                   ),
                   textAlign: TextAlign.left,
                 ),
-                SizedBox(height: 8),
-                //TODO : Add relevant text here
-                Text("""
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Dui id ornare arcu odio. Pharetra diam sit amet nisl suscipit adipiscing bibendum est. Leo duis ut diam quam nulla. Tincidunt lobortis feugiat vivamus at augue eget. Faucibus vitae aliquet nec ullamcorper. Donec ac odio tempor orci dapibus ultrices. Faucibus a pellentesque sit amet porttitor eget dolor morbi non. Nunc sed blandit libero volutpat sed cras ornare arcu. Cursus risus at ultrices mi tempus imperdiet. Feugiat nisl pretium fusce id velit ut. Habitasse platea dictumst vestibulum rhoncus est pellentesque elit ullamcorper. Ipsum dolor sit amet consectetur adipiscing elit pellentesque habitant. Orci phasellus egestas tellus rutrum.
-                """),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10.0),
+                  child: FutureBuilder<String>(
+                      future: DefaultAssetBundle.of(context)
+                          .loadString("assets/credits/attribution.md"),
+                      initialData: "",
+                      builder: (BuildContext context, snapshot) {
+                        return MarkdownBody(
+                          data: snapshot.data!,
+                          onTapLink: (
+                            _,
+                            String? url,
+                            __,
+                          ) async {
+                            await canLaunch(url!)
+                                ? await launch(url)
+                                : throw 'Could not launch $url';
+                          },
+                        );
+                      }),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Divider(),
+                ),
                 Text("From the Developer",
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.w100,
                     )),
-                Text("""
-                Lectus nulla at volutpat diam ut venenatis tellus. Pulvinar mattis nunc sed blandit libero volutpat sed cras. At varius vel pharetra vel turpis nunc eget. Mauris a diam maecenas sed enim ut sem viverra. Maecenas accumsan lacus vel facilisis volutpat est velit egestas dui. Volutpat est velit egestas dui id. Elementum sagittis vitae et leo duis ut diam. Vel turpis nunc eget lorem dolor. Donec pretium vulputate sapien nec sagittis aliquam malesuada. Augue eget arcu dictum varius duis at. Arcu bibendum at varius vel pharetra vel turpis nunc eget. Ac turpis egestas integer eget aliquet nibh praesent tristique. Urna porttitor rhoncus dolor purus non enim. Rhoncus aenean vel elit scelerisque mauris pellentesque pulvinar pellentesque. At lectus urna duis convallis convallis tellus id interdum.
-                """),
-                Center(
-                  child: RichText(
-                    text: TextSpan(
-                        style: Theme.of(context).textTheme.bodyText2,
-                        children: [
-                          TextSpan(text: "Made with a keyboard"),
-                          TextSpan(text: " by Dev")
-                        ]),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10.0),
+                  child: FutureBuilder<String>(
+                    future: DefaultAssetBundle.of(context)
+                        .loadString("assets/credits/from_the_developer.md"),
+                    initialData: "",
+                    builder: (BuildContext context, snapshot) {
+                      return MarkdownBody(data: snapshot.data!);
+                    },
                   ),
                 )
               ],

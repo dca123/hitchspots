@@ -18,6 +18,7 @@ dependencies:
   firebase_crashlytics: ^2.0.6
   firebase_storage: ^8.1.1
   flutter_dotenv: 4.0.0-nullsafety.1
+  flutter_markdown: ^0.6.2
   flutter_rating_bar: ^4.0.0
   flutter_spinkit: ^5.0.0
   geocoding: ^2.0.0
@@ -35,6 +36,7 @@ dependencies:
   shared_preferences: ^2.0.6
   sliding_up_panel: ^2.0.0+1
   timeago: ^3.0.2
+  url_launcher: ^6.0.9
 
 dev_dependencies:
   flutter_driver:
@@ -59,6 +61,7 @@ flutter:
     - assets/icons/
     - assets/locations/
     - assets/onboarding/
+    - assets/credits/
 
 flutter_icons:
   android: true
