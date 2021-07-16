@@ -1,11 +1,18 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.hitchspots">
    <uses-permission android:name="android.permission.INTERNET" />
+   <queries>
+    <intent>
+      <action android:name="android.intent.action.VIEW" />
+      <data android:scheme="https" />
+    </intent>
+  </queries>
    <application
         android:label="HitchSpots"
         android:icon="@mipmap/ic_launcher">
         <meta-data android:name="com.google.android.geo.API_KEY"
                android:value="${MAPS_API_KEY}"/>
+               
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"
