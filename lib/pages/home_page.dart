@@ -56,7 +56,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Location _location = Location();
   bool _isLocationGranted = false;
   bool _findingLocation = false;
-
+  bool _initMapRequirements = false;
   late AnimationController _slidingPanelAnimationController;
 
   final BorderRadiusGeometry _radius = BorderRadius.only(
@@ -68,9 +68,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   double? _noImagesCardSnapPoint;
   final cardDetailsKey = GlobalKey();
 
-  HomePageState() {}
-
-  Future<bool> _initialize() async {
+  void _initialize() async {
     await Firebase.initializeApp();
     await Provider.of<AuthenticationState>(context, listen: false)
         .ensureFirebaseInit();
@@ -82,11 +80,16 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       LatLng location = await _getLocation();
       _startLocation =
           CameraPosition(target: location, zoom: _initialZoomLevel);
+      _isLocationGranted = true;
     } else {
       LatLng ipLocation = await _getIPLocation() ?? LatLng(0, 0);
       _startLocation =
           CameraPosition(target: ipLocation, zoom: _initialZoomLevel);
     }
+
+    setState(() {
+      _initMapRequirements = true;
+    });
 
     _goodIcon = await BitmapDescriptor.fromAssetImage(
         createLocalImageConfiguration(context), 'assets/icons/Good.png');
@@ -95,8 +98,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _badIcon = await BitmapDescriptor.fromAssetImage(
         createLocalImageConfiguration(context), 'assets/icons/Bad.png');
     _clusterImage = await _loadClusterImage('assets/icons/cluster.png');
-
-    return true;
   }
 
   Future<LatLng?> _getIPLocation() async {
@@ -203,7 +204,8 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _requestLocationPermission() async {
-    if (await Permission.location.request().isGranted) {
+    if (await Permission.location.request().isGranted &&
+        _findingLocation == false) {
       if (await _location.serviceEnabled()) {
         _moveCameraToUserLocation();
       } else {
@@ -241,9 +243,14 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   // Call only if location permission is enabled
   Future<LatLng> _getLocation() async {
-    assert(await Permission.location.isGranted);
-    LocationData locationData = await _location.getLocation();
-    return LatLng(locationData.latitude!, locationData.longitude!);
+    try {
+      // assert(await Permission.location.isGranted);
+      LocationData locationData = await _location.getLocation();
+      return LatLng(locationData.latitude!, locationData.longitude!);
+    } catch (e) {
+      print(e);
+      return LatLng(0, 0);
+    }
   }
 
   void _moveCameraToLocation(LatLng location, [double? zoom]) async {
@@ -336,10 +343,11 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   @override
   void initState() {
-    super.initState();
+    _initialize();
     _clusterManager = _initClusterManager();
     _slidingPanelAnimationController =
         AnimationController(vsync: this, lowerBound: 0, upperBound: 1);
+    super.initState();
   }
 
   @override
@@ -368,34 +376,29 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         },
         body: Stack(
           children: [
-            FutureBuilder<bool>(
-              future: _initialize(),
-              builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
-                return WidgetSwitcherWrapper(
-                  condition: snapshot.hasData,
-                  fillColor: Theme.of(context).cardColor,
-                  widgetIfFalse: Center(
-                    child: SpinKitPulse(
-                      color: Theme.of(context).primaryColor,
-                    ),
-                  ),
-                  duration: 400,
-                  widgetIfTrue: GoogleMap(
-                    initialCameraPosition: _startLocation,
-                    onMapCreated: _onMapCreated,
-                    myLocationEnabled: _isLocationGranted,
-                    myLocationButtonEnabled: false,
-                    zoomControlsEnabled: false,
-                    mapToolbarEnabled: false,
-                    markers: _clusterMarkers,
-                    onCameraMove: _clusterManager.onCameraMove,
-                    onCameraIdle: () {
-                      _getNearbySpots(screenCoordinate);
-                      _clusterManager.updateMap();
-                    },
-                  ),
-                );
-              },
+            WidgetSwitcherWrapper(
+              condition: _initMapRequirements,
+              fillColor: Theme.of(context).cardColor,
+              widgetIfFalse: Center(
+                child: SpinKitPulse(
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
+              duration: 400,
+              widgetIfTrue: GoogleMap(
+                initialCameraPosition: _startLocation,
+                onMapCreated: _onMapCreated,
+                myLocationEnabled: _isLocationGranted,
+                myLocationButtonEnabled: false,
+                zoomControlsEnabled: false,
+                mapToolbarEnabled: false,
+                markers: _clusterMarkers,
+                onCameraMove: _clusterManager.onCameraMove,
+                onCameraIdle: () {
+                  _getNearbySpots(screenCoordinate);
+                  _clusterManager.updateMap();
+                },
+              ),
             ),
             AddLocationWrapper(
               mapController: _mapController,
