@@ -15,6 +15,6 @@
         "widgets/settings/settings_modal",
         "widgets/settings",
         "pages/edit_profile_page",
-        "pages/spash_screen_dart"
+        "pages/splash_screen_dart"
     ]
 }

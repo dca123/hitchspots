@@ -10,10 +10,9 @@ class SplashScreen extends StatelessWidget {
       body: Container(
           width: MediaQuery.of(context).size.width * 0.785,
           color: Colors.white,
-          child: Flexible(
-              child: RiveAnimation.asset(
+          child: RiveAnimation.asset(
             "assets/splash/globe.riv",
-          ))),
+          )),
     );
   }
 }
