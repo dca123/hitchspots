@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hitchspots/pages/onboard_page.dart';
+import 'package:hitchspots/pages/splash_screen_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FirstRunWrapper extends StatelessWidget {
@@ -25,7 +26,7 @@ class FirstRunWrapper extends StatelessWidget {
               return homePage;
             }
           default:
-            return Container(child: Text("Loading Cache Data"));
+            return SplashScreen();
         }
       },
     ));
