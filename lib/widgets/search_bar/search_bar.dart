@@ -1,8 +1,10 @@
 import 'dart:math';
 
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hitchspots/widgets/search_bar/search_bar_card.dart';
+import 'package:hitchspots/widgets/settings/settings_modal.dart';
 import 'package:location/location.dart';
 import 'package:material_floating_search_bar/material_floating_search_bar.dart';
 import 'package:geocoding/geocoding.dart' as geocoding;
@@ -107,7 +109,7 @@ class _SearchBarState extends State<SearchBar> {
       ),
       controller: _floatingSearchBarController,
       backdropColor: Colors.black45,
-      borderRadius: BorderRadius.circular(32),
+      borderRadius: BorderRadius.circular(8),
       margins: const EdgeInsets.only(top: 45, right: 20, left: 20),
       scrollPadding: const EdgeInsets.only(top: 20, bottom: 56),
       transitionDuration: const Duration(milliseconds: 300),
@@ -123,11 +125,21 @@ class _SearchBarState extends State<SearchBar> {
         });
       },
       transition: SlideFadeFloatingSearchBarTransition(),
+      automaticallyImplyBackButton: false,
       actions: [
-        FloatingSearchBarAction.searchToClear(
-          duration: const Duration(milliseconds: 300),
-          color: Colors.black45,
-        ),
+        FloatingSearchBarAction.icon(
+            icon: Icon(
+              Icons.tune,
+              color: Colors.black38,
+            ),
+            onTap: () {
+              showModal(
+                context: context,
+                builder: (BuildContext context) {
+                  return SettingsCard();
+                },
+              );
+            }),
       ],
       builder: (context, transition) {
         return _hasSearchError

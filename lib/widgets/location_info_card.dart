@@ -1,10 +1,10 @@
 import 'package:animations/animations.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:hitchspots/models/location_card.dart';
 import 'package:hitchspots/services/authentication.dart';
-import 'package:hitchspots/utils/icon_switcher.dart';
+import 'package:hitchspots/utils/widget_switcher.dart';
+import 'package:hitchspots/utils/show_dialog.dart';
 import 'package:provider/provider.dart';
 import '../pages/create_review_page.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -97,20 +97,6 @@ class ReviewImageRow extends StatelessWidget {
   }) : super(key: key);
   final BorderRadiusGeometry radius;
 
-  Future<List<String>> getImageUrl(String locationID) async {
-    Future<String> getUrl(String heading) async =>
-        await FirebaseStorage.instance
-            .ref('street_view_images/$locationID/$heading.jpeg')
-            .getDownloadURL();
-
-    const headings = ['0', '120', '240'];
-    List<Future<String>> x = headings.map((heading) async {
-      Future<String> data = getUrl(heading);
-      return data;
-    }).toList();
-    return await Future.wait(x);
-  }
-
   @override
   Widget build(BuildContext context) {
     final String locationID =
@@ -185,7 +171,7 @@ class ReviewList extends StatelessWidget {
           return ReviewTile(
             description: '${review['description']}',
             fuzzyTimeAgo: '$fuzzyTimeStamp',
-            rating: (review['rating'] ?? 0).toDouble(),
+            rating: review['rating'],
             displayName: '${review['createdByDisplayName']}',
           );
         },
@@ -204,12 +190,13 @@ class ReviewTile extends StatelessWidget {
   }) : super(key: key);
 
   final String description;
-  final double rating;
+  final double? rating;
   final String fuzzyTimeAgo;
   final String displayName;
 
   @override
   Widget build(BuildContext context) {
+    double fuzzyTimePadding = (rating == null ? 0 : 2);
     return Container(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -225,9 +212,12 @@ class ReviewTile extends StatelessWidget {
                 StarRatingsBar(
                   rating: rating,
                 ),
-                Text(
-                  ' $fuzzyTimeAgo',
-                  style: Theme.of(context).textTheme.caption,
+                Padding(
+                  padding: EdgeInsets.only(left: fuzzyTimePadding),
+                  child: Text(
+                    '$fuzzyTimeAgo',
+                    style: Theme.of(context).textTheme.caption,
+                  ),
                 ),
               ],
             ),
@@ -266,9 +256,9 @@ class ButtonBar extends StatelessWidget {
     return Consumer<AuthenticationState>(
         key: UniqueKey(),
         builder: (context, authState, child) {
-          return IconSwitcherWrapper(
+          return WidgetSwitcherWrapper(
             condition: authState.isAuthenticating,
-            iconIfTrue: SizedBox(
+            widgetIfTrue: SizedBox(
               key: ValueKey('loading'),
               height: 16,
               width: 24,
@@ -280,7 +270,7 @@ class ButtonBar extends StatelessWidget {
                 ),
               ),
             ),
-            iconIfFalse: Icon(
+            widgetIfFalse: Icon(
               Icons.add,
               key: ValueKey('ready'),
             ),
@@ -312,17 +302,31 @@ class ButtonBar extends StatelessWidget {
             },
             closedBuilder: (context, openContainer) {
               return ElevatedButton.icon(
-                onPressed: () {
+                onPressed: () async {
                   if (Provider.of<AuthenticationState>(context, listen: false)
                           .isAuthenticating ==
                       false) {
-                    Provider.of<AuthenticationState>(
-                      context,
-                      listen: false,
-                    ).loginFlowWithAction(
-                      buildContext: context,
-                      postLogin: () => openContainer(),
-                    );
+                    if (Provider.of<AuthenticationState>(context, listen: false)
+                            .loginState !=
+                        LoginState.loggedIn) {
+                      await showAlertDialog(
+                          context: context,
+                          title: "You're Not Signed In",
+                          body:
+                              "You will need to login or sign up before you can contribute",
+                          ActionOneTitle: "Continue",
+                          ActionTwoTitle: "Close",
+                          ActionOne: () async {
+                            Provider.of<AuthenticationState>(context,
+                                    listen: false)
+                                .loginFlowWithAction(
+                              buildContext: context,
+                              postLogin: openContainer,
+                            );
+                          });
+                    } else {
+                      openContainer();
+                    }
                   }
                 },
                 icon: _icon(context),
@@ -396,21 +400,25 @@ class LocationInfomation extends StatelessWidget {
 
 class StarRatingsBar extends StatelessWidget {
   const StarRatingsBar({Key? key, required this.rating}) : super(key: key);
-  final double rating;
+  final double? rating;
   @override
   Widget build(BuildContext context) {
-    return RatingBarIndicator(
-      rating: rating,
-      itemBuilder: (context, index) {
-        return Icon(
-          index < rating ? Icons.star : Icons.star_outline,
-          color: Colors.yellow[700],
-        );
-      },
-      itemCount: 5,
-      itemSize: 13,
-      unratedColor: Colors.yellow[700],
-    );
+    if (rating == null) {
+      return SizedBox.shrink();
+    } else {
+      return RatingBarIndicator(
+        rating: rating!,
+        itemBuilder: (context, index) {
+          return Icon(
+            index < rating! ? Icons.star : Icons.star_outline,
+            color: Colors.yellow[700],
+          );
+        },
+        itemCount: 5,
+        itemSize: 13,
+        unratedColor: Colors.yellow[700],
+      );
+    }
   }
 }
 

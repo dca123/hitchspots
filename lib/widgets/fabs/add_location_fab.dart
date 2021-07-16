@@ -1,8 +1,10 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hitchspots/pages/create_location_page.dart';
 import 'package:hitchspots/services/authentication.dart';
+import 'package:hitchspots/utils/show_dialog.dart';
 import 'package:provider/provider.dart';
 
 class AddLocationWrapper extends StatefulWidget {
@@ -47,26 +49,53 @@ class _AddLocationWrapperState extends State<AddLocationWrapper> {
         closedBuilder: (context, openContainer) {
           return InkWell(
             child: SizedBox(
-              height: widget.mobileFabDimension,
-              width: widget.mobileFabDimension,
-              child: Center(
-                child: Icon(
-                  Icons.add,
-                  color: theme.colorScheme.surface,
-                ),
-              ),
-            ),
+                height: widget.mobileFabDimension,
+                width: widget.mobileFabDimension,
+                child: Consumer<AuthenticationState>(
+                  builder: (context, authState, child) {
+                    if (authState.isAuthenticating) {
+                      return Center(
+                        child: SpinKitPulse(
+                          size: 30,
+                          color: Theme.of(context).cardColor,
+                        ),
+                      );
+                    } else {
+                      return Center(
+                        child: Icon(
+                          Icons.add,
+                          color: theme.colorScheme.surface,
+                        ),
+                      );
+                    }
+                  },
+                )),
             onTap: () async {
               if (Provider.of<AuthenticationState>(context, listen: false)
                       .isAuthenticating ==
                   false) {
                 middlePoint = await widget.mapController!
                     .getLatLng(widget.screenCoordinate);
-                Provider.of<AuthenticationState>(context, listen: false)
-                    .loginFlowWithAction(
-                  buildContext: context,
-                  postLogin: () => openContainer(),
-                );
+                if (Provider.of<AuthenticationState>(context, listen: false)
+                        .loginState !=
+                    LoginState.loggedIn) {
+                  await showAlertDialog(
+                      context: context,
+                      title: "You're Not Signed In",
+                      body:
+                          "You will need to login or sign up before you can contribute",
+                      ActionOneTitle: "Continue",
+                      ActionTwoTitle: "Close",
+                      ActionOne: () {
+                        Provider.of<AuthenticationState>(context, listen: false)
+                            .loginFlowWithAction(
+                          buildContext: context,
+                          postLogin: openContainer,
+                        );
+                      });
+                } else {
+                  openContainer();
+                }
               }
             },
           );

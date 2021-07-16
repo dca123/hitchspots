@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:hitchspots/models/location_picker_store.dart';
+import 'package:hitchspots/models/create_location_page_store.dart';
 import 'package:provider/provider.dart';
 import './home_page.dart';
 
@@ -26,7 +26,7 @@ class _LocationPickerState extends State<LocationPickerPage> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        Provider.of<LocationPickerStore>(context, listen: false)
+        Provider.of<CreateLocationPageStore>(context, listen: false)
             .toggleLocationPicker();
         return false;
       },
@@ -34,12 +34,11 @@ class _LocationPickerState extends State<LocationPickerPage> {
         appBar: AppBar(
           backgroundColor: Theme.of(context).canvasColor,
           elevation: 1,
-          // toolbarHeight: 64,
           toolbarHeight: 84,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () =>
-                Provider.of<LocationPickerStore>(context, listen: false)
+                Provider.of<CreateLocationPageStore>(context, listen: false)
                     .toggleLocationPicker(),
             color: Colors.black,
           ),
@@ -59,7 +58,7 @@ class _LocationPickerState extends State<LocationPickerPage> {
 
                   final LatLng middlePoint =
                       await mapController.getLatLng(screenCoordinate);
-                  Provider.of<LocationPickerStore>(context, listen: false)
+                  Provider.of<CreateLocationPageStore>(context, listen: false)
                       .setLocation(middlePoint);
                 },
                 color: Colors.black,

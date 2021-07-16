@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'dart:ui' as UI;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geoflutterfire2/geoflutterfire2.dart';
@@ -11,12 +12,16 @@ import 'package:google_maps_cluster_manager/google_maps_cluster_manager.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hitchspots/models/location_card.dart';
 import 'package:hitchspots/services/authentication.dart';
+import 'package:hitchspots/utils/widget_switcher.dart';
+import 'package:hitchspots/utils/show_dialog.dart';
 import 'package:hitchspots/widgets/fabs/add_location_fab.dart';
 import 'package:hitchspots/widgets/fabs/my_location_fab.dart';
 import 'package:hitchspots/widgets/search_bar/search_bar.dart';
 import 'package:location/location.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:rive/rive.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -37,18 +42,23 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   List<ClusterItem> _clusterItems = [];
   Map<String, Marker> _markersMap = {};
   Set<Marker> _clusterMarkers = {};
+  final double _initialZoomLevel = 12;
 
   final _geo = GeoFlutterFire();
   GoogleMapController? _mapController;
   final PanelController _panelController = PanelController();
-  static final CameraPosition _centerOfWorld = CameraPosition(
-    target: LatLng(0, 0),
-    zoom: 0,
+  late CameraPosition _startLocation = CameraPosition(
+    target: LatLng(
+      0,
+      0,
+    ),
+    zoom: _initialZoomLevel,
   );
   Location _location = Location();
   bool _isLocationGranted = false;
   bool _findingLocation = false;
-
+  bool _initMapRequirements = false;
+  bool _showLoadAnimation = false;
   late AnimationController _slidingPanelAnimationController;
 
   final BorderRadiusGeometry _radius = BorderRadius.only(
@@ -58,30 +68,81 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   double _snapPoint = 0.35;
   double? _noImagesCardSnapPoint;
+  final cardDetailsKey = GlobalKey();
 
-  HomePageState() {
-    init();
-  }
-
-  Future<void> init() async {
+  void _initialize() async {
     await Firebase.initializeApp();
-    await Provider.of<AuthenticationState>(context, listen: false).init();
+    await Provider.of<AuthenticationState>(context, listen: false)
+        .ensureFirebaseInit();
     // FirebaseFirestore.instance.settings =
     //     Settings(host: '192.168.1.2:8005', sslEnabled: false);
 
-    _goodIcon = await BitmapDescriptor.fromAssetImage(
-        createLocalImageConfiguration(context), 'assets/icons/Good.png');
-    _warningIcon = await BitmapDescriptor.fromAssetImage(
-        createLocalImageConfiguration(context), 'assets/icons/Warning.png');
-    _badIcon = await BitmapDescriptor.fromAssetImage(
-        createLocalImageConfiguration(context), 'assets/icons/Bad.png');
-    _clusterImage = await _loadClusterImage('assets/icons/cluster.png');
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String>? locationCache = prefs.getStringList("locationData");
+
+    if (locationCache != null) {
+      String lastCacheDate = locationCache[0];
+      LatLng location = LatLng(
+        double.parse(locationCache[1]),
+        double.parse(locationCache[2]),
+      );
+
+      Duration timeDiff =
+          DateTime.now().difference(DateTime.parse(lastCacheDate));
+
+      if (timeDiff.inDays >= 3) {
+        _startLocation = await _findInitialCameraPosition(prefs);
+      } else {
+        _startLocation =
+            CameraPosition(target: location, zoom: _initialZoomLevel);
+      }
+    } else {
+      _startLocation = await _findInitialCameraPosition(prefs);
+    }
+
+    setState(() {
+      _initMapRequirements = true;
+    });
+  }
+
+  Future<CameraPosition> _findInitialCameraPosition(
+      SharedPreferences prefs) async {
+    LatLng location;
+    setState(() {
+      _showLoadAnimation = true;
+    });
+    if (await Permission.location.isGranted &&
+        await _location.serviceEnabled()) {
+      location = await _getLocation();
+
+      _isLocationGranted = true;
+    } else {
+      location = await _getIPLocation() ?? LatLng(0, 0);
+    }
+    List<String> locationCache = [
+      DateTime.now().toString(),
+      location.latitude.toString(),
+      location.longitude.toString()
+    ];
+    prefs.setStringList("locationData", locationCache);
+    return CameraPosition(target: location, zoom: _initialZoomLevel);
+  }
+
+  Future<LatLng?> _getIPLocation() async {
+    try {
+      //TODO : Remove IP HERE
+      var response = await Dio()
+          .get('http://ip-api.com/json/62.210.188.30??fields=lat,lon');
+      return LatLng(response.data["lat"], response.data["lon"]);
+    } catch (e) {
+      print(e);
+    }
   }
 
   BitmapDescriptor _ratingToMarker(double rating) {
-    if (rating >= 4) {
+    if (rating >= 3.0) {
       return _goodIcon;
-    } else if (rating >= 2.5) {
+    } else if (rating >= 2.0) {
       return _warningIcon;
     }
     return _badIcon;
@@ -168,12 +229,36 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       this._mapController = mapController;
       _clusterManager.setMapController(mapController);
     });
-    _moveCameraToUserLocation();
+    _goodIcon = await BitmapDescriptor.fromAssetImage(
+        createLocalImageConfiguration(context), 'assets/icons/Good.png');
+    _warningIcon = await BitmapDescriptor.fromAssetImage(
+        createLocalImageConfiguration(context), 'assets/icons/Warning.png');
+    _badIcon = await BitmapDescriptor.fromAssetImage(
+        createLocalImageConfiguration(context), 'assets/icons/Bad.png');
+    _clusterImage = await _loadClusterImage('assets/icons/cluster.png');
   }
 
-  void _getLocation() async {
-    if (await Permission.location.request().isGranted) {
-      _moveCameraToUserLocation();
+  void _requestLocationPermission() async {
+    if (await Permission.location.request().isGranted &&
+        _findingLocation == false) {
+      if (await _location.serviceEnabled()) {
+        _moveCameraToUserLocation();
+      } else {
+        await showAlertDialog(
+          context: context,
+          title: "Location Services Disabled",
+          body: "Please enable location services to use this feature",
+        );
+        _location.requestService();
+      }
+    } else if (await Permission.location.isDenied) {
+      await showAlertDialog(
+        context: context,
+        title: "Location Permission Denied",
+        body:
+            "Please provide location permissions to HitchSpots in your settings",
+      );
+      await openAppSettings();
     }
   }
 
@@ -183,27 +268,32 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         _isLocationGranted = true;
         _findingLocation = true;
       });
-      LocationData locationData = await _location.getLocation();
+      LatLng location = await _getLocation();
       setState(() {
         _findingLocation = false;
       });
-      _mapController!.animateCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(
-            target: LatLng(locationData.latitude!, locationData.longitude!),
-            zoom: 12,
-          ),
-        ),
-      );
+      _moveCameraToLocation(location);
     }
   }
 
-  void _moveCameraToLocation(LatLng location) async {
+  // Call only if location permission is enabled
+  Future<LatLng> _getLocation() async {
+    try {
+      // assert(await Permission.location.isGranted);
+      LocationData locationData = await _location.getLocation();
+      return LatLng(locationData.latitude!, locationData.longitude!);
+    } catch (e) {
+      print(e);
+      return LatLng(0, 0);
+    }
+  }
+
+  void _moveCameraToLocation(LatLng location, [double? zoom]) async {
     _mapController!.animateCamera(
       CameraUpdate.newCameraPosition(
         CameraPosition(
           target: LatLng(location.latitude, location.longitude),
-          zoom: 10,
+          zoom: zoom ?? 12,
         ),
       ),
     );
@@ -214,7 +304,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ? Marker(
                 markerId: MarkerId(cluster.getId()),
                 position: cluster.location,
-                onTap: () {
+                onTap: () async {
+                  double zoom = await _mapController!.getZoomLevel() + 0.5;
+                  _moveCameraToLocation(cluster.location, zoom);
                   cluster.items.forEach((p) => print(p));
                 },
                 icon: await _getMarkerBitmap(cluster.count.toString()),
@@ -243,18 +335,20 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     TextPainter painter = TextPainter(textDirection: TextDirection.ltr);
     painter.text = TextSpan(
-        text: text,
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: Theme.of(context).textTheme.headline4?.fontSize,
-        ));
+      text: text,
+      style: TextStyle(
+        color: Colors.white,
+        fontSize: 30,
+        fontWeight: FontWeight.w400,
+      ),
+    );
     painter.layout();
     painter.paint(
       canvas,
       // Offset.zero,
       Offset(
         width / 2 - painter.width / 2,
-        width / 3.15 - painter.height / 2,
+        width / 3.25 - painter.height / 2,
       ),
     );
 
@@ -270,8 +364,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       _clusterItems,
       _updateMarkers,
       markerBuilder: _markerBuilder,
-      initialZoom: 16,
-      stopClusteringZoom: 12,
+      initialZoom: _initialZoomLevel,
+      stopClusteringZoom: 10,
+      extraPercent: 0.25,
     );
   }
 
@@ -283,13 +378,13 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   @override
   void initState() {
-    super.initState();
+    _initialize();
     _clusterManager = _initClusterManager();
     _slidingPanelAnimationController =
         AnimationController(vsync: this, lowerBound: 0, upperBound: 1);
+    super.initState();
   }
 
-  final cardDetailsKey = GlobalKey();
   @override
   Widget build(BuildContext context) {
     final ScreenCoordinate screenCoordinate =
@@ -316,26 +411,36 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         },
         body: Stack(
           children: [
-            GoogleMap(
-              initialCameraPosition: _centerOfWorld,
-              onMapCreated: _onMapCreated,
-              myLocationEnabled: _isLocationGranted,
-              myLocationButtonEnabled: false,
-              zoomControlsEnabled: false,
-              mapToolbarEnabled: false,
-              markers: _clusterMarkers,
-              onCameraMove: _clusterManager.onCameraMove,
-              onCameraIdle: () {
-                _getNearbySpots(screenCoordinate);
-                _clusterManager.updateMap();
-              },
+            WidgetSwitcherWrapper(
+              condition: _initMapRequirements,
+              fillColor: Colors.transparent,
+              widgetIfFalse: _showLoadAnimation
+                  ? Center(
+                      child: RiveAnimation.asset("assets/splash/globe.riv"),
+                    )
+                  : Container(),
+              duration: 700,
+              widgetIfTrue: GoogleMap(
+                initialCameraPosition: _startLocation,
+                onMapCreated: _onMapCreated,
+                myLocationEnabled: _isLocationGranted,
+                myLocationButtonEnabled: false,
+                zoomControlsEnabled: false,
+                mapToolbarEnabled: false,
+                markers: _clusterMarkers,
+                onCameraMove: _clusterManager.onCameraMove,
+                onCameraIdle: () {
+                  _getNearbySpots(screenCoordinate);
+                  _clusterManager.updateMap();
+                },
+              ),
             ),
             AddLocationWrapper(
               mapController: _mapController,
               screenCoordinate: screenCoordinate,
             ),
             MyLocationFabAnimator(
-              getLocation: _getLocation,
+              getLocation: _requestLocationPermission,
               animationController: _slidingPanelAnimationController,
               findingLocation: _findingLocation,
             ),

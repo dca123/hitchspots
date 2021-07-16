@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:hitchspots/models/location_picker_store.dart';
+import 'package:hitchspots/models/create_location_page_store.dart';
 import 'package:provider/provider.dart';
 
-class MapLocationFormField extends FormField<LatLng> {
+class LocationPickerFormField extends FormField<LatLng> {
   static GoogleMapController? mapController;
-  MapLocationFormField({
+  LocationPickerFormField({
     required BuildContext buildContext,
-    required onSaved,
+    required Function(LatLng?) onSaved,
     required LatLng centerLatLng,
+    required GlobalKey<FormState> formkey,
   }) : super(
           initialValue:
-              Provider.of<LocationPickerStore>(buildContext, listen: false)
+              Provider.of<CreateLocationPageStore>(buildContext, listen: false)
                   .selectedLocation,
           onSaved: onSaved,
           validator: (LatLng? value) {
@@ -30,8 +31,9 @@ class MapLocationFormField extends FormField<LatLng> {
                 Container(
                   height: 100,
                   child: GestureDetector(
-                    onTap: () async {
-                      Provider.of<LocationPickerStore>(buildContext,
+                    onTap: () {
+                      formkey.currentState!.save();
+                      Provider.of<CreateLocationPageStore>(buildContext,
                               listen: false)
                           .toggleLocationPicker();
                     },

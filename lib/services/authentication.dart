@@ -20,19 +20,36 @@ class AuthenticationState extends ChangeNotifier {
   String? _displayName;
   bool _isAuthenticating = false;
 
-  // late FirebaseAuth _auth;
+  GoogleSignIn? _googleSignIn;
   FirebaseAuth? _auth;
+  FirebaseFirestore? _firestore;
 
   LoginState get loginState => _loginState;
   String? get uid => _uid;
   String? get displayName => _displayName;
   bool get isAuthenticating => _isAuthenticating;
 
-  Future<void> init() async {
+  AuthenticationState(
+      {GoogleSignIn? mockSignIn,
+      FirebaseAuth? mockFirebaseAuth,
+      FirebaseFirestore? mockFirebaseFirestore,
+      String? displayName}) {
+    _googleSignIn = mockSignIn;
+    _auth = mockFirebaseAuth;
+    _firestore = mockFirebaseFirestore;
+    _displayName = displayName;
+  }
+
+  Future<void> ensureFirebaseInit() async {
     if (Firebase.apps.length < 1) {
       await Firebase.initializeApp();
     }
     _auth ??= FirebaseAuth.instance;
+    _firestore ??= FirebaseFirestore.instance;
+    _googleSignIn ??= GoogleSignIn();
+    if (_checkandLoadFireAuthUser()) {
+      await _loadProfile();
+    }
   }
 
   Future<void> loginFlowWithAction(
@@ -41,13 +58,15 @@ class AuthenticationState extends ChangeNotifier {
     notifyListeners();
     try {
       if (_loginState != LoginState.loggedIn) {
-        await signInWithGoogle();
+        if (!_checkandLoadFireAuthUser()) {
+          await _signInWithGoogle();
+        }
         if (_loginState == LoginState.oauthFailed) {
           _isAuthenticating = false;
           notifyListeners();
           return;
         }
-        await loadProfile();
+        await _loadProfile();
         if (_loginState == LoginState.profileSetup) {
           await Navigator.push(
             buildContext,
@@ -67,37 +86,43 @@ class AuthenticationState extends ChangeNotifier {
     }
   }
 
-  Future<void> signInWithGoogle() async {
-    await init();
+  ///Checks for the firebase auth user and loads it if it exists
+  bool _checkandLoadFireAuthUser() {
     final User? fireAuthUser = _auth?.currentUser;
-    // Not Authenticated via FireAuth
-    if (fireAuthUser == null) {
-      _loginState = LoginState.register;
-      GoogleSignInAccount? googleUser;
-      googleUser = await GoogleSignIn().signIn();
-
-      if (googleUser != null) {
-        final GoogleSignInAuthentication googleAuth =
-            await googleUser.authentication;
-
-        final credential = GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
-          idToken: googleAuth.idToken,
-        );
-        await _auth?.signInWithCredential(credential);
-        _uid = FirebaseAuth.instance.currentUser!.uid;
-      } else {
-        _loginState = LoginState.oauthFailed;
-      }
-    } else {
+    if (fireAuthUser != null) {
       _loginState = LoginState.oauthCompleted;
       _uid = fireAuthUser.uid;
+      return true;
+    }
+    return false;
+  }
+
+  /// Sign in via google when not authenticated via FireAuth
+  Future<void> _signInWithGoogle() async {
+    await ensureFirebaseInit();
+    _loginState = LoginState.register;
+    GoogleSignInAccount? googleUser;
+    GoogleSignIn googleSignIn = _googleSignIn!;
+    googleUser = await googleSignIn.signIn();
+
+    if (googleUser != null) {
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      await _auth?.signInWithCredential(credential);
+      _uid = _auth?.currentUser!.uid;
+    } else {
+      _loginState = LoginState.oauthFailed;
     }
   }
 
-  Future<void> loadProfile() async {
+  Future<void> _loadProfile() async {
     final DocumentSnapshot hitchSpotsUser =
-        await FirebaseFirestore.instance.collection('users').doc(_uid).get();
+        await _firestore!.collection('users').doc(_uid).get();
     if (hitchSpotsUser.exists) {
       _displayName = hitchSpotsUser.get("displayName");
       _loginState = LoginState.loggedIn;
@@ -111,8 +136,14 @@ class AuthenticationState extends ChangeNotifier {
     _loginState = LoginState.loggedIn;
   }
 
-  void signOut() {
-    _auth?.signOut();
+  void logout() {
+    _auth!.signOut();
+    _resetAuthState();
     _loginState = LoginState.loggedOut;
+  }
+
+  void _resetAuthState() {
+    _uid = null;
+    _displayName = null;
   }
 }

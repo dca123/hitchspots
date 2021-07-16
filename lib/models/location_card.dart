@@ -11,6 +11,7 @@ class LocationCardModel extends ChangeNotifier {
   LatLng _coordinates = LatLng(0, 0);
   Map<String, dynamic> _reviews = {};
   bool _hasImages = false;
+  FirebaseFirestore? _firestoreInstance;
 
   String get locationID => _locationID;
   String get locationName => _locationName;
@@ -20,6 +21,10 @@ class LocationCardModel extends ChangeNotifier {
   LatLng get coordinates => _coordinates;
   List get reviews => _reviews.values.toList();
   bool get hasImages => _hasImages;
+
+  LocationCardModel({FirebaseFirestore? firestoreInstance}) {
+    _firestoreInstance = firestoreInstance;
+  }
 
   Future<void> updateLocation(dynamic locationData, String locationID) async {
     if (_locationID != locationID) {
@@ -39,7 +44,7 @@ class LocationCardModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void getReviews() async {
+  Future<void> getReviews() async {
     var reviewQuery = await _reviewQuery(locationId: _locationID, limit: 100);
     reviewQuery.docs.forEach((document) {
       _reviews[document.id] = document.data();
@@ -54,11 +59,13 @@ class LocationCardModel extends ChangeNotifier {
   Future<QuerySnapshot<Map<String, dynamic>>> _reviewQuery({
     required locationId,
     required limit,
-  }) async =>
-      await FirebaseFirestore.instance
-          .collection("reviews")
-          .orderBy('timestamp', descending: true)
-          .limit(limit)
-          .where("locationID", isEqualTo: locationId)
-          .get();
+  }) async {
+    _firestoreInstance ??= FirebaseFirestore.instance;
+    return await _firestoreInstance!
+        .collection("reviews")
+        .orderBy('timestamp', descending: true)
+        .limit(limit)
+        .where("locationID", isEqualTo: locationId)
+        .get();
+  }
 }
