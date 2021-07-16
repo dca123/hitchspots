@@ -14,7 +14,7 @@ class OnboardingPage extends StatefulWidget {
 class _OnboardingPageState extends State<OnboardingPage> {
   TextStyle headline1() => TextStyle(
         fontSize: 64,
-        fontWeight: FontWeight.w300,
+        fontWeight: FontWeight.w200,
         color: Theme.of(context).accentColor,
       );
   TextStyle headline2() => TextStyle(
@@ -99,7 +99,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
         _pageViewModelCreator(
             title: "Explore over 20,000 locations",
             body: "Tapping on markers reveals more info",
-            image: "screencap_2"),
+            image: "screencap_1"),
         _pageViewModelCreator(
             title: "Share new locations with other hitchhikers",
             image: "screencap_2"),
