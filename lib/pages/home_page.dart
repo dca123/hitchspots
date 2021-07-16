@@ -7,7 +7,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:geoflutterfire2/geoflutterfire2.dart';
 import 'package:google_maps_cluster_manager/google_maps_cluster_manager.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -21,6 +20,8 @@ import 'package:hitchspots/widgets/search_bar/search_bar.dart';
 import 'package:location/location.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:rive/rive.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -57,6 +58,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   bool _isLocationGranted = false;
   bool _findingLocation = false;
   bool _initMapRequirements = false;
+  bool _showLoadAnimation = false;
   late AnimationController _slidingPanelAnimationController;
 
   final BorderRadiusGeometry _radius = BorderRadius.only(
@@ -75,29 +77,55 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     // FirebaseFirestore.instance.settings =
     //     Settings(host: '192.168.1.2:8005', sslEnabled: false);
 
-    if (await Permission.location.isGranted &&
-        await _location.serviceEnabled()) {
-      LatLng location = await _getLocation();
-      _startLocation =
-          CameraPosition(target: location, zoom: _initialZoomLevel);
-      _isLocationGranted = true;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String>? locationCache = prefs.getStringList("locationData");
+
+    if (locationCache != null) {
+      String lastCacheDate = locationCache[0];
+      LatLng location = LatLng(
+        double.parse(locationCache[1]),
+        double.parse(locationCache[2]),
+      );
+
+      Duration timeDiff =
+          DateTime.now().difference(DateTime.parse(lastCacheDate));
+
+      if (timeDiff.inDays >= 3) {
+        _startLocation = await _findInitialCameraPosition(prefs);
+      } else {
+        _startLocation =
+            CameraPosition(target: location, zoom: _initialZoomLevel);
+      }
     } else {
-      LatLng ipLocation = await _getIPLocation() ?? LatLng(0, 0);
-      _startLocation =
-          CameraPosition(target: ipLocation, zoom: _initialZoomLevel);
+      _startLocation = await _findInitialCameraPosition(prefs);
     }
 
     setState(() {
       _initMapRequirements = true;
     });
+  }
 
-    _goodIcon = await BitmapDescriptor.fromAssetImage(
-        createLocalImageConfiguration(context), 'assets/icons/Good.png');
-    _warningIcon = await BitmapDescriptor.fromAssetImage(
-        createLocalImageConfiguration(context), 'assets/icons/Warning.png');
-    _badIcon = await BitmapDescriptor.fromAssetImage(
-        createLocalImageConfiguration(context), 'assets/icons/Bad.png');
-    _clusterImage = await _loadClusterImage('assets/icons/cluster.png');
+  Future<CameraPosition> _findInitialCameraPosition(
+      SharedPreferences prefs) async {
+    LatLng location;
+    setState(() {
+      _showLoadAnimation = true;
+    });
+    if (await Permission.location.isGranted &&
+        await _location.serviceEnabled()) {
+      location = await _getLocation();
+
+      _isLocationGranted = true;
+    } else {
+      location = await _getIPLocation() ?? LatLng(0, 0);
+    }
+    List<String> locationCache = [
+      DateTime.now().toString(),
+      location.latitude.toString(),
+      location.longitude.toString()
+    ];
+    prefs.setStringList("locationData", locationCache);
+    return CameraPosition(target: location, zoom: _initialZoomLevel);
   }
 
   Future<LatLng?> _getIPLocation() async {
@@ -201,6 +229,13 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       this._mapController = mapController;
       _clusterManager.setMapController(mapController);
     });
+    _goodIcon = await BitmapDescriptor.fromAssetImage(
+        createLocalImageConfiguration(context), 'assets/icons/Good.png');
+    _warningIcon = await BitmapDescriptor.fromAssetImage(
+        createLocalImageConfiguration(context), 'assets/icons/Warning.png');
+    _badIcon = await BitmapDescriptor.fromAssetImage(
+        createLocalImageConfiguration(context), 'assets/icons/Bad.png');
+    _clusterImage = await _loadClusterImage('assets/icons/cluster.png');
   }
 
   void _requestLocationPermission() async {
@@ -378,13 +413,13 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
           children: [
             WidgetSwitcherWrapper(
               condition: _initMapRequirements,
-              fillColor: Theme.of(context).cardColor,
-              widgetIfFalse: Center(
-                child: SpinKitPulse(
-                  color: Theme.of(context).primaryColor,
-                ),
-              ),
-              duration: 400,
+              fillColor: Colors.transparent,
+              widgetIfFalse: _showLoadAnimation
+                  ? Center(
+                      child: RiveAnimation.asset("assets/splash/globe.riv"),
+                    )
+                  : Container(),
+              duration: 700,
               widgetIfTrue: GoogleMap(
                 initialCameraPosition: _startLocation,
                 onMapCreated: _onMapCreated,
