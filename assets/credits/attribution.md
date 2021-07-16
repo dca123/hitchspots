@@ -1,6 +1,6 @@
 #### Images Used
 
-- [Travel vector created by stories - freepik.com](https://www.freepik.com/vectors/travel)
+- [Travel illustrations by Storyset](https://storyset.com/travel)
 
 #### Tech Stack
 

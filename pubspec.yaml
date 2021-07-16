@@ -1,7 +1,7 @@
 name: hitchspots
 description: A new Flutter project.
 publish_to: "none"
-version: 1.0.1+1
+version: 1.0.2
 environment:
   sdk: ">=2.12.0 <3.0.0"
 
@@ -33,6 +33,7 @@ dependencies:
   path_provider: ^2.0.2
   permission_handler: ^8.0.1
   provider: ^5.0.0
+  rive: ^0.7.23
   shared_preferences: ^2.0.6
   sliding_up_panel: ^2.0.0+1
   timeago: ^3.0.2
@@ -51,9 +52,13 @@ dev_dependencies:
   firebase_auth_mocks: ^0.7.1
   flutter_launcher_icons: ^0.9.0
   flutter_lints: ^1.0.3
+  flutter_native_splash: ^1.2.0
   google_sign_in_mocks: ^0.2.1
   lint: ^1.5.3
   mockito: ^5.0.10
+
+dependency_overrides:
+  args: 2.0.0
 
 flutter:
   uses-material-design: true
@@ -62,10 +67,17 @@ flutter:
     - assets/locations/
     - assets/onboarding/
     - assets/credits/
+    - assets/splash/
+    - assets/launcher/
 
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/launcher.png"
+  image_path: "assets/launcher/launcher.png"
   adaptive_icon_background: "#06D6A0"
-  adaptive_icon_foreground: "assets/adaptive_foreground.png"
+  adaptive_icon_foreground: "assets/launcher/adaptive_foreground.png"
+
+flutter_native_splash:
+  color: "#06D6A0"
+  image: assets/splash/splashText.png
+  android: true
