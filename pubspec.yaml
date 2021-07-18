@@ -69,6 +69,7 @@ flutter:
     - assets/credits/
     - assets/splash/
     - assets/launcher/
+    - assets/map_style/
 
 flutter_icons:
   android: true
