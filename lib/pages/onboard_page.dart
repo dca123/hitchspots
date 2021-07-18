@@ -75,7 +75,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
           reverse: true,
           decoration: PageDecoration(
             bodyAlignment: Alignment.bottomCenter,
-            bodyFlex: 2,
+            bodyFlex: 3,
             imageFlex: 4,
           ),
           titleWidget: Center(
@@ -89,10 +89,13 @@ class _OnboardingPageState extends State<OnboardingPage> {
             ),
           ),
           body: "",
-          image: Center(
-            child: Image.asset(
-              "assets/onboarding/person_1.png",
-              fit: BoxFit.cover,
+          image: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Center(
+              child: Image.asset(
+                "assets/onboarding/person_1.png",
+                fit: BoxFit.cover,
+              ),
             ),
           ),
         ),
@@ -101,10 +104,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
             body: "Tapping on markers reveals more info",
             image: "screencap_1"),
         _pageViewModelCreator(
-            title: "Share new locations with other hitchhikers",
-            image: "screencap_2"),
+            title: "Contribute to existing locations", image: "screencap_2"),
         _pageViewModelCreator(
-            title: "Contribute to existing locations", image: "screencap_3"),
+            title: "Share new locations with other hitchhikers",
+            image: "screencap_3"),
       ];
 
   @override
