@@ -99,7 +99,7 @@ class _CreateReviewPageState extends State<CreateReviewPage> {
                 condition: isSaving,
                 widgetIfTrue: IconButton(
                   key: ValueKey('spinner'),
-                  onPressed: () => {},
+                  onPressed: null,
                   icon: SpinKitWave(
                     color: Colors.black,
                     size: 16,

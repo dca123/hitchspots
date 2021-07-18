@@ -4,30 +4,10 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hitchspots/models/location_card.dart';
 import 'package:hitchspots/pages/create_review_page.dart';
-import 'package:hitchspots/services/authentication.dart';
-import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import '../services/firebase_app_mock.dart';
-
-Widget applicationWrapper({
-  required Widget child,
-  LocationCardModel? locationCardModel,
-}) {
-  return MultiProvider(
-    providers: [
-      ChangeNotifierProvider(
-        create: (context) => locationCardModel ?? LocationCardModel(),
-      ),
-      ChangeNotifierProvider(
-        create: (context) => AuthenticationState(displayName: "TestUser"),
-      ),
-    ],
-    child: MaterialApp(
-      home: child,
-    ),
-  );
-}
+import '../utils.dart';
 
 main() {
   group("Shows Errors when data is invalid", () {

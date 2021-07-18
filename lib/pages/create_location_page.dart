@@ -42,7 +42,7 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
 
   bool isSaving = false;
 
-  void addLocation() async {
+  void _addLocation() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         isSaving = !isSaving;
@@ -81,9 +81,9 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
     }
   }
 
-  String? errorMessageIfNullOrEmpty(String? value, String errorMessage) {
+  String? _errorMessageIfNullOrEmpty(String? value, String errorMessage) {
     if (value == null || value.isEmpty) {
-      return 'Please enter a name for this location';
+      return errorMessage;
     }
     return null;
   }
@@ -139,7 +139,7 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
               widgetIfFalse: IconButton(
                 key: ValueKey('send'),
                 icon: const Icon(Icons.send),
-                onPressed: () => addLocation(),
+                onPressed: () => _addLocation(),
                 color: Colors.black,
               ),
             ),
@@ -173,7 +173,7 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
                     Provider.of<CreateLocationPageStore>(context, listen: false)
                         .updateLocationName(value!),
                 maxLength: 50,
-                validator: (value) => errorMessageIfNullOrEmpty(
+                validator: (value) => _errorMessageIfNullOrEmpty(
                     value, "Please enter a name for this location"),
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
@@ -197,7 +197,7 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
                     hintText: "Describe your experience briefly"),
                 maxLines: 3,
                 keyboardType: TextInputType.multiline,
-                validator: (value) => errorMessageIfNullOrEmpty(value,
+                validator: (value) => _errorMessageIfNullOrEmpty(value,
                     "Please enter a short description of your experience"),
               ),
             ]),
