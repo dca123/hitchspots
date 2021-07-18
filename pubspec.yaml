@@ -64,7 +64,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icons/
-    - assets/locations/
     - assets/onboarding/
     - assets/credits/
     - assets/splash/
