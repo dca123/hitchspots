@@ -236,6 +236,10 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _badIcon = await BitmapDescriptor.fromAssetImage(
         createLocalImageConfiguration(context), 'assets/icons/Bad.png');
     _clusterImage = await _loadClusterImage('assets/icons/cluster.png');
+
+    String mapStyle = await DefaultAssetBundle.of(context)
+        .loadString("assets/map_style/mapstyle.json");
+    mapController.setMapStyle(mapStyle);
   }
 
   void _requestLocationPermission() async {
