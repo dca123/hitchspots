@@ -130,7 +130,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   Future<LatLng?> _getIPLocation() async {
     try {
-      //TODO : Remove IP HERE
       var response = await Dio().get('http://ip-api.com/json/?fields=lat,lon');
       // .get('http://ip-api.com/json/62.210.188.30??fields=lat,lon');
       return LatLng(response.data["lat"], response.data["lon"]);
