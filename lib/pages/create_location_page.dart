@@ -1,7 +1,6 @@
 import 'package:animations/animations.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:geoflutterfire2/geoflutterfire2.dart';
@@ -13,6 +12,7 @@ import 'package:provider/provider.dart';
 import '../widgets/form_fields/rating_bar.dart';
 import '../widgets/form_fields/location_picker_form_field.dart';
 import 'location_picker_page.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 class CreateLocationPage extends StatefulWidget {
   final LatLng _centerLatLng;
@@ -21,10 +21,12 @@ class CreateLocationPage extends StatefulWidget {
     Key? key,
     required LatLng centerLatLng,
     required Function closedContainer,
+    FirebaseFirestore? fakeFirestore,
   })  : closedContainer = closedContainer,
         _centerLatLng = centerLatLng,
+        firestoreInstance = fakeFirestore,
         super(key: key);
-
+  late final FirebaseFirestore? firestoreInstance;
   @override
   _CreateLocationPageState createState() => _CreateLocationPageState();
 }
@@ -42,42 +44,45 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
 
   bool isSaving = false;
 
+  Future<void> _ensureFirebaseInit() async {
+    if (Firebase.apps.length < 1) {
+      await Firebase.initializeApp();
+    }
+    widget.firestoreInstance ??= FirebaseFirestore.instance;
+  }
+
   void _addLocation() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         isSaving = !isSaving;
       });
+      await _ensureFirebaseInit();
 
       GeoFirePoint newSpot = geo.point(
           latitude: position!.latitude, longitude: position!.longitude);
       final locationID =
-          await FirebaseFirestore.instance.collection('locations').add({
+          await widget.firestoreInstance!.collection('locations').add({
         'name': locationName.text,
         'position': newSpot.data,
         'rating': ratingValue,
         'reviewCount': 1,
         'hasImages': false,
-        'createdBy': FirebaseAuth.instance.currentUser!.uid,
+        'createdBy':
+            Provider.of<AuthenticationState>(context, listen: false).uid,
       });
 
-      final String displayName =
-          Provider.of<AuthenticationState>(context, listen: false).displayName!;
-      await FirebaseFirestore.instance.collection('reviews').add({
+      await widget.firestoreInstance!.collection('reviews').add({
         'description': locationExperience.text,
         'locationID': locationID.id,
         'rating': ratingValue,
         'timestamp': DateTime.now().millisecondsSinceEpoch,
-        'createdByDisplayName': displayName,
+        'createdByDisplayName':
+            Provider.of<AuthenticationState>(context, listen: false)
+                .displayName,
       });
+      //TODO : Firebase analytics
       print("CREATED LOCAITON WITH ID - ${locationID.id}");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Thank you for contributing!'),
-        ),
-      );
-      Future.delayed(Duration(milliseconds: 100), () {
-        Navigator.pop(context);
-      });
+      Navigator.pop(context);
     }
   }
 
@@ -168,6 +173,7 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
                   }),
               SizedBox(height: 24),
               TextFormField(
+                key: ValueKey("locationName"),
                 controller: locationName,
                 onSaved: (value) =>
                     Provider.of<CreateLocationPageStore>(context, listen: false)
@@ -184,6 +190,7 @@ class _CreateLocationPageState extends State<CreateLocationPage> {
               ),
               SizedBox(height: 24),
               TextFormField(
+                key: ValueKey("locationDescription"),
                 controller: locationExperience,
                 maxLength: 300,
                 onSaved: (value) =>

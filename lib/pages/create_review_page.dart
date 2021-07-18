@@ -27,7 +27,7 @@ class _CreateReviewPageState extends State<CreateReviewPage> {
   double ratingController = 0;
   bool isSaving = false;
 
-  Future<void> ensureFirebaseInit() async {
+  Future<void> _ensureFirebaseInit() async {
     if (Firebase.apps.length < 1) {
       await Firebase.initializeApp();
     }
@@ -41,7 +41,7 @@ class _CreateReviewPageState extends State<CreateReviewPage> {
         setState(() {
           isSaving = true;
         });
-        await ensureFirebaseInit();
+        await _ensureFirebaseInit();
         final String displayName =
             Provider.of<AuthenticationState>(context, listen: false)
                 .displayName!;
