@@ -171,7 +171,7 @@ class ReviewList extends StatelessWidget {
           return ReviewTile(
             description: '${review['description']}',
             fuzzyTimeAgo: '$fuzzyTimeStamp',
-            rating: review['rating'],
+            rating: (review['rating']).toDouble(),
             displayName: '${review['createdByDisplayName']}',
           );
         },

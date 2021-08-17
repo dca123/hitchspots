@@ -29,15 +29,18 @@ class AuthenticationState extends ChangeNotifier {
   String? get displayName => _displayName;
   bool get isAuthenticating => _isAuthenticating;
 
-  AuthenticationState(
-      {GoogleSignIn? mockSignIn,
-      FirebaseAuth? mockFirebaseAuth,
-      FirebaseFirestore? mockFirebaseFirestore,
-      String? displayName}) {
+  AuthenticationState({
+    GoogleSignIn? mockSignIn,
+    FirebaseAuth? mockFirebaseAuth,
+    FirebaseFirestore? mockFirebaseFirestore,
+    String? displayName,
+    String? uid,
+  }) {
     _googleSignIn = mockSignIn;
     _auth = mockFirebaseAuth;
     _firestore = mockFirebaseFirestore;
     _displayName = displayName;
+    _uid = uid;
   }
 
   Future<void> ensureFirebaseInit() async {

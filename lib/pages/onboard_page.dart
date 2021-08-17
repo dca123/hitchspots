@@ -5,8 +5,9 @@ import 'package:introduction_screen/introduction_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingPage extends StatefulWidget {
-  OnboardingPage({Key? key}) : super(key: key);
+  OnboardingPage({Key? key, required this.pageOnFinish}) : super(key: key);
 
+  final Widget pageOnFinish;
   @override
   _OnboardingPageState createState() => _OnboardingPageState();
 }
@@ -128,7 +129,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
         await prefs.setBool('isFirstRun', false);
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) {
-            return HomePage();
+            return widget.pageOnFinish;
           }),
         );
       },

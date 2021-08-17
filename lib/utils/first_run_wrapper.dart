@@ -21,7 +21,9 @@ class FirstRunWrapper extends StatelessWidget {
         switch (snapshot.connectionState) {
           case ConnectionState.done:
             if (snapshot.data == true) {
-              return OnboardingPage();
+              return OnboardingPage(
+                pageOnFinish: homePage,
+              );
             } else {
               return homePage;
             }
